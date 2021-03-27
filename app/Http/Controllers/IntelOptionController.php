@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use http\Env\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -55,6 +54,7 @@ class IntelOptionController extends Controller
 
                 return response()->json([
                     'msg' => 'In',
+                    'dota' => 'Inn',
                     'data' => $records
                 ], 200);
 
