@@ -54,7 +54,6 @@ class IntelOptionController extends Controller
 
                 return response()->json([
                     'msg' => 'In',
-                    'dota' => 'Inn',
                     'data' => $records
                 ], 200);
 
