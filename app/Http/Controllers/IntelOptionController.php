@@ -25,7 +25,7 @@ class IntelOptionController extends Controller
                 {
                     $query = DB::connection('sqlsrv_hosv')
                         ->select(
-                            DB::raw("SELECT TOP(100) * FROM DATOS_DEMOGRAFICOS('$age')")
+                            DB::raw("SELECT * FROM DATOS_DEMOGRAFICOS('$age')")
                         );
 
                     if (count($query ) > 0)
