@@ -22,28 +22,39 @@ class LyaElectronicController extends Controller
                     DB::raw("SELECT * FROM DIAGNOSTICOS_C90()")
                 );
 
-            if (count($query) > 0)
+            if (count($query ) > 0)
             {
+
                 $records = [];
 
                 foreach ($query as $item)
                 {
 
                     $temp = array(
-                        'documento' => $item->DOCUMENTO
+                        'documento' => $item->DOCUMENTO,
+                        'tDoc' => $item->TIPO,
+                        'nombre' => $item->NOMBRE,
+                        'codDx' => $item->COD_DX,
+                        'nombreDx' => $item->NOMBRE_DX,
                     );
 
-                    $records = $temp;
-
+                    $records[] = $temp;
                 }
-            }
 
-            return response()
-                ->json([
+                return response()->json([
                     'msg' => 'Ok',
                     'status' => 200,
                     'data' => $records
                 ], 200);
+
+            } else {
+
+                return response()->json([
+                    'msg' => 'No Hay Datos en la Respuesta',
+                    'status' => 204
+                ], 204);
+
+            }
         }
     }
 

@@ -29,4 +29,10 @@ Route::group([
             'getDataUsersPopulation'
         ]);
 
+    Route::get('/hs/patients-c90',
+        [
+            \App\Http\Controllers\LyaElectronicController::class,
+            'getPatientsData'
+        ]);
+
 });
