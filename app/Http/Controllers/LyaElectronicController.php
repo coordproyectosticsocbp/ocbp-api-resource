@@ -30,7 +30,7 @@ class LyaElectronicController extends Controller
                 {
 
                     $temp = array(
-                        ''
+                        'documento' => $item->DOCUMENTO
                     );
 
                     $records = $temp;
