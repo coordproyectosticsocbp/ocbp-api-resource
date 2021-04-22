@@ -19,8 +19,31 @@ class LyaElectronicController extends Controller
         {
             $query = DB::connection('sqlsrv_hosv')
                 ->select(
-                    DB::raw("SELECT ")
+                    DB::raw("SELECT * FROM DIAGNOSTICOS_C90()")
                 );
+
+            if (count($query) > 0)
+            {
+                $records = [];
+
+                foreach ($query as $item)
+                {
+
+                    $temp = array(
+                        ''
+                    );
+
+                    $records = $temp;
+
+                }
+            }
+
+            return response()
+                ->json([
+                    'msg' => 'Ok',
+                    'status' => 200,
+                    'data' => $records
+                ], 200);
         }
     }
 
