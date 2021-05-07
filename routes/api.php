@@ -35,4 +35,10 @@ Route::group([
             'getPatientsData'
         ]);
 
+    Route::get('/hs/billing/init-date/{initdate}/end-date/{enddate}',
+        [
+            \App\Http\Controllers\ThOcbpController::class,
+            'getPendingForBilling'
+        ]);
+
 });
