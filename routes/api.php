@@ -18,12 +18,15 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::post('login', [\App\Http\Controllers\LoginController::class, 'Login']);
+Route::post('logout', [\App\Http\Controllers\LoginController::class, 'Logout']);
+
 Route::group([
     'prefix' => 'v1',
     'middleware' => 'auth.apikey'
 ], function () {
 
-    Route::get('/hs/populations/age/{age}',
+    Route::get('/hs/populations/age/{age}/init/{initdate?}/end/{enddate?}',
         [
             \App\Http\Controllers\IntelOptionController::class,
             'getDataUsersPopulation'
@@ -39,6 +42,14 @@ Route::group([
         [
             \App\Http\Controllers\ThOcbpController::class,
             'getPendingForBilling'
+        ]);
+
+
+    /* ESPARTA */
+    Route::get('/esparta/patient/{patientdoc}/type/{patientdoctype}/information',
+        [
+            \App\Http\Controllers\EspartaController::class,
+            'initialPatientInfo'
         ]);
 
 });

@@ -15,7 +15,12 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => [
+        'api/*',
+        'sanctum/csrf-cookie',
+        'http://190.131.222.108:8088/api/v1/*',
+        'http://localhost:8080/',
+    ],
 
     'allowed_methods' => ['*'],
 
@@ -29,6 +34,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];

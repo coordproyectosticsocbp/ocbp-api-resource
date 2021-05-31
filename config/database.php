@@ -91,12 +91,25 @@ return [
             'prefix_indexes' => true,
         ],
 
-        'sqlsrv_hosv' => [
+        'sqlsrv_hosvital' => [
             'driver' => 'sqlsrv',
             'url' => env('DATABASE_URL'),
             'host' => '172.16.52.74',
             'port' => env('DB_PORT', '1433'),
             'database' => 'HOSVITAL',
+            'username' => 'csalgado',
+            'password' => '1047236066',
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
+
+        'sqlsrv_hosvital_pruebas' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DATABASE_URL'),
+            'host' => '172.16.52.82\MSSQL2014',
+            'port' => env('1433'),
+            'database' => 'HOSVITALPRUEBAS',
             'username' => 'csalgado',
             'password' => '1047236066',
             'charset' => 'utf8',

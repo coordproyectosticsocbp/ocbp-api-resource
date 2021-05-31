@@ -17,7 +17,7 @@ class LyaElectronicController extends Controller
     {
         if ($request->hasHeader('X-Authorization'))
         {
-            $query = DB::connection('sqlsrv_hosv')
+            $query = DB::connection('sqlsrv_hosvital')
                 ->select(
                     DB::raw("SELECT * FROM DIAGNOSTICOS_C90()")
                 );
