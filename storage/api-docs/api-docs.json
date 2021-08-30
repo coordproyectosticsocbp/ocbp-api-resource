@@ -1,0 +1,551 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "OCBP API",
+        "version": "0.1"
+    },
+    "paths": {
+        "/api/v1/agotados/get/drugs-by-code/{sumcod}": {
+            "get": {
+                "tags": [
+                    "Agotados"
+                ],
+                "summary": "Get Drugs By Code",
+                "description": "Returns Drugs By Code",
+                "operationId": "drugsByCode",
+                "parameters": [
+                    {
+                        "name": "sumcod",
+                        "in": "path",
+                        "description": "Código del Medicamento",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/agotados/get/purchase-order/not-greater-than-21": {
+            "get": {
+                "tags": [
+                    "Agotados"
+                ],
+                "summary": "purchaseOrderNoGreaterThan21",
+                "description": "purchaseOrderNoGreaterThan21",
+                "operationId": "purchaseOrderNoGreaterThan21",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/esparta/patient/{patientdoc}/type/{patientdoctype}/information": {
+            "get": {
+                "tags": [
+                    "Esparta"
+                ],
+                "summary": "Get Patient Informations",
+                "description": "Returns Patient Information",
+                "operationId": "initialPatientInfo",
+                "parameters": [
+                    {
+                        "name": "patientdoc",
+                        "in": "path",
+                        "description": "Documento del Paciente",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "patientdoctype",
+                        "in": "path",
+                        "description": "Tipo de Documento del Paciente - CC, TI, RC, PE",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/ethereum/get/specialties": {
+            "get": {
+                "tags": [
+                    "Ethereum"
+                ],
+                "summary": "Get Specialties Info",
+                "description": "Returns Specialties Info",
+                "operationId": "Specialties",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/ethereum/get/doctors-with-spe-regm": {
+            "get": {
+                "tags": [
+                    "Ethereum"
+                ],
+                "summary": "Get Doctors Info",
+                "description": "Returns Doctors Info",
+                "operationId": "Doctors",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/ethereum/get/diagnostics": {
+            "get": {
+                "tags": [
+                    "Ethereum"
+                ],
+                "summary": "Get Diagnostics Info",
+                "description": "Returns Diagnostics Info",
+                "operationId": "Diagnostics",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hito/get/occupation-with-real-stay": {
+            "get": {
+                "tags": [
+                    "Hito"
+                ],
+                "summary": "Get occupation Info With Real Stay",
+                "description": "Returns occupation Name",
+                "operationId": "occupation",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hito/get/patient-info-by-hab-code/{hab?}": {
+            "get": {
+                "tags": [
+                    "Hito"
+                ],
+                "summary": "Get Patient Info by Hab Code",
+                "description": "Returns Patient Info by Hab Code",
+                "operationId": "getPatientInfoByHabCode",
+                "parameters": [
+                    {
+                        "name": "hab?",
+                        "in": "path",
+                        "description": "Fecha Inicio para Búsqueda - Opcional",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hito/get/patient-adm-output-info/{patientdoc?}/{patientdoctype?}": {
+            "get": {
+                "tags": [
+                    "Hito"
+                ],
+                "summary": "Get Adm Output Info By NumDoc",
+                "description": "Returns Adm Output Info By NumDoc",
+                "operationId": "get Adm Output Info By NumDoc",
+                "parameters": [
+                    {
+                        "name": "patientdoc?",
+                        "in": "path",
+                        "description": "Número de Documento - Opcional",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "patientdoctype?",
+                        "in": "path",
+                        "description": "Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hito/get/patient/{patientdoc?}/type/{patientdoctype?}/information": {
+            "get": {
+                "tags": [
+                    "Hito"
+                ],
+                "summary": "Get clinic Historial By NumDoc",
+                "description": "Returns clinic Historial By NumDoc",
+                "operationId": "get clinic Historial By NumDoc",
+                "parameters": [
+                    {
+                        "name": "patientdoc?",
+                        "in": "path",
+                        "description": "Número de Documento - Obligatory",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "patientdoctype?",
+                        "in": "path",
+                        "description": "Tipo de Documento - Obligatory - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hygea/get/warehouses": {
+            "get": {
+                "tags": [
+                    "Hygea"
+                ],
+                "summary": "Get WareHouses Info",
+                "description": "Returns WareHouses Info",
+                "operationId": "get WareHouses Info",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hygea/get/providers": {
+            "get": {
+                "tags": [
+                    "Hygea"
+                ],
+                "summary": "Get Providers Info",
+                "description": "Returns Providers Info",
+                "operationId": "get Providers Info",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hs/populations/age/{age}/date/{init?}/{end?}": {
+            "get": {
+                "tags": [
+                    "IntelOptions"
+                ],
+                "summary": "Get Patient With CP Format",
+                "description": "Returns CP Format Information",
+                "operationId": "getDataUsersPopulation",
+                "parameters": [
+                    {
+                        "name": "age",
+                        "in": "path",
+                        "description": "Edad Tope",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "init?",
+                        "in": "path",
+                        "description": "Fecha Inicio para Búsqueda - Opcional",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "end?",
+                        "in": "path",
+                        "description": "Fecha Final para Búsqueda - Opcional",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "X-Authorization": {
+                "type": "apiKey",
+                "description": "EspartaApiKey",
+                "name": "X-Authorization",
+                "in": "header"
+            }
+        }
+    },
+    "security": [
+        {
+            "X-Authorization": []
+        }
+    ]
+}

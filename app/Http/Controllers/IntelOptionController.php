@@ -9,28 +9,80 @@ use Illuminate\Support\Facades\DB;
 class IntelOptionController extends Controller
 {
     //
+
     public function __construct()
     {
         $this->middleware('auth.apikey');
     }
 
-    public function getDataUsersPopulation(Request $request, $age, $initDate = null, $endDate = null)
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hs/populations/age/{age}/date/{init?}/{end?}",
+     *     operationId="getDataUsersPopulation",
+     *     tags={"IntelOptions"},
+     *     summary="Get Patient With CP Format",
+     *     description="Returns CP Format Information",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="age",
+     *          description="Edad Tope",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="init?",
+     *          description="Fecha Inicio para Búsqueda - Opcional",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="end?",
+     *          description="Fecha Final para Búsqueda - Opcional",
+     *          required=false,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getDataUsersPopulation(Request $request, $age)
     {
-        if ($request->hasHeader('X-Authorization'))
-        {
+        if ($request->hasHeader('X-Authorization')) {
 
             if ($age)
             {
-
-                $currentDate = Carbon::now();
-
-                if (!$initDate) {
-                    $initDate = Carbon::parse($currentDate)->format('Ymd H:i:s');
-                }
-
-                if (!$endDate) {
-                    $endDate = Carbon::parse($currentDate)->format('Ymd H:i:s');
-                }
+                $initdate = \request('init', \Carbon\Carbon::create('1900-01-01 00:00:00')->format('Ymd H:i:s'));
+                $enddate = \request('end', \Carbon\Carbon::now()->format('Ymd H:i:s'));
 
                 if ($age >= 50)
                 {
@@ -38,8 +90,8 @@ class IntelOptionController extends Controller
                         ->select(
                             DB::raw(
                                 "SELECT * FROM DATOS_DEMOGRAFICOS('$age')
-                                        WHERE	(   FECHA_FORMATO >= '$initDate' AND
-                                                    FECHA_FORMATO <= '$endDate')"
+                                        WHERE	(   FECHA_FORMATO >= '$initdate' AND
+                                                    FECHA_FORMATO <= '$enddate')"
                             )
                         );
 
@@ -126,7 +178,6 @@ class IntelOptionController extends Controller
                             'msg' => 'Ok',
                             'status' => 200,
                             'data' => $records,
-                            JSON_PRETTY_PRINT
                         ], 200);
 
                     } else {
@@ -134,7 +185,6 @@ class IntelOptionController extends Controller
                         return response()->json([
                             'msg' => 'No Hay Datos en la Respuesta a la Solicitud',
                             'status' => 204,
-                            JSON_PRETTY_PRINT
                         ]);
 
                     }
@@ -162,7 +212,6 @@ class IntelOptionController extends Controller
                 'msg' => 'Acceso No Autorizado',
                 'status' => 401
             ], 401);
-
         }
     }
 }
