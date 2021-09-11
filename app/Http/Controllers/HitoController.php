@@ -505,12 +505,7 @@ class HitoController extends Controller
 
 
                         $query_consul_reason = DB::connection('sqlsrv_hosvital')
-                            ->select("SELECT * FROM MOTIVOS_CONSULTA('$item->DOCUMENTO', '$item->TIP_DOC')");
-
-                        /*$query_consul_soap = DB::connection('sqlsrv_hosvital')
-                            ->select("SELECT * FORM ");*/
-
-
+                            ->select("SELECT * FROM MOTIVOS_CONSULTA('$item->NUM_HISTORIA', '$item->TI_DOC')");
 
                         if (count($query_consul_reason) > 0) {
 
@@ -518,12 +513,23 @@ class HitoController extends Controller
 
                             foreach ($query_consul_reason as $cr) {
 
+                                if ($item->NEUTROPENIA != null) {
+                                    $item->NEUTROPENIA = 1;
+                                } else {
+                                    $item->NEUTROPENIA = 0;
+                                }
+
                                 $temp2 = array(
-                                    'folio' => $item->FOLIO,
-                                    'diagnostics_cod' => $item->DX_COD,
-                                    'diagnostics' => $item->DX,
-                                    'currentDisease' => $item->ENFEREMDAD_ACTUAL,
-                                    'consultationReason' => $cr->MOTIVO
+                                    //'folio' => $item->FOLIO,
+                                    //'currentDisease' => $item->ENFEREMDAD_ACTUAL,
+                                    'neutropenia' => $item->NEUTROPENIA,
+                                    'dxSecondaryCode' => $item->COD_DX_SECUNDARIO,
+                                    'dxSecondaryName' => $item->NOMBRE_DX_SECUNDARIO,
+                                    'consultationReason' => $cr->MOTIVO,
+                                    'medDiagnostics' => $item->DX_MEDICO,
+                                    'treatment' => $item->TRATAMIENTOS,
+                                    'previousStudies' => $item->ESTUDIOS_PREVIOS,
+                                    'pendingAndRecommendations' => $item->PENDIENTES,
                                 );
 
                                 $consul_reason[] = $temp2;
@@ -541,30 +547,23 @@ class HitoController extends Controller
                         }
 
                         $temp = array(
-                            'tipDoc' => $item->TIP_DOC,
-                            'document' => $item->DOCUMENTO,
-                            'admConsecutive' => $item->CTVO_INGRESO,
-                            'patientCompany' => $item->EMPRESA,
+                            'document' => $item->NUM_HISTORIA,
+                            'tipDoc' => $item->TI_DOC,
+                            'admConsecutive' => $item->INGRESO,
+                            'folio' => $item->FOLIO,
                             'fName' => $item->PRIMER_NOMBRE,
                             'sName' => $item->SEGUNDO_NOMBRE,
                             'fLastname' => $item->PRIMER_APELLIDO,
                             'sLastname' => $item->SEGUNDO_APELLIDO,
-                            /*'birthDate' => $item->FECHA_NAC,
+                            'birthDate' => $item->FECHA_NAC,
                             'age' => $item->EDAD,
                             'gender' => $item->SEXO,
                             'civilStatus' => $item->ESTADOCIVIL,
-                            'bloodType' => $item->GRUPO_SANGUINEO,
-                            'mobilePhone' => $item->TELEFONO1,
-                            'address' => $item->DIRECCION,
-                            'state' => $item->DEPARTAMENTO,
-                            'city' => $item->MUNICIPIO,
-                            'neighborhood' => $item->BARRIO,
-                            'occupation' => $item->OCUPACION,
-                            'ethnicity' => $item->BARRIO,
-                            'educationLevel' => $item->NIVEL_EDUCATIVO,
-                            'specialAttention' => $item->ATEN_ESPECIAL,
-                            'disability' => $item->DISCAPACIDAD,
-                            'populationGroup' => $item->GRUPO_POBLA,*/
+                            'patientCompany' => $item->EMPRESA,
+                            'patientContract' => $item->CONTRATO,
+                            'primaryDxCode' => $item->DX_COD,
+                            'primaryDxDescription' => $item->DX,
+                            'primaryDxDate' => $item->FECHA_1_DX,
                             'clinicHistorial' => $consul_reason
                         );
 

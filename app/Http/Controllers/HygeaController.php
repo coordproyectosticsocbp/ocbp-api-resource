@@ -69,7 +69,8 @@ class HygeaController extends Controller
                         'prefix' => $item->PREFIJO,
                         'whTypeCode' => $item->TIPO_BODEGA_COD,
                         'whTypeDesc' => $item->TIPO_BODEGA_DESC,
-                        'type' => $item->CLASE,
+                        'type' => $item->CLASE_COD,
+                        'typeDesc' => $item->CLASE_DESC,
                         'whDispatchToFloor' => $item->DESPACHO_A_PISO,
                         'consignmentWh' => $item->BODEGA_CONSIGNACION,
                         'purchaseWh' => $item->BODEGA_COMPRA,
@@ -213,6 +214,132 @@ class HygeaController extends Controller
 
             }
 
+
+        }
+
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/purchase-orders/{date?}",
+     *     operationId="get Purchases Orders Info",
+     *     tags={"Hygea"},
+     *     summary="Get Purchases Orders Info",
+     *     description="Returns Purchases Orders Info",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="date",
+     *          description="date",
+     *          required=false,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getPurchaseOrders(Request $request)
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $date = \request('init', \Carbon\Carbon::now()->format('Ymd'));
+
+
+            $query_purchase_order = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM HYGEA_PURCHASE_ORDERS('$date')");
+
+
+            if (count($query_purchase_order) > 0)
+            {
+
+                $purchaseOrders = [];
+
+                foreach ($query_purchase_order as $item)
+                {
+
+                    $temp = array(
+                        'orderNro' => $item->NRO,
+                        'transacNro' => $item->TRANSAC,
+                        'providerCode' => $item->PROVEED_COD,
+                        'providerName' => $item->PROVEED,
+                        'paymentDeadline' => $item->PLAZO,
+                        'OrderSatatus' => $item->ESTADO_ORDEN,
+                        'sumCod' => $item->CODIGO,
+                        'sumDesc' => $item->SUMINISTRO,
+                        'sumStatus' => $item->ESTADO_ITEM,
+                        'quantity' => $item->CANTIDAD,
+                        'receivedQuantity' => $item->RECIBIDO,
+                        'unitValue' => $item->VALOR_UNITARIO,
+                        'orderDate' => $item->FECHA_ORDEN,
+                        'warehouse' => $item->BODEGA,
+                        'totalValue' => $item->VALOR_TOTAL,
+                        'discountValue' => $item->VALOR_DESCUENTO,
+                        'requisitionNro' => $item->NRO_REQUI,
+                        'createdBy' => $item->USUARIO_CREA,
+                        'authorizedBy' => $item->USUARIO_AUTORIZA,
+                        'ordObservation' => $item->OBSERVACION,
+                        'deliveryTime' => $item->TIEMPO_ENTREGA,
+                    );
+
+                    $purchaseOrders[] = $temp;
+
+                }
+
+                if (count($purchaseOrders) > 0) {
+
+                    return response()
+                        ->json([
+                            'msg' => 'Ok',
+                            'status' => 200,
+                            'data' => $purchaseOrders
+                        ]);
+
+                } else {
+
+                    return response()
+                        ->json([
+                            'msg' => 'Empty Purchase Orders Array',
+                            'status' => 200,
+                            'data' => []
+                        ]);
+
+                }
+
+            } else {
+
+                return response()
+                    ->json([
+                        'msg' => 'Empty Purchase Orders Query',
+                        'status' => 200,
+                        'data' => []
+                    ]);
+
+            }
 
         }
 

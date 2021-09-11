@@ -137,6 +137,7 @@ Route::group([
 
 
     /*-------------------------------------------------------------------------------------------------------------*/
+
     /* HYGEA */
     Route::get('/hygea/get/warehouses',
         [
@@ -149,6 +150,24 @@ Route::group([
         [
             \App\Http\Controllers\HygeaController::class,
             'getProviders'
+        ]
+    );
+
+    Route::get('/hygea/get/purchase-orders/{init?}',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getPurchaseOrders'
+        ]
+    );
+
+    /*-------------------------------------------------------------------------------------------------------------*/
+
+    /* MACNA */
+    Route::get(
+        '/macna/patient/{patientdoc}/type/{patientdoctype}/information',
+        [
+            \App\Http\Controllers\MacnaController::class,
+            'getPatientInfoByDocument'
         ]
     );
 

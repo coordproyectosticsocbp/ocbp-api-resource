@@ -79,7 +79,7 @@ class AgotadosController extends Controller
                                 'sumGName' => $item->NOMBRE_GENERICO,
                                 'sumGroupCod' => $item->COD_GRUPO,
                                 'sumGroupName' => $item->NOM_GRUPO,
-                                'balance' => $item->SALDO
+                                'balance' => (int) $item->SALDO
                             );
 
                             $records = $temp;
@@ -131,6 +131,7 @@ class AgotadosController extends Controller
         }
 
     }
+
 
     /**
      * @OA\Get (
