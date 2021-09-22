@@ -68,8 +68,7 @@ class MacnaController extends Controller
      */
     public function getPatientInfoByDocument(Request $request, $patientCode, $patientDoctype)
     {
-        if ($request->hasHeader('X-Authorization'))
-        {
+        if ($request->hasHeader('X-Authorization')) {
             $query_patient = DB::connection('sqlsrv_hosvital')
                 ->select("SELECT * FROM MACNA_INFORMACION_PACIENTE('$patientCode', '$patientDoctype')");
 
@@ -90,7 +89,7 @@ class MacnaController extends Controller
                         foreach ($query_ingresos as $row) {
 
                             $query_folios = DB::connection('sqlsrv_hosvital')
-                                ->select("select * from MACNA_FOLIOS_PACIENTE('$item->DOCUMENTO', '$item->TIP_DOC', '$row->INGRESO') ORDER BY INGRESO ASC, FOLIO ASC");
+                                ->select("select * from MACNA_FOLIOS_PACIENTE('$item->DOCUMENTO', '$item->TIP_DOC', '$row->INGRESO') ORDER BY FOLIO ASC");
 
                             if (count($query_folios) > 0) {
 
@@ -100,6 +99,9 @@ class MacnaController extends Controller
 
                                     $query_formulacion = DB::connection('sqlsrv_hosvital')
                                         ->select("SELECT * FROM MACNA_FORMULACION_PACIENTE('$item->DOCUMENTO', '$item->TIP_DOC', '$folio->FOLIO') ORDER BY FOLIO ASC");
+
+                                    $query_procedimientos = DB::connection('sqlsrv_hosvital')
+                                        ->select("SELECT * FROM MACNA_PROCEDIMIENTOS_QX('$item->DOCUMENTO', '$item->TIP_DOC', $row->INGRESO, '$folio->FOLIO')");
 
                                     if (count($query_formulacion) > 0) {
 
@@ -113,7 +115,7 @@ class MacnaController extends Controller
                                                 'sumDesc' => trim($med->MED_DESC),
                                                 'dose' => $med->DOSIS,
                                                 'measurementUnit' => $med->UNIDAD_MEDIDA,
-                                                'quantity' => $med->CANTIDAD,
+                                                'quantity' => (int) $med->CANTIDAD,
                                                 'admRoute' => $med->VIA_ADMINISTRACION,
                                                 'frequency' => $med->FRECUENCIA,
                                                 'orderDate' => $med->FECHA_ORDENAMIENTO,
@@ -129,13 +131,99 @@ class MacnaController extends Controller
 
                                     }
 
+                                    if (count($query_procedimientos) > 0) {
+
+                                        $procedimientos = [];
+
+                                        foreach ($query_procedimientos as $proc) {
+
+                                            $query_cirugias = DB::connection('sqlsrv_hosvital')
+                                                ->select("SELECT dbo.MACNA_LISTA_CIRUGIAS_REALIZADAS('$proc->EMPRESA_RESERVA','$proc->SEDE_RESERVA','$proc->CODIGO_PROC','$proc->CODIGO_CIRUGIA') AS CIRUGIA ");
+
+                                            if (count($query_cirugias) > 0) {
+
+                                                $cirugias = [];
+
+                                                foreach ($query_cirugias as $cirugia) {
+
+                                                    $cirugia_explode = explode(',', trim($cirugia->CIRUGIA));
+                                                    unset($cirugia_explode[0]);
+
+
+                                                    foreach ($cirugia_explode as $cir) {
+
+                                                        $cirugia_explode_two = explode('-', trim($cir));
+
+                                                        $temp5 = array(
+                                                            'surgeryCode' => $cirugia_explode_two[0],
+                                                            'surgeryDesc' => $cirugia_explode_two[1]
+                                                        );
+
+                                                        $cirugias[] = $temp5;
+
+                                                    }
+
+                                                    if (count($cirugias) < 0) {
+
+                                                        return response()
+                                                            ->json([
+                                                                'msg' => 'Empty Surgeries Array',
+                                                                'status' => 200,
+                                                                'data' => []
+                                                            ]);
+
+                                                    }
+
+                                                }
+
+
+                                            } else {
+
+                                                $cirugias = [];
+
+                                            }
+
+                                            $temp4 = array(
+                                                'folio' => $proc->FOLIO,
+                                                'proc' => $proc->CODIGO_PROC,
+                                                'procDate' => $proc->FECHA_PROCEDIMIENTO,
+                                                'procState' => $proc->QX_ESTADO,
+                                                'srCode' => $proc->CODIGO_CIRUGIA,
+                                                'empRes' => $proc->EMPRESA_RESERVA,
+                                                'sedRes' => $proc->SEDE_RESERVA,
+                                                'surgeries' => $cirugias,
+                                                //'dddd' => $cirugias
+                                            );
+
+                                            $procedimientos[] = $temp4;
+
+                                        }
+
+                                        if (count($procedimientos) < 0) {
+
+                                            return response()
+                                                ->json([
+                                                    'msg' => 'Empty Procedures Array',
+                                                    'status' => 200,
+                                                    'data' => []
+                                                ]);
+
+                                        }
+
+                                    } else {
+
+                                        $procedimientos = [];
+
+                                    }
+
 
                                     $temp = array(
                                         'admConsecutive' => $folio->INGRESO,
                                         'folio' => $folio->FOLIO,
                                         'specialty' => $folio->ESPECIALIDAD_FOLIO,
                                         'specialtyDesc' => $folio->ESPECIALIDAD_FOLIO_DESC,
-                                        'ordering' => $formulacion
+                                        'ordering' => $formulacion,
+                                        'procedures' => $procedimientos,
                                     );
 
                                     $folios[] = $temp;
@@ -148,38 +236,6 @@ class MacnaController extends Controller
                                 $folios = [];
 
                             }
-
-                            /*if ($row->ATENCION_ACTUAL === 'HOSPITAL_DIA') {
-
-                                $query_ordenamiento = DB::connection('sqlsrv_hosvital')
-                                    ->select("select * from FRMSMNS where FRMSMNS.HISCKEY = '$row->DOCUMENTO' and FRMSMNS.HISTipDoc = '$row->TIPO' and FRMSMNS.HISCSEC = '19'");
-
-                                if (count($query_ordenamiento) > 0) {
-
-                                    $ordenamiento = [];
-
-                                    foreach ($query_ordenamiento as $var) {
-
-                                        $temp = array(
-                                            'sumDescription' => $var->FsmDscMdc,
-                                            'dose' => $var->hisCanSum
-                                        );
-
-                                        $ordenamiento = $temp;
-
-                                    }
-
-                                } else {
-
-                                    return response()
-                                        ->json([
-                                            'msg' => 'Empty Ordering Array',
-                                            'status' => 200,
-                                            'data' => []
-                                        ]);
-
-                                }
-                            }*/
 
                             $temp1 = array(
                                 'document' => $row->DOCUMENTO,
@@ -209,13 +265,6 @@ class MacnaController extends Controller
                         }
 
                     }
-
-
-                    /*if ($item->FECHA_DEFUNCION != '1753-01-01 00:00:00.000' && $item->FECHA_DEFUNCION != null) {
-                        $deceased = 1;
-                    } else {
-                        $item->FECHA_DEFUNCION = null;
-                    }*/
 
                     $temp2 = array(
                         'docType' => $item->TIP_DOC,
@@ -273,7 +322,7 @@ class MacnaController extends Controller
 
                 return response()
                     ->json([
-                        'msg' => 'Empty Patient Query Request for year '. Carbon::now()->year,
+                        'msg' => 'Empty Patient Query Request for year ' . Carbon::now()->year,
                         'status' => 200,
                         'data' => []
                     ]);

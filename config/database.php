@@ -61,6 +61,19 @@ return [
             'prefix_indexes' => true,
         ],
 
+        'sqlsrv_kactusprod' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DATABASE_URL'),
+            'host' => '172.16.52.74',
+            'port' => env('DB_PORT', '1433'),
+            'database' => 'KACTUSPRO',
+            'username' => 'csalgado',
+            'password' => '@Camilo1047236066*',
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
+
     ],
 
     /*

@@ -74,12 +74,54 @@ class AgotadosController extends Controller
 
                         foreach ($query as $item)
                         {
+
+                            $query_providers = DB::connection('sqlsrv_hosvital')
+                                ->select("SELECT * FROM AGOTADOS_PROVEEDORES_X_MEDICAMENTOS('$item->CODIGO_MEDICAMENTO')");
+
+
+                            if (count($query_providers) > 0) {
+
+                                $providers = [];
+
+                                foreach ($query_providers as $provider) {
+
+                                    $temp2 = array(
+                                        'sumCod' => $provider->COD_SUM,
+                                        'provNit' => $provider->NIT_PROVEEDOR,
+                                        'provName' => $provider->RAZON_SOCIAL,
+                                        'provAddress' => $provider->DIRECCION,
+                                        'provPhone' => $provider->TELEFONO,
+                                        'provEmail' => $provider->EMAIL,
+                                    );
+
+                                    $providers[] = $temp2;
+
+                                }
+
+                                if (count($providers) < 0) {
+                                    return response()
+                                        ->json([
+                                            'msg' => 'Empty Providers Array',
+                                            'data' => [],
+                                            'status' => 500
+                                        ], 500);
+                                }
+
+
+                            } else {
+
+                                $providers = [];
+
+                            }
+
+
                             $temp = array(
                                 'sumCod' => $item->CODIGO_MEDICAMENTO,
                                 'sumGName' => $item->NOMBRE_GENERICO,
                                 'sumGroupCod' => $item->COD_GRUPO,
                                 'sumGroupName' => $item->NOM_GRUPO,
-                                'balance' => (int) $item->SALDO
+                                'balance' => (int) $item->SALDO,
+                                'providers' => $providers
                             );
 
                             $records = $temp;

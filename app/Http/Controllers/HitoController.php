@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class HitoController extends Controller
@@ -494,6 +495,8 @@ class HitoController extends Controller
         {
             if ($patientDoc != "" && $patientTipoDoc != "") {
 
+                $dt = Carbon::now()->format('Y-m-d');
+
                 $query_patient_info = DB::connection('sqlsrv_hosvital')
                     ->select("SELECT * FROM HITO_INFORMACION_HISTORIAL_CLINICO('$patientDoc', '$patientTipoDoc')");
 
@@ -507,6 +510,100 @@ class HitoController extends Controller
                         $query_consul_reason = DB::connection('sqlsrv_hosvital')
                             ->select("SELECT * FROM MOTIVOS_CONSULTA('$item->NUM_HISTORIA', '$item->TI_DOC')");
 
+                        $query_antecedentes = DB::connection('sqlsrv_hosvital')
+                            ->select("SELECT * FROM ANTECEDENTES('$item->NUM_HISTORIA', '$item->TI_DOC')");
+
+                        $query_consumo = DB::connection('sqlsrv_hosvital')
+                            ->select("SELECT * FROM HITO_CONSUMO_ESTANCIA_PACIENTE('$item->FECHA_INGRESO', '$dt', '$item->NUM_HISTORIA')");
+
+                        $query_riesgos = DB::connection('sqlsrv_hosvital')
+                            ->select("SELECT * FROM HITO_RIESGOS_PACIENTE('$item->NUM_HISTORIA', '$item->TI_DOC', '$item->FOLIO')");
+
+                        if (count($query_riesgos) > 0) {
+
+                            $riesgos = [];
+
+                            foreach ($query_riesgos as $riesgo) {
+
+                                $temp4 = array(
+                                    'neutropenia' => $riesgo->NEUTROPENIA === 1 ? 1 : 0,
+                                    'mucositis' => $riesgo->MUCOSITIS === 1 ? 1 : 0,
+                                    'pain' => $riesgo->DOLOR === 1 ? 1 : 0,
+                                    'malnutrition' => $riesgo->MALNUTRICION === 1 ? 1 : 0,
+                                    'radTherapyComplications' => $riesgo->COMPLICACIONES_RADIOTERAPIA === 1 ? 1 : 0,
+                                    'attDelay' => $riesgo->RETRASO_ATENCION === 1 ? 1 : 0,
+                                    'hemorrhage' => $riesgo->HEMORRAGIA_TROMBOSIS === 1 ? 1 : 0,
+                                    'painQx' => $riesgo->DOLOR_QX === 1 ? 1 : 0,
+                                    'peritonitis' => $riesgo->PERITONITIS === 1 ? 1 : 0,
+                                    'infection' => $riesgo->INFECCION === 1 ? 1 : 0,
+                                    'malnutritionQx' => $riesgo->MALNUTRICION_QX === 1 ? 1 : 0,
+                                    'hematoma' => $riesgo->HEMATOMA === 1 ? 1 : 0,
+                                    'ileoPara' => $riesgo->ILEO_PARALITICO === 1 ? 1 : 0,
+                                    'linfaedema' => $riesgo->LINFAEDEMA === 1 ? 1 : 0,
+                                    'obstruction' => $riesgo->OBSTRUCCION === 1 ? 1 : 0,
+                                    'hematorax' => $riesgo->HEMATORAX === 1 ? 1 : 0,
+                                );
+
+                                $riesgos[] = $temp4;
+
+                            }
+
+                        } else {
+
+                            $riesgos = [];
+
+                        }
+
+                        if (count($query_consumo) > 0) {
+
+                            $consumos = [];
+
+                            foreach ($query_consumo as $consumo) {
+
+                                /*$temp4 = array(
+                                    'consumption' => $consumo->VENTA_TOTAL
+                                );*/
+
+                                $consumos[] = $consumo->VENTA_TOTAL;
+
+                            }
+
+                        } else {
+
+                            $consumos = [];
+
+                        }
+
+
+                        if (count($query_antecedentes) > 0) {
+
+                            $antecedentes = [];
+
+                            foreach ($query_antecedentes as $antecedente) {
+
+                                $temp3 = array(
+                                    'folio' => $antecedente->FOLIO,
+                                    'backDate' => $antecedente->FECHA,
+                                    'backGroup' => $antecedente->GRUPO_ANTECEDENTE,
+                                    'backSubGroup' => $antecedente->SUBGRUPO_ANTECEDENTE,
+                                    'backDesc' => $antecedente->ANTECEDENTES,
+                                );
+
+                                $antecedentes[] = $temp3;
+
+                            }
+
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Background Info Array',
+                                    'data' => [],
+                                    'status' => 200
+                                ], 200);
+
+                        }
+
                         if (count($query_consul_reason) > 0) {
 
                             $consul_reason = [];
@@ -519,10 +616,17 @@ class HitoController extends Controller
                                     $item->NEUTROPENIA = 0;
                                 }
 
+                                if ($item->PREALTA != null) {
+                                    $item->PREALTA = 1;
+                                } else {
+                                    $item->PREALTA = 0;
+                                }
+
                                 $temp2 = array(
                                     //'folio' => $item->FOLIO,
                                     //'currentDisease' => $item->ENFEREMDAD_ACTUAL,
                                     'neutropenia' => $item->NEUTROPENIA,
+                                    'preMedicalDischarge' => $item->PREALTA,
                                     'dxSecondaryCode' => $item->COD_DX_SECUNDARIO,
                                     'dxSecondaryName' => $item->NOMBRE_DX_SECUNDARIO,
                                     'consultationReason' => $cr->MOTIVO,
@@ -530,6 +634,8 @@ class HitoController extends Controller
                                     'treatment' => $item->TRATAMIENTOS,
                                     'previousStudies' => $item->ESTUDIOS_PREVIOS,
                                     'pendingAndRecommendations' => $item->PENDIENTES,
+                                    'background' => $antecedentes,
+                                    'risks' => $riesgos
                                 );
 
                                 $consul_reason[] = $temp2;
@@ -546,10 +652,12 @@ class HitoController extends Controller
 
                         }
 
+
                         $temp = array(
                             'document' => $item->NUM_HISTORIA,
                             'tipDoc' => $item->TI_DOC,
                             'admConsecutive' => $item->INGRESO,
+                            'admDate' => $item->FECHA_INGRESO,
                             'folio' => $item->FOLIO,
                             'fName' => $item->PRIMER_NOMBRE,
                             'sName' => $item->SEGUNDO_NOMBRE,
@@ -564,7 +672,10 @@ class HitoController extends Controller
                             'primaryDxCode' => $item->DX_COD,
                             'primaryDxDescription' => $item->DX,
                             'primaryDxDate' => $item->FECHA_1_DX,
-                            'clinicHistorial' => $consul_reason
+                            'date' => $dt,
+                            //'consumptionount' => count($consumos),
+                            'consumption' => array_sum($consumos),
+                            'clinicHistorial' => $consul_reason,
                         );
 
                         $patient_info[] = $temp;

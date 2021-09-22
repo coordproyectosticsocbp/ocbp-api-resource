@@ -171,6 +171,24 @@ Route::group([
         ]
     );
 
+    /*-------------------------------------------------------------------------------------------------------------*/
+
+    /* EVALUACION Y DESEMPEÑO */
+    Route::get(
+        '/eva-des/get/employees-database/',
+        [
+            \App\Http\Controllers\EvaluacionDesempenoController::class,
+            'getEmployeesDatabase'
+        ]
+    );
+
+    Route::get(
+        '/eva-des/get/novelties-concepts/from/{init?}/{end?}',
+        [
+            \App\Http\Controllers\EvaluacionDesempenoController::class,
+            'getNoveltiesConcepts'
+        ]
+    );
 
 });
 

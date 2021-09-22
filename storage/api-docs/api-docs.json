@@ -228,6 +228,90 @@
                 ]
             }
         },
+        "/api/v1/eva-des/get/employees-database/": {
+            "get": {
+                "tags": [
+                    "Evaluacion y Desempeño"
+                ],
+                "summary": "Get Employees Database",
+                "description": "Returns Get Employees Database",
+                "operationId": "Evades",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/eva-des/get/novelties-concepts/from/{init?}/{end?}": {
+            "get": {
+                "tags": [
+                    "Evaluacion y Desempeño"
+                ],
+                "summary": "Get Novelties Concepts",
+                "description": "Returns Novelties Concepts",
+                "operationId": "getNoveltiesConcepts",
+                "parameters": [
+                    {
+                        "name": "init?",
+                        "in": "path",
+                        "description": "Fecha Inicio para Búsqueda - Opcional - Formato: Y-m-d",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "end?",
+                        "in": "path",
+                        "description": "Fecha Final para Búsqueda - Opcional - Formato: Y-m-d",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
         "/api/v1/hito/get/occupation-with-real-stay": {
             "get": {
                 "tags": [
