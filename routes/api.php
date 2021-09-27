@@ -135,6 +135,14 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/ethereum/get/patient/{patientdoc}/type/{patientdoctype}/information',
+        [
+            \App\Http\Controllers\EthereumController::class,
+            'initialPatientInfo'
+        ]
+    );
+
 
     /*-------------------------------------------------------------------------------------------------------------*/
 
@@ -187,6 +195,17 @@ Route::group([
         [
             \App\Http\Controllers\EvaluacionDesempenoController::class,
             'getNoveltiesConcepts'
+        ]
+    );
+
+    /*-------------------------------------------------------------------------------------------------------------*/
+
+    /* COCO */
+    Route::get(
+        '/coco/patient/{patientdoc}/type/{patientdoctype}/information',
+        [
+            \App\Http\Controllers\CocoController::class,
+            'initialPatientInfo'
         ]
     );
 
