@@ -317,9 +317,9 @@ class EthereumController extends Controller
 
     /**
      * @OA\Get (
-     *     path="/api/v1/coco/patient/{patientdoc}/type/{patientdoctype}/information",
+     *     path="/api/v1/ethereum/get/patient/{patientdoc}/type/{patientdoctype}/information",
      *     operationId="initialPatientInfo",
-     *     tags={"COCO"},
+     *     tags={"Ethereum"},
      *     summary="Get Patient Informations",
      *     description="Returns Patient Information",
      *     security = {
