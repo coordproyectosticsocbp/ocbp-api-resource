@@ -80,7 +80,7 @@ class MacnaController extends Controller
                 foreach ($query_patient as $item) {
 
                     $query_ingresos = DB::connection('sqlsrv_hosvital')
-                        ->select("select * from MACNA_INGRESOS_PACIENTES('$item->DOCUMENTO', '$item->TIP_DOC') ORDER BY INGRESO ASC");
+                        ->select("select * from MACNA_INGRESOS_PACIENTES('$item->DOCUMENTO', '$item->TIP_DOC') ORDER BY INGRESO + 0 ASC");
 
                     if (count($query_ingresos) > 0) {
 
@@ -89,7 +89,7 @@ class MacnaController extends Controller
                         foreach ($query_ingresos as $row) {
 
                             $query_folios = DB::connection('sqlsrv_hosvital')
-                                ->select("select * from MACNA_FOLIOS_PACIENTE('$item->DOCUMENTO', '$item->TIP_DOC', '$row->INGRESO') ORDER BY FOLIO ASC");
+                                ->select("select * from MACNA_FOLIOS_PACIENTE('$item->DOCUMENTO', '$item->TIP_DOC', '$row->INGRESO') ORDER BY FOLIO + 0 ASC");
 
                             if (count($query_folios) > 0) {
 
@@ -98,7 +98,7 @@ class MacnaController extends Controller
                                 foreach ($query_folios as $folio) {
 
                                     $query_formulacion = DB::connection('sqlsrv_hosvital')
-                                        ->select("SELECT * FROM MACNA_FORMULACION_PACIENTE('$item->DOCUMENTO', '$item->TIP_DOC', '$folio->FOLIO') ORDER BY FOLIO ASC");
+                                        ->select("SELECT * FROM MACNA_FORMULACION_PACIENTE('$item->DOCUMENTO', '$item->TIP_DOC', '$folio->FOLIO') ORDER BY FOLIO + 0 ASC");
 
                                     $query_procedimientos = DB::connection('sqlsrv_hosvital')
                                         ->select("SELECT * FROM MACNA_PROCEDIMIENTOS_QX('$item->DOCUMENTO', '$item->TIP_DOC', $row->INGRESO, '$folio->FOLIO')");

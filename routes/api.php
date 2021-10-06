@@ -161,10 +161,31 @@ Route::group([
         ]
     );
 
+    Route::get('/hygea/get/total-providers',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getAllProviders'
+        ]
+    );
+
     Route::get('/hygea/get/purchase-orders/{init?}',
         [
             \App\Http\Controllers\HygeaController::class,
             'getPurchaseOrders'
+        ]
+    );
+
+    Route::get('/hygea/get/drugs-inventory',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'drugsInventory'
+        ]
+    );
+
+    Route::get('/hygea/get/all-drugs',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'allDrugs'
         ]
     );
 

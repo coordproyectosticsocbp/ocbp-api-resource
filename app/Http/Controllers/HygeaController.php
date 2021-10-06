@@ -345,6 +345,302 @@ class HygeaController extends Controller
 
     }
 
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/total-providers",
+     *     operationId="get Providers Info",
+     *     tags={"Hygea"},
+     *     summary="Get Providers Info",
+     *     description="Returns Providers Info",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getAllProviders(Request $request)
+    {
+        if ($request->hasHeader('X-Authorization')) {
 
+            $query_providers = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM HYGEA_ALL_PROVEEDORES()");
+
+            if (count($query_providers) > 0) {
+
+                $providers = [];
+
+                foreach ($query_providers as $provider) {
+
+                    $temp = array(
+                        'providerCode' => $provider->CODIGO,
+                        'providerVerificationCode' => $provider->CODIGO_VERIFICACION,
+                        'providerCodeType' => $provider->CODIGO_TIPO_DOC,
+                        'providerCodeTypeDesc' => $provider->TIPO_DOC,
+                        'providerName' => $provider->RAZON_SOCIAL,
+                        'providerAddress' => $provider->DIRECCION,
+                        'providerPhone' => $provider->TELEFONO,
+                        'providerEmail' => $provider->EMAIL,
+                        'providerEntityType' => $provider->CODIGO_TIPO_ENTIDAD,
+                        'providerEntityTypeDes' => $provider->TIPO_ENTIDAD,
+                        'providerType' => $provider->CODIGO_TIPO_TERCERO,
+                        'providerTypeDesc' => $provider->TIPO_TERCERO,
+                        'providerIsInactive' => $provider->ACTIVO,
+                    );
+
+                    $providers[] = $temp;
+                }
+
+                if (count($providers) > 0) {
+
+                    return response()
+                        ->json([
+                            'data' => $providers,
+                            'status' => 200,
+                            'msg' => 'Ok'
+                        ]);
+
+                } else {
+
+                    return response()
+                        ->json([
+                            'data' => [],
+                            'status' => 204,
+                            'msg' => 'Empty array Providers'
+                        ]);
+
+                }
+
+            } else {
+
+                return response()
+                    ->json([
+                        'data' => [],
+                        'status' => 204,
+                        'msg' => 'Empty Query Providers Response'
+                    ]);
+
+            }
+
+        }
+    }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/drugs-inventory",
+     *     operationId="get Drugs Inventory Info",
+     *     tags={"Hygea"},
+     *     summary="Get Drugs Inventory Info",
+     *     description="Returns Drugs Inventory Info",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function drugsInventory(Request $request)
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            $query_inventory = DB::connection('sqlsrv_hosvital')
+                ->select('SELECT * FROM HYGEA_INVENTARIO_MEDICAMENTOS()');
+
+            if(count($query_inventory) > 0) {
+                $drugs = [];
+
+                foreach ($query_inventory as $item) {
+
+                    $temp = array(
+                        'sumCod' => trim($item->MEDICAMENTO),
+                        'balance' => (int) $item->SALDO,
+                        'warehouse' => $item->BODEGA,
+                    );
+
+                    $drugs[] = $temp;
+
+                }
+
+                if (count($drugs) > 0) {
+
+                    return response()
+                        ->json([
+                            'data' => $drugs,
+                            'status' => 200,
+                            'msg' => 'Ok'
+                        ]);
+
+                } else {
+
+                    return response()
+                        ->json([
+                            'data' => [],
+                            'status' => 204,
+                            'msg' => 'Empty drugs Array'
+                        ]);
+
+                }
+
+            } else {
+
+                return response()
+                    ->json([
+                        'data' => [],
+                        'status' => 204,
+                        'msg' => 'Empty Inventory Query Array'
+                    ]);
+
+            }
+
+        }
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/all-drugs",
+     *     operationId="get All Drugs Info",
+     *     tags={"Hygea"},
+     *     summary="Get All Drugs Info",
+     *     description="Returns All Drugs Info",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function allDrugs(Request $request)
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            $query_drugs = DB::connection('sqlsrv_hosvital')
+                ->select('SELECT * FROM PRODUCTO_ACTIVOS()');
+
+            if(count($query_drugs) > 0) {
+                $drugs = [];
+
+                foreach ($query_drugs as $item) {
+
+                    $temp = array(
+                        'sumCod' => trim($item->CODIGO),
+                        'balance' => $item->DESCRIPCION,
+                        'activePrinciple' => $item->PRINCIPIO_ACTIVO,
+                        'invimaCode' => trim($item->REGISTRO_INVIMA),
+                        'cumCod' => trim($item->CODIGO_CUM),
+                        'concentration' => trim($item->CONCENTRACION),
+                        'pharmForm' => $item->FORMA_FARMACEUTICA,
+                        'posNoPos' => $item->POS,
+                        'atcCode' => trim($item->ATC),
+                        'price' => $item->VALOR,
+                        'group' => trim($item->GRUPO),
+                        'subGroup' => trim($item->SUBGRUPO),
+                        'storageCondition' => trim($item->CONDICION_ALMACENAJE),
+                        'dispatchAdditional' => $item->DESPACHAR_COMO_ADICIONAL,
+                        'medicationControl' => $item->MEDICAMENTO_CONTROL,
+                        'remission' => $item->REMISION,
+                        'warehouse' => $item->ADMITE_ADICIONALES,
+                        'highPrice' => $item->ALTO_COSTO,
+                        'applyForNursing' => $item->SOLICITA_ENFERMERIA,
+                        'refusedType' => $item->TIPO_REHUSO,
+                        'riskClass' => $item->CLASE_RIESGO,
+                        'averageCost' => $item->COSTO_PROMEDIO,
+                        'creationDate' => $item->FECHA_CREACION
+                    );
+
+                    $drugs[] = $temp;
+
+                }
+
+                if (count($drugs) > 0) {
+
+                    return response()
+                        ->json([
+                            'data' => $drugs,
+                            'status' => 200,
+                            'msg' => 'Ok'
+                        ]);
+
+                } else {
+
+                    return response()
+                        ->json([
+                            'data' => [],
+                            'status' => 204,
+                            'msg' => 'Empty drugs Array'
+                        ]);
+
+                }
+
+            } else {
+
+                return response()
+                    ->json([
+                        'data' => [],
+                        'status' => 204,
+                        'msg' => 'Empty Inventory Query Array'
+                    ]);
+
+            }
+
+        }
+    }
 
 }

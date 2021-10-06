@@ -369,12 +369,7 @@ class HitoController extends Controller
             {
 
                 $query = DB::connection('sqlsrv_hosvital')
-                    ->select("SELECT   MPCedu CEDULA, MPTDoc TIP_DOC, IngCsc INGRESO, IngFecAdm FECHA_INGRESO, IngFecEgr FECHA_EGRESO
-                                        FROM INGRESOS
-                                        WHERE MPCedu = '$patientDoc' AND MPTDoc = '$patientDoctype'
-                                        ORDER BY IngCsc
-                                     "
-                    );
+                    ->select("SELECT * FROM HITO_INGRESOS_EGRESOS('$patientDoc', '$patientDoctype')");
 
                 if (count($query) > 0) {
 
@@ -383,11 +378,15 @@ class HitoController extends Controller
                     foreach ($query as $item) {
 
                         $temp = array(
-                            'patientDoc' => $item->CEDULA,
+                            'patientDoc' => trim($item->CEDULA),
                             'patientDoctype' => $item->TIP_DOC,
                             'patAdmConsecutive' => $item->INGRESO,
                             'patAdmDate' => $item->FECHA_INGRESO,
                             'patOutputDate' => $item->FECHA_EGRESO,
+                            'attentionTypeCode' => $item->TIPO_ATENCION_ACTUAL,
+                            'attentionTypeDes' => $item->TIPO_ATENCION_ACTUAL_DESC,
+                            'outputDxCode' => trim($item->DX_EGRESO1),
+                            'outputDxDes' => trim($item->DESCRIPCION_PRIMER_DX_EGRESO),
                         );
 
                         $records[] = $temp;
@@ -634,6 +633,8 @@ class HitoController extends Controller
                                     'treatment' => $item->TRATAMIENTOS,
                                     'previousStudies' => $item->ESTUDIOS_PREVIOS,
                                     'pendingAndRecommendations' => $item->PENDIENTES,
+                                    'lastEvoDoctorCode' => $item->COD_MED_ULT_EVO,
+                                    'lastEvoDoctorName' => trim($item->NOM_MED_ULT_EVO),
                                     'background' => $antecedentes,
                                     'risks' => $riesgos
                                 );
