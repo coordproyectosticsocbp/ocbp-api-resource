@@ -14,13 +14,12 @@ class EvaluacionDesempenoController extends Controller
     {
 
         return $this->middleware('auth.apikey');
-
     }
 
 
     /**
      * @OA\Get (
-     *     path="/api/v1/eva-des/get/employees-database/",
+     *     path="/api/v1/eva-des/get/employees-database/status/{status?}",
      *     operationId="Evades",
      *     tags={"Evaluacion y Desempeño"},
      *     summary="Get Employees Database",
@@ -33,6 +32,15 @@ class EvaluacionDesempenoController extends Controller
      *              "X-Authorization": {}
      *          }
      *     },
+     *     @OA\Parameter(
+     *        name="status",
+     *        in="path",
+     *        description="Status",
+     *        required=false,
+     *        @OA\Schema(
+     *           type="string"
+     *        )
+     *    ),
      *     @OA\Response(
      *          response=200,
      *          description="Successful operation",
@@ -51,22 +59,38 @@ class EvaluacionDesempenoController extends Controller
      *      )
      * )
      */
-    public function getEmployeesDatabase(Request $request)
+    public function getEmployeesDatabase(Request $request, $empStatus = '')
     {
 
-        if ($request->hasHeader('X-Authorization'))
-        {
+        if ($request->hasHeader('X-Authorization')) {
 
             try {
 
-                $query_employees = DB::connection('sqlsrv_kactusprod')
-                    ->select("SELECT * FROM EVA_DES_BD_EMPLEADOS_ACTIVOS()");
+                if ($empStatus === '') {
+
+                    $query_employees = DB::connection('sqlsrv_kactusprod')
+                        ->select("SELECT * FROM EVA_DES_BD_EMPLEADOS_ACTIVOS() ORDER BY Nombre, ESTADO_EMPLEADO DESC");
+                } else {
+
+                    $query_employees = DB::connection('sqlsrv_kactusprod')
+                        ->select("SELECT * FROM EVA_DES_BD_EMPLEADOS_ACTIVOS() WHERE ESTADO_EMPLEADO = '$empStatus' ORDER BY Nombre, ESTADO_EMPLEADO DESC");
+                }
+
+
 
                 if (count($query_employees) > 0) {
 
                     $employees = [];
+                    $employeeStatus = "";
 
                     foreach ($query_employees as $employee) {
+
+                        if ($employee->ESTADO_EMPLEADO === 'A') {
+                            $employeeStatus = 1;
+                        } else if ($employee->ESTADO_EMPLEADO === 'I') {
+                            $employeeStatus = 0;
+                        }
+
 
                         $temp = array(
                             'empDoc' => $employee->DOC,
@@ -81,10 +105,13 @@ class EvaluacionDesempenoController extends Controller
                             'empImmediateBoss' => $employee->JEFE_INMEDIATO,
                             'empPosition' => $employee->Cargo,
                             'empCostCenter' => $employee->CENTRO_COSTO,
+                            'empLastContractInitDate' => $employee->FECHA_INI_ULT_CONTRATO,
+                            'empLastContractExpDate' => $employee->FECHA_VENC_ULT_CONTRATO,
+                            'empStatus' => $employeeStatus,
+                            //'empPhoto' => $image,
                         );
 
                         $employees[] = $temp;
-
                     }
 
                     if (count($employees) > 0) {
@@ -95,21 +122,17 @@ class EvaluacionDesempenoController extends Controller
                                 'data' => $employees,
                                 'status' => 200
                             ]);
-
                     } else {
 
                         $employees = [];
 
                         return response()
                             ->json([
-                                'msg' => 'Empty employees Query',
-                                'data' => $employees,
+                                'msg' => 'Empty employees Array',
+                                'data' => [],
                                 'status' => 200
                             ]);
-
                     }
-
-
                 } else {
 
                     return response()
@@ -118,17 +141,12 @@ class EvaluacionDesempenoController extends Controller
                             'data' => [],
                             'status' => 200
                         ]);
-
                 }
-
             } catch (\Throwable $e) {
 
                 throw $e;
-
             }
-
         }
-
     }
 
 
@@ -183,7 +201,8 @@ class EvaluacionDesempenoController extends Controller
      *      )
      * )
      */
-    public function getNoveltiesConcepts(Request $request, $initalDate = null, $finalDate = null) {
+    public function getNoveltiesConcepts(Request $request, $initalDate = null, $finalDate = null)
+    {
 
 
         if ($request->hasHeader('X-Authorization')) {
@@ -192,7 +211,6 @@ class EvaluacionDesempenoController extends Controller
 
                 $initalDate = Carbon::now()->format('Y-m-d');
                 $finalDate = Carbon::now()->format('Y-m-d');
-
             }
 
             $query_novelties = DB::connection('sqlsrv_kactusprod')
@@ -219,7 +237,6 @@ class EvaluacionDesempenoController extends Controller
                     );
 
                     $novelties[] = $temp;
-
                 }
 
                 if (count($novelties) > 0) {
@@ -230,7 +247,6 @@ class EvaluacionDesempenoController extends Controller
                             'status' => 200,
                             'data' => $novelties,
                         ]);
-
                 } else {
 
                     return response()
@@ -239,9 +255,7 @@ class EvaluacionDesempenoController extends Controller
                             'status' => 200,
                             'data' => [],
                         ]);
-
                 }
-
             } else {
 
                 return response()
@@ -250,13 +264,7 @@ class EvaluacionDesempenoController extends Controller
                         'status' => 200,
                         'data' => [],
                     ]);
-
             }
-
-
         }
-
     }
-
-
 }

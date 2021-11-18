@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use function PHPUnit\Framework\isEmpty;
 
 class MacnaController extends Controller
 {
@@ -69,6 +70,10 @@ class MacnaController extends Controller
     public function getPatientInfoByDocument(Request $request, $patientCode, $patientDoctype)
     {
         if ($request->hasHeader('X-Authorization')) {
+
+            $deathDateV = '';
+            $deathState = 0;
+
             $query_patient = DB::connection('sqlsrv_hosvital')
                 ->select("SELECT * FROM MACNA_INFORMACION_PACIENTE('$patientCode', '$patientDoctype')");
 
@@ -103,6 +108,10 @@ class MacnaController extends Controller
                                     $query_procedimientos = DB::connection('sqlsrv_hosvital')
                                         ->select("SELECT * FROM MACNA_PROCEDIMIENTOS_QX('$item->DOCUMENTO', '$item->TIP_DOC', $row->INGRESO, '$folio->FOLIO')");
 
+                                    $query_evolution = DB::connection('sqlsrv_hosvital')
+                                        ->select("SELECT * FROM MACNA_INFORMACION_EVOLUCION('$item->DOCUMENTO', '$item->TIP_DOC', '$folio->FOLIO')");
+
+
                                     if (count($query_formulacion) > 0) {
 
                                         $formulacion = [];
@@ -115,20 +124,17 @@ class MacnaController extends Controller
                                                 'sumDesc' => trim($med->MED_DESC),
                                                 'dose' => $med->DOSIS,
                                                 'measurementUnit' => $med->UNIDAD_MEDIDA,
-                                                'quantity' => (int) $med->CANTIDAD,
+                                                'quantity' => (int)$med->CANTIDAD,
                                                 'admRoute' => $med->VIA_ADMINISTRACION,
                                                 'frequency' => $med->FRECUENCIA,
                                                 'orderDate' => $med->FECHA_ORDENAMIENTO,
                                             );
 
                                             $formulacion[] = $temp3;
-
                                         }
-
                                     } else {
 
                                         $formulacion = [];
-
                                     }
 
                                     if (count($query_procedimientos) > 0) {
@@ -160,7 +166,6 @@ class MacnaController extends Controller
                                                         );
 
                                                         $cirugias[] = $temp5;
-
                                                     }
 
                                                     if (count($cirugias) < 0) {
@@ -171,16 +176,11 @@ class MacnaController extends Controller
                                                                 'status' => 200,
                                                                 'data' => []
                                                             ]);
-
                                                     }
-
                                                 }
-
-
                                             } else {
 
                                                 $cirugias = [];
-
                                             }
 
                                             $temp4 = array(
@@ -196,7 +196,6 @@ class MacnaController extends Controller
                                             );
 
                                             $procedimientos[] = $temp4;
-
                                         }
 
                                         if (count($procedimientos) < 0) {
@@ -207,15 +206,33 @@ class MacnaController extends Controller
                                                     'status' => 200,
                                                     'data' => []
                                                 ]);
-
                                         }
-
                                     } else {
 
                                         $procedimientos = [];
-
                                     }
 
+                                    if (count($query_evolution) > 0) {
+                                        $evolutions = [];
+
+                                        foreach ($query_evolution as $evo) {
+
+                                            $tempEvo = array(
+                                                'analysis' => $evo->TRATAMIENTOS,
+                                                'planAndManagement' => $evo->PENDIENTES,
+                                            );
+
+                                            $evolutions[] = $tempEvo;
+                                        }
+
+                                        if (count($evolutions) < 0) {
+
+                                            $evolutions = [];
+                                        }
+                                    } else {
+
+                                        $evolutions = [];
+                                    }
 
                                     $temp = array(
                                         'admConsecutive' => $folio->INGRESO,
@@ -224,17 +241,14 @@ class MacnaController extends Controller
                                         'specialtyDesc' => $folio->ESPECIALIDAD_FOLIO_DESC,
                                         'ordering' => $formulacion,
                                         'procedures' => $procedimientos,
+                                        'evolutions' => $evolutions
                                     );
 
                                     $folios[] = $temp;
-
                                 }
-
-
                             } else {
 
                                 $folios = [];
-
                             }
 
                             $temp1 = array(
@@ -250,7 +264,6 @@ class MacnaController extends Controller
                             );
 
                             $ingresos[] = $temp1;
-
                         }
 
                         if (count($ingresos) < 0) {
@@ -261,9 +274,15 @@ class MacnaController extends Controller
                                     'status' => 200,
                                     'data' => []
                                 ]);
-
                         }
+                    }
 
+                    if ($item->FECHA_DEFUNCION === '1753-01-01 00:00:00.000') {
+                        $deathDateV = "";
+                        $deathState = 0;
+                    } else {
+                        $deathDateV = $item->FECHA_DEFUNCION;
+                        $deathState = 1;
                     }
 
                     $temp2 = array(
@@ -273,9 +292,10 @@ class MacnaController extends Controller
                         'sName' => $item->SEGUNDO_NOMBRE,
                         'fLastname' => $item->PRIMER_APELLIDO,
                         'sLastname' => $item->SEGUNDO_APELLIDO,
-                        'birthDate' => $item->FECHA_NAC,
+                        'birthDate' => trim($item->FECHA_NAC),
                         'age' => $item->EDAD,
                         'gender' => $item->SEXO,
+                        //'patientCompany' => utf8_encode(trim($item->EMPRESA)),
                         'patientCompany' => $item->EMPRESA,
                         'civilStatus' => $item->ESTADOCIVIL,
                         'bloodType' => $item->GRUPO_SANGUINEO,
@@ -293,7 +313,9 @@ class MacnaController extends Controller
                         //'diagnostics_cod' => $item->DX_COD,
                         //'diagnostics' => $item->DX,
                         //'deceased' => $deceased,
-                        //'deathDate' => $item->FECHA_DEFUNCION,
+                        'deathDate' => $deathDateV,
+                        'deathState' => $deathState,
+                        'formatFolio' => $item->FOLIO_FORMATO,
                         'admissions' => $ingresos
                     );
 
@@ -315,9 +337,7 @@ class MacnaController extends Controller
                             'status' => 200,
                             'data' => []
                         ]);
-
                 }
-
             } else {
 
                 return response()
@@ -326,9 +346,172 @@ class MacnaController extends Controller
                         'status' => 200,
                         'data' => []
                     ]);
-
             }
         }
     }
 
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/macna/get/patient/alto-cost-format/{patientdocument?}/type/{patientdoctype?}/folio/{patientfolio?}",
+     *     operationId="altCostoFormat",
+     *     tags={"Macna"},
+     *     summary="Get Patient Alto Costo Format Information",
+     *     description="Returns Alto Costo Format Patient Information",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="patientdocument?",
+     *          description="Documento del Paciente",
+     *          required=false,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="patientdoctype?",
+     *          description="Tipo de Documento del Paciente - CC, TI, RC, PE",
+     *          required=false,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="patientfolio?",
+     *          description="Folio del Paciente: Num",
+     *          required=false,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="number"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getAltCostoFormat(Request $request, $docPac = '', $docType = '', $folio = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            if (!$docPac) {
+                return response()
+                    ->json([
+                        'msg' => 'Parameter docPac Cannot be Empty',
+                        'status' => 400
+                    ], 400);
+            } else if (!$docType) {
+                return response()
+                    ->json([
+                        'msg' => 'Parameter docType Cannot be Empty',
+                        'status' => 400
+                    ], 400);
+            } else if (!$folio) {
+                return response()
+                    ->json([
+                        'msg' => 'Parameter folio Cannot be Empty',
+                        'status' => 400
+                    ], 400);
+            }
+
+            $query_formato = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM MACNA_FORMATO_CUENTA_ALTO_COSTO('$docPac', '$docType', '$folio')");
+
+
+            if (count($query_formato) > 0) {
+
+                $records = [];
+
+                $fechaTempPrueba = '';
+                $fechaTempClasiRies = '';
+
+                foreach ($query_formato as $form) {
+
+                    if ($form->FECHA_PRUEBA === '1753-01-01 00:00:00.000') {
+                        $fechaTempPrueba = null;
+                    } else {
+                        $fechaTempPrueba = Carbon::parse($form->FECHA_PRUEBA)->format('Y-m-d');
+                    }
+
+                    if ($form->FECHA_CLASIFICACION_RIESGO === '1753-01-01 00:00:00.000') {
+                        $fechaTempClasiRies = null;
+                    } else {
+                        $fechaTempClasiRies = Carbon::parse($form->FECHA_CLASIFICACION_RIESGO)->format('Y-m-d');
+                    }
+
+                    $temp = array(
+                        'FECHA_DX_CANCER' => $form->FECHA_DX_CANCER ? Carbon::parse($form->FECHA_DX_CANCER)->format('Y-m-d') : "",
+                        'FECHA_REMISION' => $form->FECHA_REMISION ? Carbon::parse($form->FECHA_REMISION)->format('Y-m-d') : "",
+                        'FECHA_INGRESO' => $form->FECHA_INGRESO ? Carbon::parse($form->FECHA_INGRESO)->format('Y-m-d') : "",
+                        'FECHA_RECOLECCION_MUESTRA' => $form->FECHA_RECOLECCION_MUESTRA ? Carbon::parse($form->FECHA_RECOLECCION_MUESTRA)->format('Y-m-d') : "",
+                        'FECHA_INFORME' => $form->FECHA_INFORME ? Carbon::parse($form->FECHA_INFORME)->format('Y-m-d') : "",
+                        'ESTADIFICACION' => $form->ESTADIFICACION,
+                        'FECHA_PRUEBA' => $fechaTempPrueba,
+                        'RESULTADO_HER_2' => $form->RESULTADO_HER_2,
+                        'ESTADIO_DUKES' => $form->ESTADIO_DUKES,
+                        'ESTADIO_LINFOMA' => $form->ESTADIO_LINFOMA,
+                        'ESCALA_GLEASON' => $form->ESCALA_GLEASON,
+                        'RIESGO_LEUCEMIA' => $form->RIESGO_LEUCEMIA,
+                        'CLASIFICACION_RIESGO_ADULTOS' => $form->CLASIFICACION_RIESGO_ADULTOS,
+                        'CLASIFICACION_RIESGO_PEDIATRICO' => $form->CLASIFICACION_RIESGO_PEDIATRICO,
+                        'FECHA_CLASIFICACION_RIESGO' => $fechaTempClasiRies,
+                        'OBSERVACION' => $form->OBSERVACION,
+                        'UBICACION_ESQUEMA_QUIMIOTERAPIA' => $form->UBICACION_ESQUEMA_QUIMIOTERAPIA,
+                        'UBICACION_ESQUEMA_RADIO_BRAQUITERAPIA' => $form->UBICACION_ESQUEMA_RADIO_BRAQUITERAPIA,
+                        'TIPO_RADIO_APLICADA' => $form->TIPO_RADIO_APLICADA,
+                        'GRADO_DIFERENCIACION' => $form->GRADO_DIFERENCIACION,
+                    );
+
+                    $records[] = $temp;
+                }
+
+                if (count($records) < 0) {
+
+                    return response()
+                        ->json([
+                            'msg' => 'Empty Format Array',
+                            'status' => 204,
+                            'data' => []
+                        ]);
+                }
+
+                return response()
+                    ->json([
+                        'msg' => 'Ok',
+                        'status' => 200,
+                        'data' => $records
+                    ]);
+            } else {
+
+                return response()
+                    ->json([
+                        'msg' => 'Empty Query Format Array',
+                        'status' => 204,
+                        'data' => []
+                    ]);
+            }
+        }
+    }
 }

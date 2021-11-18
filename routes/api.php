@@ -94,17 +94,35 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/hito/get/active-nurses',
+        [
+            \App\Http\Controllers\HitoController::class,
+            'getNursesList'
+        ]
+    );
+
+    Route::get(
+        '/hito/get/active-doctors',
+        [
+            \App\Http\Controllers\HitoController::class,
+            'getDoctorsList'
+        ]
+    );
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* AGOTADOS */
-    Route::get('/agotados/get/drugs-by-code/{sumcod}',
+    Route::get(
+        '/agotados/get/drugs-by-code/{sumcod}',
         [
             \App\Http\Controllers\AgotadosController::class,
             'drugsByCode'
         ]
     );
 
-    Route::get('/agotados/get/purchase-order/not-greater-than-21',
+    Route::get(
+        '/agotados/get/purchase-order/not-greater-than-21',
         [
             \App\Http\Controllers\AgotadosController::class,
             'getPurchaseOrders'
@@ -114,21 +132,24 @@ Route::group([
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* ETHEREUM */
-    Route::get('/ethereum/get/specialties',
+    Route::get(
+        '/ethereum/get/specialties',
         [
             \App\Http\Controllers\EthereumController::class,
             'getSpecialties'
         ]
     );
 
-    Route::get('/ethereum/get/doctors-with-spe-regm',
+    Route::get(
+        '/ethereum/get/doctors-with-spe-regm',
         [
             \App\Http\Controllers\EthereumController::class,
             'getDoctorsWithSpecialty'
         ]
     );
 
-    Route::get('/ethereum/get/diagnostics',
+    Route::get(
+        '/ethereum/get/diagnostics',
         [
             \App\Http\Controllers\EthereumController::class,
             'getDiagnostics'
@@ -147,47 +168,74 @@ Route::group([
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* HYGEA */
-    Route::get('/hygea/get/warehouses',
+    Route::get(
+        '/hygea/get/warehouses',
         [
             \App\Http\Controllers\HygeaController::class,
             'getWarehouses'
         ]
     );
 
-    Route::get('/hygea/get/providers',
+    Route::get(
+        '/hygea/get/providers',
         [
             \App\Http\Controllers\HygeaController::class,
             'getProviders'
         ]
     );
 
-    Route::get('/hygea/get/total-providers',
+    Route::get(
+        '/hygea/get/total-providers',
         [
             \App\Http\Controllers\HygeaController::class,
             'getAllProviders'
         ]
     );
 
-    Route::get('/hygea/get/purchase-orders/{init?}',
+    Route::get(
+        '/hygea/get/purchase-orders/{init?}',
         [
             \App\Http\Controllers\HygeaController::class,
             'getPurchaseOrders'
         ]
     );
 
-    Route::get('/hygea/get/drugs-inventory',
+    Route::get(
+        '/hygea/get/drugs-inventory',
         [
             \App\Http\Controllers\HygeaController::class,
             'drugsInventory'
         ]
     );
 
-    Route::get('/hygea/get/all-drugs',
+    Route::get(
+        '/hygea/get/all-drugs',
         [
             \App\Http\Controllers\HygeaController::class,
             'allDrugs'
         ]
     );
+
+    Route::get(
+        '/hygea/get/purchase-orders/{init?}/{end?}',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getPurchaseOrdersByDateRange'
+        ]
+    );
+
+    Route::get(
+        '/hygea/get/medical-orders/{orderdate?}',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getMedicalOrders'
+        ]
+    );
+
+    Route::get('/hygea/get/drug-rotation/{sumcod?}', [
+        \App\Http\Controllers\HygeaController::class,
+        'getProductRotationPurchasesOutputBySumCod'
+    ]);
 
     /*-------------------------------------------------------------------------------------------------------------*/
 
@@ -200,11 +248,19 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/macna/get/patient/alto-cost-format/{patientdocument?}/type/{patientdoctype?}/folio/{patientfolio?}',
+        [
+            \App\Http\Controllers\MacnaController::class,
+            'getAltCostoFormat'
+        ]
+    );
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* EVALUACION Y DESEMPEÑO */
     Route::get(
-        '/eva-des/get/employees-database/',
+        '/eva-des/get/employees-database/status/{status?}',
         [
             \App\Http\Controllers\EvaluacionDesempenoController::class,
             'getEmployeesDatabase'
@@ -229,7 +285,6 @@ Route::group([
             'initialPatientInfo'
         ]
     );
-
 });
 
 

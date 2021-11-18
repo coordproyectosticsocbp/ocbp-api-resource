@@ -332,7 +332,7 @@
                 ]
             }
         },
-        "/api/v1/eva-des/get/employees-database/": {
+        "/api/v1/eva-des/get/employees-database/status/{status?}": {
             "get": {
                 "tags": [
                     "Evaluacion y Desempeño"
@@ -340,6 +340,17 @@
                 "summary": "Get Employees Database",
                 "description": "Returns Get Employees Database",
                 "operationId": "Evades",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "path",
+                        "description": "Status",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation"
@@ -460,10 +471,10 @@
                     {
                         "name": "hab?",
                         "in": "path",
-                        "description": "Fecha Inicio para Búsqueda - Opcional",
+                        "description": "Habitation Code - Opcional",
                         "required": false,
                         "schema": {
-                            "type": "date"
+                            "type": "string"
                         }
                     }
                 ],
@@ -571,6 +582,70 @@
                         }
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hito/get/active-nurses": {
+            "get": {
+                "tags": [
+                    "Hito"
+                ],
+                "summary": "Get Nurses Database",
+                "description": "Returns Nurses Database",
+                "operationId": "ActNurses",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hito/get/active-doctors": {
+            "get": {
+                "tags": [
+                    "Hito"
+                ],
+                "summary": "Get Doctors Database",
+                "description": "Returns Doctors Database",
+                "operationId": "ActDoctors",
                 "responses": {
                     "200": {
                         "description": "Successful operation"
@@ -798,6 +873,144 @@
                 ]
             }
         },
+        "/api/v1/hygea/get/purchase-orders/{init?}{end?}": {
+            "get": {
+                "tags": [
+                    "Hygea"
+                ],
+                "summary": "Get Purchases Orders Info",
+                "description": "Returns Purchases Orders Info",
+                "operationId": "get Purchases Orders Info",
+                "parameters": [
+                    {
+                        "name": "init?",
+                        "in": "path",
+                        "description": "Initial Date For Search - Optional",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "end?",
+                        "in": "path",
+                        "description": "End Date For Search - Optional",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hygea/get/medical-orders/{orderdate?}": {
+            "get": {
+                "tags": [
+                    "Hygea"
+                ],
+                "summary": "Get Medical Orders Info",
+                "description": "Returns Medical Order Information",
+                "operationId": "get Medical Orders Information",
+                "parameters": [
+                    {
+                        "name": "orderdate?",
+                        "in": "path",
+                        "description": "Order Date Y-m-d",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hygea/get/drug-rotation/{sumcod?}": {
+            "get": {
+                "tags": [
+                    "Hygea"
+                ],
+                "summary": "Get Rotation, Purchase, Output Information",
+                "description": "Returns Rotation, Purchase, Output Information",
+                "operationId": "get Rotation, Purchase, Output Information",
+                "parameters": [
+                    {
+                        "name": "sumcod?",
+                        "in": "path",
+                        "description": "Product Code",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
         "/api/v1/hs/populations/age/{age}/date/{init?}/{end?}": {
             "get": {
                 "tags": [
@@ -884,6 +1097,67 @@
                         "required": true,
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/macna/get/patient/alto-cost-format/{patientdocument?}/type/{patientdoctype?}/folio/{patientfolio?}": {
+            "get": {
+                "tags": [
+                    "Macna"
+                ],
+                "summary": "Get Patient Alto Costo Format Information",
+                "description": "Returns Alto Costo Format Patient Information",
+                "operationId": "altCostoFormat",
+                "parameters": [
+                    {
+                        "name": "patientdocument?",
+                        "in": "path",
+                        "description": "Documento del Paciente",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "patientdoctype?",
+                        "in": "path",
+                        "description": "Tipo de Documento del Paciente - CC, TI, RC, PE",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "patientfolio?",
+                        "in": "path",
+                        "description": "Folio del Paciente: Num",
+                        "required": false,
+                        "schema": {
+                            "type": "number"
                         }
                     }
                 ],

@@ -79,13 +79,11 @@ class IntelOptionController extends Controller
     {
         if ($request->hasHeader('X-Authorization')) {
 
-            if ($age)
-            {
+            if ($age) {
                 $initdate = \request('init', \Carbon\Carbon::create('1900-01-01 00:00:00')->format('Ymd H:i:s'));
                 $enddate = \request('end', \Carbon\Carbon::now()->format('Ymd H:i:s'));
 
-                if ($age >= 50)
-                {
+                if ($age >= 50) {
                     $query = DB::connection('sqlsrv_hosvital')
                         ->select(
                             DB::raw(
@@ -95,13 +93,16 @@ class IntelOptionController extends Controller
                             )
                         );
 
-                    if (count($query ) > 0)
-                    {
+                    if (count($query) > 0) {
 
                         $records = [];
 
-                        foreach ($query as $item)
-                        {
+                        foreach ($query as $item) {
+
+                            if ($item->FECHA_TACTO_RECTAL === '1753-01-01' || $item->FECHA_ECO_PROSTATA === '1753-01-01') {
+                                $item->FECHA_TACTO_RECTAL = "";
+                                $item->FECHA_ECO_PROSTATA = "";
+                            }
 
                             $temp = array(
                                 'tipDoc' => $item->TIP_DOC,
@@ -112,61 +113,61 @@ class IntelOptionController extends Controller
                                 'sApellido' => $item->SEGUNDO_APELLIDO,
                                 'sexo' => $item->SEXO,
                                 'fNacimiento' => $item->FECHA_NACIMIFECHA_NACIMI,
-                                'empresa' => $item->EMPRESA,
+                                'empresa' => trim($item->EMPRESA),
                                 'regimen' => $item->REGIMEN,
                                 'categoria' => $item->CATEGORIA,
                                 'telefono1' => $item->TELEFONO1,
                                 'telefono2' => $item->TELEFONO2,
                                 'telefono3' => $item->TELEFONO3,
-                                'fechaCitaMedExp' => $item->FECHA_CITA_MEDICO_EXPERTO,
-                                'fechaPsa' => $item->FECHA_PSA,
+                                'fechaCitaMedExp' => Carbon::parse($item->FECHA_CITA_MEDICO_EXPERTO)->format('Y-m-d'),
+                                'fechaPsa' => Carbon::parse($item->FECHA_PSA)->format('Y-m-d'),
                                 'valPsa' => $item->VALOR_PSA,
-                                'fechaTacRec' => $item->FECHA_TACTO_RECTAL,
+                                'fechaTacRec' => Carbon::parse($item->FECHA_TACTO_RECTAL)->format('Y-m-d'),
                                 'ValTacRec' => $item->VALOR_TACTO_RECTAL,
-                                'fechaEcoPro' => $item->FECHA_ECO_PROSTATA,
+                                'fechaEcoPro' => Carbon::parse($item->FECHA_ECO_PROSTATA)->format('Y-m-d'),
                                 'valEcoPro' => $item->ECOGRAFIA_PROSTA,
-                                'fechaBioPro' => $item->FECHA_BIOPSIA_PROSTATA,
+                                'fechaBioPro' => Carbon::parse($item->FECHA_BIOPSIA_PROSTATA)->format('Y-m-d'),
                                 'resBioPro' => $item->RESULTADO_BIOPSIA,
-                                'fechaInforPac' => $item->FECHA_INFOR_PACIENTE,
+                                'fechaInforPac' => Carbon::parse($item->FECHA_INFOR_PACIENTE)->format('Y-m-d'),
                                 'clasiRies' => $item->CLASIFICACION_RIESGO,
                                 'resGleason' => $item->RESULTADO_GLEASON,
-                                'fechaEstTnm' => $item->FECHA_ESTADIFICACION_TNM,
+                                'fechaEstTnm' => Carbon::parse($item->FECHA_ESTADIFICACION_TNM)->format('Y-m-d'),
                                 'estTnm' => $item->ESTADIFICACION_TNM,
                                 'fechaEstCaso' => $item->FECHA_ESTADIFICACION_CASO,
                                 'estCaso' => $item->ESTADIFICACION_CASO,
-                                'fechaIniTrat' => $item->FECHA_INICIO_TRATAMIENTO,
+                                'fechaIniTrat' => Carbon::parse($item->FECHA_INICIO_TRATAMIENTO)->format('Y-m-d'),
                                 'tipoTrat' => $item->TIPO_TRATAMIENTO,
                                 'defConducta' => $item->DEFINICION_CONDUCTA,
-                                'fechaCitaUro' => $item->FECHA_CITA_URO_ONCO,
-                                'fechaPresTrat' => $item->FECHA_PRES_TRATAMIENTO,
-                                'fechaAutTrat' => $item->FECHA_AUTORIZACION_TRATAMIENTO,
-                                'fechaRealizaPsaPosTrat' => $item->FECHA_REALIZA_PSA_POS_TRATAMIENTO,
+                                'fechaCitaUro' => Carbon::parse($item->FECHA_CITA_URO_ONCO)->format('Y-m-d'),
+                                'fechaPresTrat' => Carbon::parse($item->FECHA_PRES_TRATAMIENTO)->format('Y-m-d'),
+                                'fechaAutTrat' => Carbon::parse($item->FECHA_AUTORIZACION_TRATAMIENTO)->format('Y-m-d'),
+                                'fechaRealizaPsaPosTrat' => Carbon::parse($item->FECHA_REALIZA_PSA_POS_TRATAMIENTO)->format('Y-m-d'),
                                 'valPsaPosTrat' => $item->VALOR_PSA_POS_TRATAMIENTO,
-                                'fechaFosAlc' => $item->FECHA_FOSFATASA_ALCALINA,
+                                'fechaFosAlc' => Carbon::parse($item->FECHA_FOSFATASA_ALCALINA)->format('Y-m-d'),
                                 'resFosAlc' => $item->RESULTADO_FOSFATASA,
-                                'fechaGama' => $item->FECHA_GAMAGRAFIA,
+                                'fechaGama' => Carbon::parse($item->FECHA_GAMAGRAFIA)->format('Y-m-d'),
                                 'resGama' => $item->RESULTADO_GAMAGRAFIA,
-                                'fechaTest' => $item->FECHA_TESTOSTERONA,
+                                'fechaTest' => Carbon::parse($item->FECHA_TESTOSTERONA)->format('Y-m-d'),
                                 'resTest' => $item->RESULTADO_TESTOSTERONA,
-                                'fechaPato' => $item->FECHA_PATOLOGIA,
+                                'fechaPato' => Carbon::parse($item->FECHA_PATOLOGIA)->format('Y-m-d'),
                                 'resPato' => $item->RESULTADO_PATOLOGIA,
-                                'fechaBili' => $item->FECHA_BILIRRUBINAS,
+                                'fechaBili' => Carbon::parse($item->FECHA_BILIRRUBINAS)->format('Y-m-d'),
                                 'resBili' => $item->RESULTADO_BILIRRUBINAS,
-                                'fechaTgo' => $item->FECHA_TGO,
+                                'fechaTgo' => Carbon::parse($item->FECHA_TGO)->format('Y-m-d'),
                                 'resTgo' => $item->RESULTADO_TGO,
-                                'fechaTgp' => $item->FECHA_TGP,
+                                'fechaTgp' => Carbon::parse($item->FECHA_TGP)->format('Y-m-d'),
                                 'resTgp' => $item->RESULTADO_TGP,
-                                'fechaLdh' => $item->FECHA_LDH,
+                                'fechaLdh' => Carbon::parse($item->FECHA_LDH)->format('Y-m-d'),
                                 'resLdh' => $item->RESULTADO_LDH,
-                                'fechaCh' => $item->FECHA_CH,
+                                'fechaCh' => Carbon::parse($item->FECHA_CH)->format('Y-m-d'),
                                 'resCh' => $item->RESULTADO_CH,
-                                'fechaTomoTorax' => $item->FECHA_TOMOGRAFIA_TORAX,
+                                'fechaTomoTorax' => Carbon::parse($item->FECHA_TOMOGRAFIA_TORAX)->format('Y-m-d'),
                                 'resTomoTorax' => $item->RESULTADO_TOMO_TORAX,
-                                'fechaAst' => $item->FECHA_AST,
+                                'fechaAst' => Carbon::parse($item->FECHA_AST)->format('Y-m-d'),
                                 'resAst' => $item->RESULTADO_AST,
-                                'fechaAlt' => $item->FECHA_ALT,
+                                'fechaAlt' => Carbon::parse($item->FECHA_ALT)->format('Y-m-d'),
                                 'restAlt' => $item->RESULTADO_ALT,
-                                'fechaCreatinina' => $item->FECHA_CREATININA,
+                                'fechaCreatinina' => Carbon::parse($item->FECHA_CREATININA)->format('Y-m-d'),
                                 'resCreatinina' => $item->RESULTADO_CREATININA,
                                 'desClinRel' => $item->DESLENACES_CLINICOS_RELEVANTES,
                             );
@@ -177,6 +178,7 @@ class IntelOptionController extends Controller
                         return response()->json([
                             'msg' => 'Ok',
                             'status' => 200,
+                            'count' => count($records),
                             'data' => $records,
                         ], 200);
 
