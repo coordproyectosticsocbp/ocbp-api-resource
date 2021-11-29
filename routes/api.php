@@ -232,10 +232,29 @@ Route::group([
         ]
     );
 
-    Route::get('/hygea/get/drug-rotation/{sumcod?}', [
-        \App\Http\Controllers\HygeaController::class,
-        'getProductRotationPurchasesOutputBySumCod'
-    ]);
+    Route::get(
+        '/hygea/get/mov-transac/{initdate?}/{enddate?}',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getMovTransacWarehousesWithDateFilter'
+        ]
+    );
+
+    Route::get(
+        '/hygea/get/drug-rotation/{sumcod?}',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getProductRotationPurchasesOutputBySumCod'
+        ]
+    );
+
+    Route::get(
+        '/hygea/get/lot/{sumcod?}',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getLoteBySumCod'
+        ]
+    );
 
     /*-------------------------------------------------------------------------------------------------------------*/
 
@@ -272,6 +291,17 @@ Route::group([
         [
             \App\Http\Controllers\EvaluacionDesempenoController::class,
             'getNoveltiesConcepts'
+        ]
+    );
+
+    /*-------------------------------------------------------------------------------------------------------------*/
+
+    /* NÓMINA */
+    Route::get(
+        '/nomina/get/employees-database',
+        [
+            \App\Http\Controllers\NominaController::class,
+            'getEmployeesDatabaseWithSalary'
         ]
     );
 

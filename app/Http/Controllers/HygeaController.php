@@ -539,7 +539,7 @@ class HygeaController extends Controller
         if ($request->hasHeader('X-Authorization')) {
 
             $query_drugs = DB::connection('sqlsrv_hosvital')
-                ->select('SELECT * FROM PRODUCTO_ACTIVOS()');
+                ->select('SELECT * FROM HYGEA_PRODUCTOS_ACTIVOS()');
 
             if (count($query_drugs) > 0) {
                 $drugs = [];
@@ -993,6 +993,9 @@ class HygeaController extends Controller
                                     'data' => []
                                 ]);
                         }
+                    } else {
+
+                        $rotation = [];
                     }
 
 
@@ -1022,6 +1025,9 @@ class HygeaController extends Controller
                                     'data' => []
                                 ]);
                         }
+                    } else {
+
+                        $purchases = [];
                     }
 
                     // VALIDACIÓN SI EL MEDICAMENTO TIENE ROTACIÓN
@@ -1050,6 +1056,9 @@ class HygeaController extends Controller
                                     'data' => []
                                 ]);
                         }
+                    } else {
+
+                        $outputs = [];
                     }
 
                     // VALIDACIÓN PRINCIPAL DEL MEDICAMENTO -- CÓDIGO, DESCRIPCIÓN, DESCRIPCIÓN COMERCIAL, ARRAY DE ROTACIÓN, ARRAY DE COMPRAS, ARRAY DE DESPACHOS
@@ -1090,6 +1099,267 @@ class HygeaController extends Controller
                                     'data' => $suministros
                                 ]);
                         }
+                    }
+                }
+            } catch (\Throwable $e) {
+                return $e->getMessage();
+            }
+        }
+    }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/mov-transac/{initdate?}/{enddate?}",
+     *     operationId="get Mov Transac Information",
+     *     tags={"Hygea"},
+     *     summary="Get Mov Transac Info",
+     *     description="Returns Mov Transac Information",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="initdate?",
+     *          description="Order Date Y-m-d",
+     *          required=false,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="enddate?",
+     *          description="Order Date Y-m-d",
+     *          required=false,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getMovTransacWarehousesWithDateFilter(Request $request, $filterDateI = '', $filterDateF = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+
+            try {
+
+                if (!$filterDateI && !$filterDateF) {
+                    return response()
+                        ->json([
+                            'msg' => 'Parameters cannot be Empty',
+                            'status' => 400
+                        ]);
+                } else if (!$filterDateI) {
+
+                    return response()
+                        ->json([
+                            'msg' => 'Parameter FilterDateI cannot be Empty',
+                            'status' => 400
+                        ]);
+                } else if (!$filterDateF) {
+
+                    return response()
+                        ->json([
+                            'msg' => 'Parameter FilterDateF cannot be Empty',
+                            'status' => 400
+                        ]);
+                } else {
+                    $filterDateU = carbon::parse($filterDateI)->format('Ymd');
+                    $filteDateF = carbon::parse($filterDateF)->format('Ymd');
+
+                    $queryMovTransac = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM HYGEA_ANALISIS_TRANSAC('$filterDateU', '$filteDateF')");
+
+                    if (count($queryMovTransac) > 0) {
+
+                        $movTransac = [];
+
+                        foreach ($queryMovTransac as $item) {
+
+                            $tempMovTransac = array(
+                                'sumCod' => trim($item->COD_SUM),
+                                'sumDesc' => trim($item->DESCRIPCION),
+                                'transacCode' => trim($item->COD_TRANSAC),
+                                'transacDesc' => trim($item->TRANSACCION),
+                                'transacWarehouseCode' => trim($item->BOD),
+                                'transacWarehouseDesc' => trim($item->BODEGA),
+                                'transacProviderCode' => trim($item->NIT),
+                                'transacProviderDesc' => trim($item->PROVEEDOR),
+                                'transacCostCenter' => trim($item->CENTRO_COSTO),
+                                'transacDate' => trim($item->FECHA),
+                                'transacStatus' => $item->ESTADO,
+                                'transacQuantity' => (int) $item->CANT,
+                                'transacUniValue' => $item->VALOR_UNITARIO,
+                                'transacTotalValue' => $item->VALOR_TOTAL,
+                            );
+
+
+                            $movTransac[] = $tempMovTransac;
+                        }
+
+                        if (count($movTransac) < 0) {
+
+                            // PETICIÓN CON RESPUESTA VACIA
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Mov Transac Array',
+                                    'status' => 204,
+                                    'data' => []
+                                ]);
+                        } else {
+
+                            // PETICIÓN CON RESPUESTA EXITOSA
+                            return response()
+                                ->json([
+                                    'msg' => 'Ok',
+                                    'status' => 200,
+                                    'data' => $movTransac
+                                ]);
+                        }
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Query Mov Transac',
+                                'status' => 204,
+                                'data' => []
+                            ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                return $e->getMessage();
+            }
+        }
+    }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/lot/{sumcod?}",
+     *     operationId="get Lote by SumCod Information",
+     *     tags={"Hygea"},
+     *     summary="Get  Lote by SumCod Information",
+     *     description="Returns  Lote by SumCod Information",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="sumcod?",
+     *          description="Product Lot",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getLoteBySumCod(Request $request, $codSum = '')
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            try {
+
+                if (!$codSum) {
+                    return response()
+                        ->json([
+                            'msg' => 'Parameter codSum cannot be Empty',
+                            'status' => 400
+                        ]);
+                } else {
+
+                    $queryLoteBySumCod = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM HYGEA_LOTE_SUMINISTRO('$codSum')");
+
+                    if (count($queryLoteBySumCod) > 0) {
+
+                        $loteBySumCod = [];
+
+                        foreach ($queryLoteBySumCod as $item) {
+                            $tempLoteBySumCod = array(
+                                'sumCod' => trim($item->COD_SUM),
+                                'sumDesc' => trim($item->DESCRIPCION_SUM),
+                                'lotCode' => trim($item->LOTE),
+                                'lotDueDate' => trim($item->FECHA_VENCIMIENTO),
+                                'lotWarehouse' => trim($item->BODEGA),
+                                'providerCode' => trim($item->PROVEEDOR_COD),
+                                'providerDesc' => trim($item->PROVEEDOR_DES),
+                            );
+
+                            $loteBySumCod[] = $tempLoteBySumCod;
+                        }
+
+                        if (count($loteBySumCod) < 0) {
+
+                            // PETICIÓN CON RESPUESTA VACIA
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Lote By Sum Array',
+                                    'status' => 204,
+                                    'data' => []
+                                ]);
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Ok',
+                                    'status' => 200,
+                                    'data' => $loteBySumCod
+                                ]);
+                        }
+
+                        // PETICIÓN CON RESPUESTA EXITOSA
+
+                    } else {
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Query Lote By SumCod',
+                                'status' => 204,
+                                'data' => []
+                            ]);
                     }
                 }
             } catch (\Throwable $e) {
