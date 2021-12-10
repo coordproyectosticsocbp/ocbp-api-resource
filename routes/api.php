@@ -256,6 +256,14 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/hygea/get/last-patient-evo/{docpac?}/{doctype?}/folio/{folio?}',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getPatientLastEvolution'
+        ]
+    );
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* MACNA */
@@ -304,6 +312,20 @@ Route::group([
             'getEmployeesDatabaseWithSalary'
         ]
     );
+
+    /*-------------------------------------------------------------------------------------------------------------*/
+
+    /* EXITUS */
+
+    Route::get(
+        '/financial-exitus/get/bills-by-date/{startdate?}/end/{endddate?}',
+        [
+            \App\Http\Controllers\ExitusController::class,
+            'getBillByDateRange'
+        ]
+    );
+
+
 
     /*-------------------------------------------------------------------------------------------------------------*/
 

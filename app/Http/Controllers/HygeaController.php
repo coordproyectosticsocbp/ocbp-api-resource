@@ -1367,4 +1367,144 @@ class HygeaController extends Controller
             }
         }
     }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/last-patient-evo/{docpac?}/{doctype?}/folio/{folio?}",
+     *     operationId="get Patient Last Evo Information",
+     *     tags={"Hygea"},
+     *     summary="Get  Patient Last Evo Information",
+     *     description="Returns  Patient Last Evo Information",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="docpac?",
+     *          description="Patient Doc",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *      @OA\Parameter (
+     *          name="doctype?",
+     *          description="Patient DocType",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *      @OA\Parameter (
+     *          name="folio?",
+     *          description="Patient Folio",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getPatientLastEvolution(Request $request, $docPac, $docType, $folio)
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+                if (!$docPac || !$docType || !$folio) {
+                    return response()
+                        ->json([
+                            'msg' => 'Parameter docPac, docType or Folio cannot be Empty',
+                            'status' => 400
+                        ]);
+                } else {
+
+                    $queryPatientLastEvolution = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM HYGEA_FOLIO_EVOLUCION()
+                                    WHERE   IDENTIFICACION = '$docPac'
+                                            AND TIPO_ID = '$docType'
+                                            AND FOLIO = '$folio'
+                                ");
+
+                    if (count($queryPatientLastEvolution) > 0) {
+                        $patientLastEvolution = [];
+
+                        foreach ($queryPatientLastEvolution as $item) {
+
+                            $tempPatientLastEvolution = array(
+                                'evoPatient' => trim($item->IDENTIFICACION),
+                                'evoDocType' => trim($item->TIPO_ID),
+                                'evoFolio' => trim($item->FOLIO),
+                                'evoAdmConsecutive' => trim($item->INGRESO),
+                                'evoAdmDate' => Carbon::parse($item->FECHA)->format('Y-m-d'),
+                                'evoDoctor' => trim($item->ESPECIALISTA),
+                                'evoDoctorSpeciality' => trim($item->ESPECIALIDAD),
+                                'evoTreatment' => trim($item->SUBJETIVOS),
+                                'evoPlan' => trim($item->OBJETIVOS),
+                                'evoAnalysis' => trim($item->ANALISIS),
+                                'evoDescription' => trim($item->RESULTADO),
+                            );
+
+
+
+                            $patientLastEvolution[] = $tempPatientLastEvolution;
+                        }
+
+                        if (count($patientLastEvolution) < 0) {
+
+                            // PETICIÓN CON RESPUESTA VACIA
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Patient Last Evolution Array',
+                                    'status' => 204,
+                                    'data' => []
+                                ]);
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Ok',
+                                    'status' => 200,
+                                    'data' => $patientLastEvolution
+                                ]);
+                        }
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Query Patient Last Evolution',
+                                'status' => 204,
+                                'data' => []
+                            ]);
+                    }
+                }
+            }
+        }
+    }
 }

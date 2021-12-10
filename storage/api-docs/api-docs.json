@@ -427,6 +427,58 @@
                 ]
             }
         },
+        "/api/v1/financial-exitus/get/bills-by-date/{startdate?}/end/{enddate?}": {
+            "get": {
+                "tags": [
+                    "Exitus"
+                ],
+                "summary": "Get Bills Info",
+                "description": "Returns Bills Info",
+                "operationId": "get Bills Info",
+                "parameters": [
+                    {
+                        "name": "startdate?",
+                        "in": "path",
+                        "description": "Initial Date For Search - Optional",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "enddate?",
+                        "in": "path",
+                        "description": "End Date For Search - Optional",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
         "/api/v1/hito/get/occupation-with-real-stay": {
             "get": {
                 "tags": [
@@ -1076,6 +1128,67 @@
                         "name": "sumcod?",
                         "in": "path",
                         "description": "Product Lot",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hygea/get/last-patient-evo/{docpac?}/{doctype?}/folio/{folio?}": {
+            "get": {
+                "tags": [
+                    "Hygea"
+                ],
+                "summary": "Get  Patient Last Evo Information",
+                "description": "Returns  Patient Last Evo Information",
+                "operationId": "get Patient Last Evo Information",
+                "parameters": [
+                    {
+                        "name": "docpac?",
+                        "in": "path",
+                        "description": "Patient Doc",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "doctype?",
+                        "in": "path",
+                        "description": "Patient DocType",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "folio?",
+                        "in": "path",
+                        "description": "Patient Folio",
                         "required": true,
                         "schema": {
                             "type": "string"
