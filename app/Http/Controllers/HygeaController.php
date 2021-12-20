@@ -1428,7 +1428,7 @@ class HygeaController extends Controller
      *      )
      * )
      */
-    public function getPatientLastEvolution(Request $request, $docPac, $docType, $folio)
+    public function getPatientLastEvolution(Request $request, $docPac = '', $docType = '', $folio = '')
     {
 
         if ($request->hasHeader('X-Authorization')) {
@@ -1445,6 +1445,9 @@ class HygeaController extends Controller
                         ]);
                 } else {
 
+                    $patientLastEvolution = [];
+                    $patientLastSOAPEvolution = [];
+
                     $queryPatientLastEvolution = DB::connection('sqlsrv_hosvital')
                         ->select("SELECT * FROM HYGEA_FOLIO_EVOLUCION()
                                     WHERE   IDENTIFICACION = '$docPac'
@@ -1453,11 +1456,11 @@ class HygeaController extends Controller
                                 ");
 
                     if (count($queryPatientLastEvolution) > 0) {
-                        $patientLastEvolution = [];
 
                         foreach ($queryPatientLastEvolution as $item) {
 
                             $tempPatientLastEvolution = array(
+                                'evoType' => trim($item->TIPO),
                                 'evoPatient' => trim($item->IDENTIFICACION),
                                 'evoDocType' => trim($item->TIPO_ID),
                                 'evoFolio' => trim($item->FOLIO),
@@ -1470,8 +1473,6 @@ class HygeaController extends Controller
                                 'evoAnalysis' => trim($item->ANALISIS),
                                 'evoDescription' => trim($item->RESULTADO),
                             );
-
-
 
                             $patientLastEvolution[] = $tempPatientLastEvolution;
                         }
@@ -1496,14 +1497,295 @@ class HygeaController extends Controller
                         }
                     } else {
 
+                        $queryPatientLastSOAPEvolution = DB::connection('sqlsrv_hosvital')
+                            ->select("  SELECT * FROM HYGEA_FOLIO_EVOLUCION_SOAP()
+                                                WHERE   IDENTIFICACION = '$docPac'
+                                                AND TIPO_ID = '$docType'
+                                                AND FOLIO = '$folio'");
+
+                        if (count($queryPatientLastSOAPEvolution) > 0) {
+
+                            foreach ($queryPatientLastSOAPEvolution as $itemSoap) {
+
+                                $tempPatientLastSOAPEvolution = array(
+                                    'evoType' => trim($itemSoap->TIPO),
+                                    'evoPatient' => trim($itemSoap->IDENTIFICACION),
+                                    'evoDocType' => trim($itemSoap->TIPO_ID),
+                                    'evoFolio' => trim($itemSoap->FOLIO),
+                                    'evoAdmConsecutive' => trim($itemSoap->INGRESO),
+                                    'evoAdmDate' => Carbon::parse($itemSoap->FECHA)->format('Y-m-d'),
+                                    'evoDoctor' => trim($itemSoap->ESPECIALISTA),
+                                    'evoDoctorSpeciality' => trim($itemSoap->ESPECIALIDAD),
+                                    'evoTreatment' => trim($itemSoap->SUBJETIVOS),
+                                    'evoPlan' => trim($itemSoap->OBJETIVOS),
+                                    'evoAnalysis' => trim($itemSoap->ANALISIS),
+                                    'evoDescription' => trim($itemSoap->PLAN_Y_TTO),
+                                );
+
+                                $patientLastSOAPEvolution[] = $tempPatientLastSOAPEvolution;
+                            }
+
+                            if (count($patientLastSOAPEvolution) < 0) {
+
+                                // PETICIÓN CON RESPUESTA VACIA
+                                return response()
+                                    ->json([
+                                        'msg' => 'Empty Patient Last SOAP Evolution Array',
+                                        'status' => 204,
+                                        'data' => []
+                                    ]);
+                            } else {
+
+                                return response()
+                                    ->json([
+                                        'msg' => 'Ok',
+                                        'status' => 200,
+                                        'data' => $patientLastSOAPEvolution
+                                    ]);
+                            }
+                        }
+                    } /*else {
+
                         return response()
                             ->json([
-                                'msg' => 'Empty Query Patient Last Evolution',
+                                'msg' => 'Patient Data Not Found',
+                                'status' => 204,
+                                'data' => []
+                            ]);
+                    }*/
+                }
+            }
+        }
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/billed-drugs-by-code/{sumcod?}",
+     *     operationId="get Billed Drugs By Code Information",
+     *     tags={"Hygea"},
+     *     summary="Get   Billed Drugs By Code Information",
+     *     description="Returns   Billed Drugs By Code Information",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="sumcod?",
+     *          description="Drug Code",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getBilledDrugsByCode(Request $request, $sumCod = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                if (!$sumCod) {
+
+                    return response()
+                        ->json([
+                            'msg' => 'Parameter sumCod cannot be Empty',
+                            'status' => 400
+                        ]);
+                } else {
+
+                    $queryBilledDrugsByCode = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM HYGEA_MEDICAMENTOS_CON_FACTURA('$sumCod')");
+
+                    if (count($queryBilledDrugsByCode) > 0) {
+                        $billedDrugsByCode = [];
+
+                        foreach ($queryBilledDrugsByCode as $item) {
+
+                            $tempBilledDrugsByCode = array(
+                                'sumCod' => trim($item->codigo),
+                                'quantity' => trim($item->cantidad),
+                                'month' => trim($item->mes_factura),
+                                'year' => trim($item->año_factura),
+                            );
+
+                            $billedDrugsByCode[] = $tempBilledDrugsByCode;
+                        }
+
+                        if (count($billedDrugsByCode) < 0) {
+
+                            // PETICIÓN CON RESPUESTA VACIA
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Billed Drugs By Code Array',
+                                    'status' => 204,
+                                    'data' => []
+                                ]);
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Ok',
+                                    'status' => 200,
+                                    'data' => $billedDrugsByCode
+                                ]);
+                        }
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Billed Drugs Array',
                                 'status' => 204,
                                 'data' => []
                             ]);
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/super-ac-dispatch/{sumcod?}",
+     *     operationId="get AC Dispatch By Code Information",
+     *     tags={"Hygea"},
+     *     summary="Get AC Dispatch By Code Information",
+     *     description="Returns AC Dispatch By Code Information",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="sumcod?",
+     *          description="Drug Code",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getSumDespachosSuperAC(Request $request, $sumCod = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                if (!$sumCod) {
+
+                    return response()
+                        ->json([
+                            'status' => 400,
+                            'message' => 'SumCod Parameter Cannot Be Empty'
+                        ]);
+                } else {
+
+                    $despachos = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM DESPACHOS_SUPER_ALTO_COSTO('$sumCod') ORDER BY ULTIMO_DESPACHO DESC");
+
+                    if (count($despachos) > 0) {
+
+                        $records = [];
+
+                        foreach ($despachos as $despacho) {
+
+                            $temp = array(
+                                'patient' => $despacho->PACIENTE,
+                                'lastDispatch' => $despacho->ULTIMO_DESPACHO,
+                                'dispatchProduct' => $despacho->PRODUCTO,
+                                'dispatchQuantity' =>  $despacho->CANT_DESP,
+                                'dispatchDevolution' => $despacho->CANT_DEV,
+                                'dispatchTotalQuantity' => $despacho->TOTAL_CANT,
+                                'dispatchPbsNoPbs' => $despacho->PbsNoPbs,
+                                'dispatchContract' => $despacho->CONTRATO_DEL_CARGO,
+                            );
+
+                            $records[] = $temp;
+                        }
+
+                        if (count($records) < 0) {
+
+                            return response()
+                                ->json([
+                                    'status' => 204,
+                                    'message' => 'Empty Despachos Records Array'
+                                ]);
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'status' => 200,
+                                    'message' => 'Ok',
+                                    'data' => $records
+                                ]);
+                        }
+                    } else {
+
+                        return response()
+                            ->json([
+                                'status' => 204,
+                                'message' => 'Empty Despachos Array'
+                            ]);
+                    }
+                }
+            } else {
+
+                return response()
+                    ->json([
+                        'status' => 401,
+                        'message' => 'Unauthorized'
+                    ]);
             }
         }
     }

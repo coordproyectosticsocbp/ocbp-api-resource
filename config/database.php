@@ -74,6 +74,19 @@ return [
             'prefix_indexes' => true,
         ],
 
+        'sqlsrv_biometrico' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DATABASE_URL'),
+            'host' => '172.16.52.74',
+            'port' => env('DB_PORT', '1433'),
+            'database' => 'security_db',
+            'username' => 'hvt_clinico_win',
+            'password' => 'hvt_clinico_win',
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
+
     ],
 
     /*
@@ -106,7 +119,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
         ],
 
         'default' => [

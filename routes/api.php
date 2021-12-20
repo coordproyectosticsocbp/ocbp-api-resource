@@ -264,6 +264,22 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/hygea/get/billed-drugs-by-code/{sumcod?}',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getBilledDrugsByCode'
+        ]
+    );
+
+    Route::get(
+        '/hygea/get/super-ac-dispatch/{sumcod?}',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getSumDespachosSuperAC'
+        ]
+    );
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* MACNA */
@@ -310,6 +326,22 @@ Route::group([
         [
             \App\Http\Controllers\NominaController::class,
             'getEmployeesDatabaseWithSalary'
+        ]
+    );
+
+    Route::get(
+        '/nomina/get/employees-biometric-marks/{document?}/{initdate?}/{enddate?}',
+        [
+            \App\Http\Controllers\NominaController::class,
+            'getBiometricMarks'
+        ]
+    );
+
+    Route::get(
+        '/nomina/get/employees-biometric-marks-by-date-range/{initdate?}/{enddate?}',
+        [
+            \App\Http\Controllers\NominaController::class,
+            'getBiometricMarksByDateRange'
         ]
     );
 

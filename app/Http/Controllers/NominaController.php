@@ -128,4 +128,296 @@ class NominaController extends Controller
             }
         }
     }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/nomina/get/employees-biometric-marks/{document?}/{initdate?}/{enddate?}",
+     *     operationId="get Biometric Marks Information",
+     *     tags={"Nomina"},
+     *     summary="get Biometric Marks Information",
+     *     description="Returns get Biometric Marks Information",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="document?",
+     *          description="Employee Document",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="initdate?",
+     *          description="Init Date - Format Y-m-d",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *  *     @OA\Parameter (
+     *          name="enddate?",
+     *          description="End Date - Format Y-m-d",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getBiometricMarks(Request $request, $document = '', $initalDate = '', $endingDate = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                if (!$document || !$initalDate || !$endingDate) {
+
+                    return response()
+                        ->json([
+                            'msg' => 'Parameters Cannot Be Empty',
+                            'data' => [],
+                            'status' => 400
+                        ]);
+                } else {
+
+                    try {
+
+                        $initDate = Carbon::parse($initalDate)->format('Y-d-m') . ' 00:00:00';
+                        $endDate = Carbon::parse($endingDate)->format('Y-d-m') . ' 23:59:59';
+
+                        $query_biometric_marks = DB::connection('sqlsrv_biometrico')
+                            ->select("SELECT * FROM EVA_DES_MARCACIONES('$document', '$initDate', '$endDate') ORDER BY MARCACION");
+
+                        if (count($query_biometric_marks) > 0) {
+
+                            $biometric_marks = [];
+
+                            foreach ($query_biometric_marks as $biometric_mark) {
+
+                                $tempBiometricMarks = array(
+                                    'employeeDocument' => $biometric_mark->CEDULA,
+                                    'employeeName' => $biometric_mark->NOMBRE,
+                                    'employeeLastName' => $biometric_mark->APELLIDO,
+                                    'employeeMarkDate' => $biometric_mark->MARCACION,
+                                    'employeeMarkType' => $biometric_mark->TIPO,
+                                );
+
+                                $biometric_marks[] = $tempBiometricMarks;
+                            }
+
+                            if (count($biometric_marks) > 0) {
+
+                                return response()
+                                    ->json([
+                                        'msg' => 'Ok',
+                                        'status' => 200,
+                                        'data' => $biometric_marks,
+                                    ]);
+                            } else {
+
+                                $biometric_marks = [];
+
+                                return response()
+                                    ->json([
+                                        'msg' => 'Empty biometric marks Array',
+                                        'data' => [],
+                                        'status' => 204
+                                    ]);
+                            }
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty biometric marks Query',
+                                    'data' => [],
+                                    'status' => 204
+                                ]);
+                        }
+                    } catch (\Throwable $e) {
+
+                        throw $e;
+                    }
+                }
+            } else {
+
+                return response()
+                    ->json([
+                        'status' => 401,
+                        'message' => 'Unauthorized'
+                    ]);
+            }
+        }
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/nomina/get/employees-biometric-marks-by-date-range/{initdate?}/{enddate?}",
+     *     operationId="get Biometric Marks Information By Date Range",
+     *     tags={"Nomina"},
+     *     summary="get Biometric Marks Information By Date Range",
+     *     description="Returns get Biometric Marks Information By Date Range",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="initdate?",
+     *          description="Init Date - Format Y-m-d",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="enddate?",
+     *          description="End Date - Format Y-m-d",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getBiometricMarksByDateRange(Request $request, $initalDate = '', $endingDate = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                if (!$initalDate || !$endingDate) {
+
+                    return response()
+                        ->json([
+                            'msg' => 'Parameters Cannot Be Empty',
+                            'data' => [],
+                            'status' => 400
+                        ]);
+                } else {
+
+                    try {
+
+                        $initDate = Carbon::parse($initalDate)->format('Y-d-m') . ' 00:00:00';
+                        $endDate = Carbon::parse($endingDate)->format('Y-d-m') . ' 23:59:59';
+
+                        $query_biometric_marks = DB::connection('sqlsrv_biometrico')
+                            ->select("SELECT * FROM EVA_DES_MARCACIONES_BY_DATE_RANGE('$initDate', '$endDate') ORDER BY NOMBRE, MARCACION");
+
+                        if (count($query_biometric_marks) > 0) {
+
+                            $biometric_marks = [];
+
+                            foreach ($query_biometric_marks as $biometric_mark) {
+
+                                $tempBiometricMarks = array(
+                                    'employeeDocument' => $biometric_mark->CEDULA,
+                                    //'employeeName' => $biometric_mark->NOMBRE,
+                                    //'employeeLastName' => $biometric_mark->APELLIDO,
+                                    'employeeMarkDate' => $biometric_mark->MARCACION,
+                                    'employeeMarkType' => $biometric_mark->TIPO,
+                                );
+
+                                $biometric_marks[] = $tempBiometricMarks;
+                            }
+
+                            if (count($biometric_marks) > 0) {
+
+                                return response()
+                                    ->json([
+                                        'msg' => 'Ok',
+                                        'status' => 200,
+                                        'data' => $biometric_marks,
+                                    ]);
+                            } else {
+
+                                $biometric_marks = [];
+
+                                return response()
+                                    ->json([
+                                        'msg' => 'Empty biometric marks Array',
+                                        'data' => [],
+                                        'status' => 204
+                                    ]);
+                            }
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty biometric marks Query',
+                                    'data' => [],
+                                    'status' => 204,
+                                    'comp' => [
+                                        'initDate' => $initDate,
+                                        'endDate' => $endDate,
+                                    ]
+                                ]);
+                        }
+                    } catch (\Throwable $e) {
+
+                        throw $e;
+                    }
+                }
+            } else {
+
+                return response()
+                    ->json([
+                        'status' => 401,
+                        'message' => 'Unauthorized'
+                    ]);
+            }
+        }
+    }
 }
