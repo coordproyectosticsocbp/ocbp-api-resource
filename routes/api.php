@@ -357,6 +357,22 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/exitus/get/occupation-with-real-stay',
+        [
+            \App\Http\Controllers\ExitusController::class,
+            'getCenso'
+        ]
+    );
+
+    Route::get(
+        '/exitus/get/patient-info-by-hab-code/{hab?}',
+        [
+            \App\Http\Controllers\ExitusController::class,
+            'getPatientInfoByHabCode'
+        ]
+    );
+
 
 
     /*-------------------------------------------------------------------------------------------------------------*/

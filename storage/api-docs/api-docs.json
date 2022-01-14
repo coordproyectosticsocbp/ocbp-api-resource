@@ -479,6 +479,81 @@
                 ]
             }
         },
+        "/api/v1/exitus/get/occupation-with-real-stay": {
+            "get": {
+                "tags": [
+                    "Exitus"
+                ],
+                "summary": "Get occupation Info With Real Stay",
+                "description": "Returns occupation Name",
+                "operationId": "occupation",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/exitus/get/patient-info-by-hab-code/{hab?}": {
+            "get": {
+                "tags": [
+                    "Exitus"
+                ],
+                "summary": "Get Patient Info by Hab Code",
+                "description": "Returns Patient Info by Hab Code",
+                "operationId": "getPatientInfoByHabCode",
+                "parameters": [
+                    {
+                        "name": "hab?",
+                        "in": "path",
+                        "description": "Habitation Code - Opcional",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
         "/api/v1/hito/get/occupation-with-real-stay": {
             "get": {
                 "tags": [
