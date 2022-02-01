@@ -373,6 +373,48 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/exitus/get/patient-adm-by-document/{document?}/document-type/{doctype?}',
+        [
+            \App\Http\Controllers\ExitusController::class,
+            'getAdmPatientInfoByDocumentToPrintHandle'
+        ]
+    );
+
+
+
+    /*-------------------------------------------------------------------------------------------------------------*/
+
+    /* AUXILIARES CLÍNICOS */
+
+    Route::get(
+        '/clinical-assistants/get/clinical-assistants',
+        [
+            \App\Http\Controllers\AuxClinicosController::class,
+            'getClinicalAssistants'
+        ]
+    );
+
+    Route::get(
+        '/clinical-assistants/get/patient-info-by-hab-code/{hab?}',
+        [
+            \App\Http\Controllers\ExitusController::class,
+            'getPatientInfoByHabCode'
+        ]
+    );
+
+    /*-------------------------------------------------------------------------------------------------------------*/
+
+    /* DOCTOR CLINIC */
+
+    Route::get(
+        '/doctor-clinic/patient/{patientdoc?}/type/{patientdoctype?}/information',
+        [
+            \App\Http\Controllers\DoctorClinicController::class,
+            'initialPatientInfo'
+        ]
+    );
+
 
 
     /*-------------------------------------------------------------------------------------------------------------*/

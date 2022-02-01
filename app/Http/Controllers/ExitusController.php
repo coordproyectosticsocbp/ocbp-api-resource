@@ -226,7 +226,7 @@ class ExitusController extends Controller
 
                                             // CONSULTA PARA TRAER PACIENTES DE LAS HABITACIONES ENVIANDO COMO PARAMETRO EL CÓDIGO DEL PABELLÓN
                                             $query2 = DB::connection('sqlsrv_hosvital')
-                                                ->select("SELECT * FROM HITO_CENSOREAL('$item->CODIGO_PABELLON')");
+                                                ->select("SELECT * FROM EXITUS_CENSO_REAL('$item->CODIGO_PABELLON')");
 
                                             if (count($query2) > 0) {
 
@@ -260,6 +260,12 @@ class ExitusController extends Controller
                                                         'real_stay' => $cat->EstanciaReal,
                                                         'diagnosis' => $cat->DX,
                                                         'prealta' => $cat->PREALTA,
+                                                        'specialistMedicaltDisDate' => $cat->HORA_ALTA_ESPECIALISTA,
+                                                        'specialistMedicaltDisUser' => $cat->MEDICO_ALTA_ESPECIALISTA,
+                                                        'epicrisisType' => $cat->TIPO_EPICRISIS,
+                                                        'parcialEpicrisisDate' => $cat->FECHA_EPICRISIS_EGRESO_PARCIAL,
+                                                        'exitEpicrisisDate' => $cat->FECHA_EPICRISIS_EGRESO,
+                                                        'epicrisisDoctor' => $cat->USUARIO_EPICRISIS,
                                                     );
 
                                                     $habs[] = $temp1;
@@ -442,6 +448,139 @@ class ExitusController extends Controller
                                 'msg' => 'Parametro habitación no recibido',
                                 'status' => 400
                             ]);
+                    }
+                } catch (\Throwable $e) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/exitus/get/patient-adm-by-document/{document?}/document-type/{doctype?}",
+     *     operationId="getAdmPatientInfoByDocumentToPrintHandle",
+     *     tags={"Exitus"},
+     *     summary="Get Patient Admission by Document",
+     *     description="Returns Patient Admission by Document",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="document?",
+     *          description="Habitation Code - Opcional",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="doctype?",
+     *          description="Habitation Code - Opcional",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getAdmPatientInfoByDocumentToPrintHandle(Request $request, $patientDoc = '', $patientDocType = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    if ($patientDoc == "" || $patientDocType == "") {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Parameters cannot be empty',
+                            ]);
+                    }
+
+                    $queryPatientToPrintHandle = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM EXITUS_ADMISION_PACIENTE_MANILLA('$patientDoc', '$patientDocType') ORDER BY INGRESO + 0 DESC");
+
+                    if (count($queryPatientToPrintHandle) > 0) {
+
+                        $arrayPatientToPrintHandle = [];
+
+                        foreach ($queryPatientToPrintHandle as $item) {
+                            $tempPatientToPrintHandle = array(
+                                'patientFirstName' => trim($item->NOMBRE1),
+                                'patientSecondName' => trim($item->NOMBRE2),
+                                'patientLastName' => trim($item->APE1),
+                                'patientSecondLastName' => trim($item->APE2),
+                                'patientDocumentType' => trim($item->TIP_DOC),
+                                'patientDocument' => trim($item->CEDULA),
+                                'patientGender' => trim($item->SEXO),
+                                'patientAge' => trim($item->EDAD),
+                                'patientBloodType' => trim($item->GRUPO_SANGUINEO),
+                                'patientAdmissionNum' => trim($item->INGRESO),
+                                'patientAdmissionDate' => trim($item->FECHA_INGRESO),
+                                'patientPavilion' => trim($item->PABELLON),
+                                'patientHabitation' => trim($item->HABITACION),
+                                'patientActualAttentionType' => trim($item->TIPO_ATENCION_ACTUAL_DESC),
+                            );
+
+                            $arrayPatientToPrintHandle[] = $tempPatientToPrintHandle;
+                        }
+
+                        if (count($arrayPatientToPrintHandle) > 0) {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Ok',
+                                    'status' => 200,
+                                    'data' => $arrayPatientToPrintHandle,
+                                ], 200);
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty ArrayPatientToPrintHandle',
+                                    'data' => [],
+                                    'status' => 200
+                                ], 400);
+                        }
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty QueryPatientToPrintHandle Array',
+                                'data' => [],
+                                'status' => 200
+                            ], 400);
                     }
                 } catch (\Throwable $e) {
                     throw $e;

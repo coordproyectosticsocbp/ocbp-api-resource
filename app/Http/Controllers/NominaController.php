@@ -81,6 +81,8 @@ class NominaController extends Controller
                             'empPhone' => $employee->Telefono,
                             'empAddress' => $employee->Direccion,
                             'empBirthDate' => $employee->Fecha_Nacimiento,
+                            'empImmediateBossDocument' => $employee->DOC_JEFE_INMEDIATO,
+                            'empImmediateBossDocumentType' => $employee->TIPODOC_JEFE_INMEDIATO,
                             'empImmediateBoss' => $employee->JEFE_INMEDIATO,
                             'empPosition' => $employee->Cargo,
                             'empCostCenter' => $employee->CENTRO_COSTO,
@@ -222,11 +224,16 @@ class NominaController extends Controller
 
                             foreach ($query_biometric_marks as $biometric_mark) {
 
+                                $marcacion = explode(' ', $biometric_mark->MARCACION);
+                                $fecha = $marcacion[0];
+                                $hora = $marcacion[1];
+
                                 $tempBiometricMarks = array(
                                     'employeeDocument' => $biometric_mark->CEDULA,
                                     'employeeName' => $biometric_mark->NOMBRE,
                                     'employeeLastName' => $biometric_mark->APELLIDO,
-                                    'employeeMarkDate' => $biometric_mark->MARCACION,
+                                    'employeeMarkDate' => $fecha,
+                                    'employeeMarkHour' => $hora,
                                     'employeeMarkType' => $biometric_mark->TIPO,
                                 );
 
