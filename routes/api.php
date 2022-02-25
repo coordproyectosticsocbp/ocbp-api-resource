@@ -403,6 +403,14 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/clinical-assistants/patient/{patientdoc?}/type/{patientdoctype?}',
+        [
+            \App\Http\Controllers\AuxClinicosController::class,
+            'initialPatientInfo'
+        ]
+    );
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* DOCTOR CLINIC */

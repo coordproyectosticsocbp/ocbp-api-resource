@@ -1748,7 +1748,7 @@ class HygeaController extends Controller
                                 'dispatchDevolution' => $despacho->CANT_DEV,
                                 'dispatchTotalQuantity' => $despacho->TOTAL_CANT,
                                 'dispatchPbsNoPbs' => $despacho->PbsNoPbs,
-                                'dispatchContract' => $despacho->CONTRATO_DEL_CARGO,
+                                'dispatchContract' => $despacho->CONTRATO,
                             );
 
                             $records[] = $temp;

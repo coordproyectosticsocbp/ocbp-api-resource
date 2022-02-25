@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class AuxClinicosController extends Controller
@@ -227,6 +228,149 @@ class AuxClinicosController extends Controller
                                     'data' => [],
                                     'status' => 204
                                 ], 400);
+                        }
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Parameters Cannot be Empty',
+                                'status' => 400
+                            ]);
+                    }
+                } catch (\Throwable $e) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/clinical-assistants/patient/{patientdoc?}/type/{patientdoctype?}",
+     *     operationId="initialPatientInfo",
+     *     tags={"AuxiliaresClinicos"},
+     *     summary="Get Patient Informations",
+     *     description="Returns Patient Information",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="patientdoc?",
+     *          description="Documento del Paciente",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="patientdoctype?",
+     *          description="Tipo de Documento del Paciente - CC, TI, RC, PE",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function initialPatientInfo(Request $request, $patientDoc = '', $patientTipoDoc = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    if ($patientDoc != "" && $patientTipoDoc != "") {
+
+                        //$dt = Carbon::now()->format('Y-m-d');
+
+                        $query_patient_info = DB::connection('sqlsrv_hosvital')
+                            ->select("SELECT * FROM AUX_CLINCOS_PACIENTE_INFO_X_CEDULA('$patientDoc', '$patientTipoDoc')");
+
+                        if (count($query_patient_info) > 0) {
+                            $patient_info = [];
+
+                            foreach ($query_patient_info as $item) {
+
+                                $temp = array(
+                                    'document' => $item->NUM_HISTORIA,
+                                    'tipDoc' => $item->TI_DOC,
+                                    'admConsecutive' => $item->INGRESO,
+                                    'admDate' => $item->FECHA_INGRESO,
+                                    'fName' => $item->PRIMER_NOMBRE,
+                                    'sName' => $item->SEGUNDO_NOMBRE,
+                                    'fLastname' => $item->PRIMER_APELLIDO,
+                                    'sLastname' => $item->SEGUNDO_APELLIDO,
+                                    'birthDate' => $item->FECHA_NAC,
+                                    'age' => $item->EDAD,
+                                    'gender' => $item->SEXO,
+                                    'civilStatus' => $item->ESTADOCIVIL,
+                                    'patientCompany' => $item->EPS,
+                                    'patientContract' => $item->CONTRATO,
+                                    'primaryDxCode' => $item->DX_COD,
+                                    'primaryDxDescription' => $item->DX,
+                                    'patientHabitation' => $item->CAMA,
+                                    'patientPavilion' => $item->PABELLON,
+                                    //'date' => $dt,
+                                    'realStay' => $item->EstanciaReal,
+                                );
+
+                                $patient_info[] = $temp;
+                            }
+
+                            if (count($patient_info) > 0) {
+
+                                return response()
+                                    ->json([
+                                        'msg' => 'Ok',
+                                        'status' => 200,
+                                        'data' => $patient_info,
+                                    ], 200);
+                            } else {
+
+                                return response()
+                                    ->json([
+                                        'msg' => 'Empty Patient Info Array',
+                                        'status' => 200,
+                                        'data' => [],
+                                    ], 200);
+                            }
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Patient Info Query Request',
+                                    'status' => 200,
+                                    'data' => [],
+                                ], 200);
                         }
                     } else {
 

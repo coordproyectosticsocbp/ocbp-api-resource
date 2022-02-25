@@ -441,7 +441,7 @@ class HitoController extends Controller
      *     ),
      *     @OA\Parameter (
      *          name="patientdoctype?",
-     *          description="Tipo de Documento - Obligatory - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+     *          description="Tipo de Documento - Obligatory - RC - TI - CC - CE - NIT - MS - PA - PE - AS - SC",
      *          in="path",
      *          required=true,
      *          @OA\Schema (
@@ -466,7 +466,7 @@ class HitoController extends Controller
      *      )
      * )
      */
-    public function initialPatientInfo(Request $request, $patientDoc, $patientTipoDoc)
+    public function initialPatientInfo(Request $request, $patientDoc = '', $patientTipoDoc = '')
     {
 
         if ($request->hasHeader('X-Authorization')) {
@@ -484,7 +484,7 @@ class HitoController extends Controller
 
 
                         $query_consul_reason = DB::connection('sqlsrv_hosvital')
-                            ->select("SELECT * FROM MOTIVOS_CONSULTA('$item->NUM_HISTORIA', '$item->TI_DOC')");
+                            ->select("SELECT * FROM HITO_MOTIVO_CONSULTA('$item->NUM_HISTORIA', '$item->TI_DOC')");
 
                         $query_antecedentes = DB::connection('sqlsrv_hosvital')
                             ->select("SELECT * FROM ANTECEDENTES('$item->NUM_HISTORIA', '$item->TI_DOC')");
@@ -495,6 +495,8 @@ class HitoController extends Controller
                         $query_riesgos = DB::connection('sqlsrv_hosvital')
                             ->select("SELECT * FROM HITO_RIESGOS_PACIENTE('$item->NUM_HISTORIA', '$item->TI_DOC', '$item->FOLIO')");
 
+
+                        // VALIDACIÓN PARA LOS RIESGOS DEL PACIENTE
                         if (count($query_riesgos) > 0) {
 
                             $riesgos = [];
@@ -597,6 +599,8 @@ class HitoController extends Controller
                             $riesgos = [];
                         }
 
+
+                        // VALIDACIÓN PARA EL CONSUMO DE LA ESTANCIA DEL PACIENTE
                         if (count($query_consumo) > 0) {
 
                             $consumos = [];
@@ -615,6 +619,7 @@ class HitoController extends Controller
                         }
 
 
+                        // VALIDACIÓN PARA LOS ANTECEDENTES DEL PACIENTE
                         if (count($query_antecedentes) > 0) {
 
                             $antecedentes = [];
@@ -633,14 +638,11 @@ class HitoController extends Controller
                             }
                         } else {
 
-                            return response()
-                                ->json([
-                                    'msg' => 'Empty Background Info Array',
-                                    'data' => [],
-                                    'status' => 200
-                                ], 200);
+                            $antecedentes = [];
                         }
 
+
+                        // VALIDACIÓN PARA LOS MOTIVOS DE CONSULTA DEL PACIENTE
                         if (count($query_consul_reason) > 0) {
 
                             $consul_reason = [];
@@ -659,6 +661,10 @@ class HitoController extends Controller
                                     $item->PREALTA = 0;
                                 }
 
+                                /*  if ($cr->MOTIVO != null) {
+                                    $cr->MOTIVO = [];
+                                } */
+
                                 $temp2 = array(
                                     //'folio' => $item->FOLIO,
                                     //'currentDisease' => $item->ENFEREMDAD_ACTUAL,
@@ -669,7 +675,7 @@ class HitoController extends Controller
                                     'preMedicalDischarge' => $item->PREALTA,
                                     'dxSecondaryCode' => $item->COD_DX_SECUNDARIO,
                                     'dxSecondaryName' => $item->NOMBRE_DX_SECUNDARIO,
-                                    'consultationReason' => $cr->MOTIVO,
+                                    'consultationReason' => $cr->DESCRIPCION_EVOLUCION,
                                     'medDiagnostics' => $item->DX_MEDICO,
                                     'treatment' => $item->TRATAMIENTOS,
                                     'previousStudies' => $item->ESTUDIOS_PREVIOS,
@@ -687,12 +693,49 @@ class HitoController extends Controller
                             }
                         } else {
 
-                            return response()
-                                ->json([
-                                    'msg' => 'Empty Consul_reason Info Array',
-                                    'data' => [],
-                                    'status' => 200
-                                ], 200);
+                            $consul_reason = [];
+
+                            if ($item->NEUTROPENIA != null) {
+                                $item->NEUTROPENIA = 1;
+                            } else {
+                                $item->NEUTROPENIA = 0;
+                            }
+
+                            if ($item->PREALTA != null) {
+                                $item->PREALTA = 1;
+                            } else {
+                                $item->PREALTA = 0;
+                            }
+
+                            /*  if ($cr->MOTIVO != null) {
+                                    $cr->MOTIVO = [];
+                                } */
+
+                            $tempConsulReason = array(
+                                //'folio' => $item->FOLIO,
+                                //'currentDisease' => $item->ENFEREMDAD_ACTUAL,
+                                'lastInterConsulDoctorDoc' => $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA,
+                                'lastInterConsulDoctor' => $item->ULTIMO_ESPECIALISTA_INTERCONSULTA,
+                                'lastInterConsulSpeciality' => $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA,
+                                'neutropenia' => $item->NEUTROPENIA,
+                                'preMedicalDischarge' => $item->PREALTA,
+                                'dxSecondaryCode' => $item->COD_DX_SECUNDARIO,
+                                'dxSecondaryName' => $item->NOMBRE_DX_SECUNDARIO,
+                                'consultationReason' => "",
+                                'medDiagnostics' => $item->DX_MEDICO,
+                                'treatment' => $item->TRATAMIENTOS,
+                                'previousStudies' => $item->ESTUDIOS_PREVIOS,
+                                'pendingAndRecommendations' => $item->ANALISIS,
+                                'lastEvoDoctorCode' => $item->COD_MED_ULT_EVO,
+                                'lastEvoDoctorName' => trim($item->NOM_MED_ULT_EVO),
+                                'tVariable' => $item->VARIABLE_T,
+                                'nVariable' => $item->VARIABLE_N,
+                                'mVariable' => $item->VARIABLE_M,
+                                'background' => $antecedentes,
+                                'risks' => $riesgos
+                            );
+
+                            $consul_reason[] = $tempConsulReason;
                         }
 
 

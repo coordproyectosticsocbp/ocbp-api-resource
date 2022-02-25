@@ -108,10 +108,10 @@ class DoctorClinicController extends Controller
                                     'dateBirth' => $item->FECHA_NAC,
                                     'state' => $item->DEPARTAMENTO,
                                     'city' => $item->MUNICIPIO,
-                                    'bloodType' => $item->GRUPO_SANGUINEO,
-                                    'maritalStatus' => $item->ESTADOCIVIL,
+                                    'bloodType' => (int) $item->GRUPO_SANGUINEO,
+                                    'maritalStatus' => (int) $item->ESTADOCIVIL,
                                     'healthProvider' => $item->EMPRESA,
-                                    'documentType' => $item->TIP_DOC,
+                                    'documentType' => (int) $item->TIP_DOC,
                                     'informationContac' => $contactInfo
                                 );
 

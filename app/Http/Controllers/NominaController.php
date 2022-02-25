@@ -55,6 +55,7 @@ class NominaController extends Controller
             try {
 
                 $query_employees = DB::connection('sqlsrv_kactusprod')
+                    //->select("SELECT * FROM NOMINA_BD_EMPLEADOS_ACTIVOS() WHERE CARGO LIKE '%AUXILIARES CLINICOS%' AND ESTADO_EMPLEADO = 'A' ORDER BY Nombre");
                     ->select("SELECT * FROM NOMINA_BD_EMPLEADOS_ACTIVOS() ORDER BY Nombre");
 
                 if (count($query_employees) > 0) {
