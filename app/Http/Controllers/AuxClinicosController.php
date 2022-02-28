@@ -386,4 +386,102 @@ class AuxClinicosController extends Controller
             }
         }
     }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/clinical-assistants/get-services",
+     *     operationId="getServices",
+     *     tags={"AuxiliaresClinicos"},
+     *     summary="Get Services Informations",
+     *     description="Returns Services Information",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getPavilionsToMakeServices(Request $request)
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    $queryServices = DB::connection('sqlsrv')
+                        ->select("SELECT * FROM AUX_CLINICOS_GET_PAVILIONS_TO_MAKE_SERVICES()");
+
+                    if (count($queryServices) > 0) {
+
+                        $pavilions = [];
+
+                        foreach ($queryServices as $item) {
+
+                            $tempServices = array(
+                                'serviceName' => trim($item->servName),
+                                'serviceDescription' => trim($item->servDescription),
+                                'serviceTowerCode' => $item->serTowerCode,
+                                'serviceTowerName' => $item->TORRE_DESCRIP,
+                                'serviceFloor' => $item->serFloor,
+                            );
+
+                            $pavilions[] = $tempServices;
+                        }
+
+                        if (count($pavilions) > 0) {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Ok',
+                                    'status' => 200,
+                                    'data' => $pavilions,
+                                ], 200);
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Pavilions Array',
+                                    'status' => 200,
+                                    'data' => [],
+                                ], 200);
+                        }
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Query Request',
+                                'status' => 200,
+                                'data' => [],
+                            ], 200);
+                    }
+                } catch (\Throwable $e) {
+                    throw $e;
+                }
+            }
+        }
+    }
 }

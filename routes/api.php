@@ -411,6 +411,14 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/clinical-assistants/get-services',
+        [
+            \App\Http\Controllers\AuxClinicosController::class,
+            'getPavilionsToMakeServices'
+        ]
+    );
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* DOCTOR CLINIC */

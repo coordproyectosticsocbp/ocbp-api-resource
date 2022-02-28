@@ -65,11 +65,11 @@ class NominaController extends Controller
 
                     foreach ($query_employees as $employee) {
 
-                        if ($employee->ESTADO_EMPLEADO === 'A') {
+                        /* if ($employee->ESTADO_EMPLEADO === 'A') {
                             $employeeStatus = 1;
                         } else if ($employee->ESTADO_EMPLEADO === 'I') {
                             $employeeStatus = 0;
-                        }
+                        } */
 
 
                         $temp = array(
@@ -89,7 +89,7 @@ class NominaController extends Controller
                             'empCostCenter' => $employee->CENTRO_COSTO,
                             'empLastContractInitDate' => $employee->FECHA_INI_ULT_CONTRATO,
                             'empLastContractExpDate' => $employee->FECHA_VENC_ULT_CONTRATO,
-                            'empStatus' => $employeeStatus,
+                            'empStatus' => $employee->ESTADO_EMPLEADO,
                             'empSalary' => $employee->SUELDO_BASICO,
                             //'empPhoto' => $image,
                         );
