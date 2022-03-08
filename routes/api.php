@@ -345,6 +345,14 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/nomina/get/immediate-bosses',
+        [
+            \App\Http\Controllers\NominaController::class,
+            'getAllImmediateBoss'
+        ]
+    );
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* EXITUS */
@@ -398,7 +406,7 @@ Route::group([
     Route::get(
         '/clinical-assistants/get/patient-info-by-hab-code/{hab?}',
         [
-            \App\Http\Controllers\ExitusController::class,
+            \App\Http\Controllers\AuxClinicosController::class,
             'getPatientInfoByHabCode'
         ]
     );

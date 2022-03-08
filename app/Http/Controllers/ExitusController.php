@@ -226,7 +226,7 @@ class ExitusController extends Controller
 
                                             // CONSULTA PARA TRAER PACIENTES DE LAS HABITACIONES ENVIANDO COMO PARAMETRO EL CÓDIGO DEL PABELLÓN
                                             $query2 = DB::connection('sqlsrv_hosvital')
-                                                ->select("SELECT * FROM EXITUS_CENSO_REAL('$item->CODIGO_PABELLON')");
+                                                ->select("SELECT * FROM EXITUS_CENSO_REAL('$item->CODIGO_PABELLON') ORDER BY CAMA ASC");
 
                                             if (count($query2) > 0) {
 

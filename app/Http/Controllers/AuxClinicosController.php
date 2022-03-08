@@ -174,7 +174,7 @@ class AuxClinicosController extends Controller
                     if ($habCode) {
 
                         $query = DB::connection('sqlsrv_hosvital')
-                            ->select("SELECT * FROM EXITUS_PACIENTE_X_HABITACION('$habCode')");
+                            ->select("SELECT * FROM AUX_CLINICOS_PACIENTE_X_HABITACION('$habCode')");
 
                         if (count($query) > 0) {
 
@@ -195,6 +195,7 @@ class AuxClinicosController extends Controller
                                     'patEpsNit' => $item->EPS_NIT,
                                     'patEps' => $item->EPS,
                                     'PatContract' => $item->CONTRATO,
+                                    'PatPavilionCode' => trim($item->PABELLON_CODIGO),
                                     'PatPavilion' => trim($item->PABELLON),
                                     'PatHabitation' => trim($item->HABITACION),
                                     'PatContType' => $item->TIPO_CONTRATO,
@@ -313,12 +314,23 @@ class AuxClinicosController extends Controller
                         //$dt = Carbon::now()->format('Y-m-d');
 
                         $query_patient_info = DB::connection('sqlsrv_hosvital')
-                            ->select("SELECT * FROM AUX_CLINCOS_PACIENTE_INFO_X_CEDULA('$patientDoc', '$patientTipoDoc')");
+                            ->select("SELECT * FROM AUX_CLINICOS_PACIENTE_INFO_X_CEDULA('$patientDoc', '$patientTipoDoc')");
 
                         if (count($query_patient_info) > 0) {
+
                             $patient_info = [];
+                            $deathDateV = "";
+                            $deathState = 0;
 
                             foreach ($query_patient_info as $item) {
+
+                                if ($item->FECHA_DEFUNCION === '1753-01-01 00:00:00.000') {
+                                    $deathDateV = "";
+                                    $deathState = 0;
+                                } else {
+                                    $deathDateV = $item->FECHA_DEFUNCION;
+                                    $deathState = 1;
+                                }
 
                                 $temp = array(
                                     'document' => $item->NUM_HISTORIA,
@@ -339,7 +351,8 @@ class AuxClinicosController extends Controller
                                     'primaryDxDescription' => $item->DX,
                                     'patientHabitation' => $item->CAMA,
                                     'patientPavilion' => $item->PABELLON,
-                                    //'date' => $dt,
+                                    'patientDeathStatus' => $deathState,
+                                    'patientDeathDate' => $deathDateV,
                                     'realStay' => $item->EstanciaReal,
                                 );
 

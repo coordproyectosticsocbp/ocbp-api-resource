@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PhpParser\Node\Stmt\TryCatch;
 
 class NominaController extends Controller
 {
@@ -85,6 +86,8 @@ class NominaController extends Controller
                             'empImmediateBossDocument' => $employee->DOC_JEFE_INMEDIATO,
                             'empImmediateBossDocumentType' => $employee->TIPODOC_JEFE_INMEDIATO,
                             'empImmediateBoss' => $employee->JEFE_INMEDIATO,
+                            'empImmediateBossEmail' => $employee->EMAIL_JEFE_INMEDIATO,
+                            'empImmediateBossPhone' => $employee->TELEFONO_JEFE_INMEDIATO,
                             'empPosition' => $employee->Cargo,
                             'empCostCenter' => $employee->CENTRO_COSTO,
                             'empLastContractInitDate' => $employee->FECHA_INI_ULT_CONTRATO,
@@ -420,6 +423,148 @@ class NominaController extends Controller
                 }
             } else {
 
+                return response()
+                    ->json([
+                        'status' => 401,
+                        'message' => 'Unauthorized'
+                    ]);
+            }
+        }
+    }
+
+    /**FUNCIÓN PARA AGRUPAR PROPIEDADES POR CUALQUIER LLAVE */
+    function array_group_by(array $array, $key)
+    {
+        if (!is_string($key) && !is_int($key) && !is_float($key) && !is_callable($key)) {
+            trigger_error('array_group_by(): The key should be a string, an integer, or a callback', E_USER_ERROR);
+            return null;
+        }
+
+        $func = (!is_string($key) && is_callable($key) ? $key : null);
+        $_key = $key;
+
+        // Load the new array, splitting by the target key
+        $grouped = [];
+        foreach ($array as $value) {
+            $key = null;
+
+            if (is_callable($func)) {
+                $key = call_user_func($func, $value);
+            } elseif (is_object($value) && property_exists($value, $_key)) {
+                $key = $value->{$_key};
+            } elseif (isset($value[$_key])) {
+                $key = $value[$_key];
+            }
+
+            if ($key === null) {
+                continue;
+            }
+
+            $grouped[$key][] = $value;
+        }
+
+        // Recursively build a nested grouping if more parameters are supplied
+        // Each grouped array value is grouped according to the next sequential key
+        if (func_num_args() > 2) {
+            $args = func_get_args();
+
+            foreach ($grouped as $key => $value) {
+                $params = array_merge([$value], array_slice($args, 2, func_num_args()));
+                $grouped[$key] = call_user_func_array('array_group_by', $params);
+            }
+        }
+
+        return $grouped;
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/nomina/get/immediate-bosses",
+     *     operationId="get Immediate Bosses",
+     *     tags={"Nomina"},
+     *     summary="get Immediate Bosses",
+     *     description="Returns Immediate Bosses",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getAllImmediateBoss(Request $request)
+    {
+        if ($request->hasHeader('X-Authorization')) {
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    $queryImmediateBoss = DB::connection('sqlsrv_kactusprod')
+                        ->select("SELECT * FROM NOMINA_JEFES_INMEDIATOS()");
+
+                    $arrayIB = json_decode(json_encode($queryImmediateBoss), true);
+
+                    if (count($queryImmediateBoss) > 0) {
+
+                        $records = [];
+
+
+                        foreach ($arrayIB as $row) {
+                            $records[$row['DOC_JEFE_INMEDIATO']]['cc'] = $row['DOC_JEFE_INMEDIATO'];
+                            $records[$row['DOC_JEFE_INMEDIATO']]['tipDoc'] = $row['TIP_DOC_JEFE_INMEDIATO'];
+                            $records[$row['DOC_JEFE_INMEDIATO']]['name'] = $row['NOMBRE_JEFE_INMEDIATO'];
+                            $records[$row['DOC_JEFE_INMEDIATO']]['lastName'] = $row['APELLIDO_JEFE_INMEDIATO'];
+                            $records[$row['DOC_JEFE_INMEDIATO']]['gender'] = $row['SEXO'];
+                            $records[$row['DOC_JEFE_INMEDIATO']]['email'] = $row['EMAIL'];
+                            $records[$row['DOC_JEFE_INMEDIATO']]['phone'] = $row['TELEFONO'];
+                            $records[$row['DOC_JEFE_INMEDIATO']]['address'] = $row['DIRECCION'];
+                            $records[$row['DOC_JEFE_INMEDIATO']]['status'] = $row['ESTADO_EMPLEADO'];
+
+                            $records[$row['DOC_JEFE_INMEDIATO']]['costCenter'][] = array('center' => $row['CENTRO_COSTO']);
+                        }
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Immediate Boss Array',
+                                'data' => $records,
+                                'status' => 200
+                            ]);
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Immediate Boss Array',
+                                'data' => [],
+                                'status' => 204
+                            ]);
+                    }
+                } catch (\Throwable $e) {
+
+                    throw $e;
+                }
+            } else {
                 return response()
                     ->json([
                         'status' => 401,

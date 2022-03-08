@@ -110,7 +110,7 @@ class DoctorClinicController extends Controller
                                     'city' => $item->MUNICIPIO,
                                     'bloodType' => (int) $item->GRUPO_SANGUINEO,
                                     'maritalStatus' => (int) $item->ESTADOCIVIL,
-                                    'healthProvider' => $item->EMPRESA,
+                                    'healthProvider' => trim($item->EMPRESA),
                                     'documentType' => (int) $item->TIP_DOC,
                                     'informationContac' => $contactInfo
                                 );
