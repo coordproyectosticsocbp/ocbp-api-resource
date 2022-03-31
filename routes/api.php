@@ -27,7 +27,7 @@ Route::group([
 ], function () {
 
     /* INTEL OPTIONS */
-    Route::get('/hs/populations/age/{age}/date/{init?}/{end?}', [
+    Route::get('/hs/populations/age/{age?}/date/{init?}/{end?}', [
         \App\Http\Controllers\IntelOptionController::class,
         'getDataUsersPopulation'
     ]);
@@ -350,6 +350,14 @@ Route::group([
         [
             \App\Http\Controllers\NominaController::class,
             'getAllImmediateBoss'
+        ]
+    );
+
+    Route::get(
+        '/nomina/get/immediate-bosses-by-document/{document?}',
+        [
+            \App\Http\Controllers\NominaController::class,
+            'getAllImmediateBossByDocument'
         ]
     );
 

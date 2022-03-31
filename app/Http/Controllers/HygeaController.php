@@ -701,8 +701,18 @@ class HygeaController extends Controller
                 if (count($query_purchase_order) > 0) {
 
                     $purchaseOrders = [];
+                    $orderUpdated = 0;
+                    $orderUpdateDate = "";
 
                     foreach ($query_purchase_order as $item) {
+
+                        if ($item->FECHA_ORDEN != $item->FECHA_REGISTRO_PRODUCTO) {
+                            $orderUpdated = 1;
+                            $orderUpdateDate = $item->FECHA_REGISTRO_PRODUCTO;
+                        } else {
+                            $orderUpdated = 0;
+                            $orderUpdateDate = null;
+                        }
 
                         $temp = array(
                             'orderNro' => $item->NRO,
@@ -726,6 +736,8 @@ class HygeaController extends Controller
                             'authorizedBy' => trim($item->USUARIO_AUTORIZA),
                             'ordObservation' => $item->OBSERVACION,
                             'deliveryTime' => $item->TIEMPO_ENTREGA,
+                            'orderUpdated' => $orderUpdated,
+                            'updatedDate' => $orderUpdateDate
                         );
 
                         $purchaseOrders[] = $temp;
@@ -1449,11 +1461,7 @@ class HygeaController extends Controller
                     $patientLastSOAPEvolution = [];
 
                     $queryPatientLastEvolution = DB::connection('sqlsrv_hosvital')
-                        ->select("SELECT * FROM HYGEA_FOLIO_EVOLUCION()
-                                    WHERE   IDENTIFICACION = '$docPac'
-                                            AND TIPO_ID = '$docType'
-                                            AND FOLIO = '$folio'
-                                ");
+                        ->select("SELECT * FROM HYGEA_FOLIO_EVOLUCION('$docPac', '$docType', '$folio')");
 
                     if (count($queryPatientLastEvolution) > 0) {
 
@@ -1543,6 +1551,15 @@ class HygeaController extends Controller
                                         'data' => $patientLastSOAPEvolution
                                     ]);
                             }
+                        } else {
+
+                            // PETICIÓN CON RESPUESTA VACIA
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Patient Last Evolution Array',
+                                    'status' => 204,
+                                    'data' => []
+                                ]);
                         }
                     } /*else {
 

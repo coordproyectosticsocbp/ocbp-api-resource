@@ -195,6 +195,7 @@ class ExitusController extends Controller
             if (count($user) > 0) {
 
                 try {
+
                     // CONSULTA PATA OBTENER LAS TORRES QUE ESTEN ACTIVAS EN LA ORGANIZACIÓN
                     $query_torres = DB::connection('sqlsrv')
                         ->select("SELECT * FROM TORRES WHERE towerState = 1");
@@ -203,6 +204,9 @@ class ExitusController extends Controller
                         $torres = [];
 
                         foreach ($query_torres as $tower) {
+
+                            // FECHA ACTUAL
+                            $dt = Carbon::now()->format('Y-m-d');
 
                             // CONSULTA PARA OBTENER LA RELACIÓN DE TORRE PABELLÓN TENIENDO COMO PARAMETRO EL CÓDIGO DE LA TORRE
                             $query_torres_pavs = DB::connection('sqlsrv')
@@ -234,6 +238,7 @@ class ExitusController extends Controller
 
                                                 foreach ($query2 as $cat) {
 
+                                                    // REVISAR SI HAY PREALTA MEDICA PARA EL PACIENTE
                                                     if ($cat->PREALTA != null) {
                                                         $cat->PREALTA = 1;
                                                     } else {
@@ -248,6 +253,7 @@ class ExitusController extends Controller
                                                         'patient_doc' => $cat->NUM_HISTORIA,
                                                         'patient_doctype' => $cat->TI_DOC,
                                                         'patient_name' => $cat->NOMBRE_PACIENTE,
+                                                        'patient_birthDate' => $cat->FECHA_NAC,
                                                         'patient_eps_nit' => $cat->EPS_NIT,
                                                         'patient_eps' => $cat->EPS,
                                                         'patient_eps_email' => $cat->EPS_EMAIL,
@@ -265,7 +271,8 @@ class ExitusController extends Controller
                                                         'epicrisisType' => $cat->TIPO_EPICRISIS,
                                                         'parcialEpicrisisDate' => $cat->FECHA_EPICRISIS_EGRESO_PARCIAL,
                                                         'exitEpicrisisDate' => $cat->FECHA_EPICRISIS_EGRESO,
-                                                        'epicrisisDoctor' => $cat->USUARIO_EPICRISIS,
+                                                        'epicrisisDoctor' => trim($cat->USUARIO_EPICRISIS),
+                                                        'consumption' => null //$cat->CONSUMO != '' ? $cat->CONSUMO : 0,
                                                     );
 
                                                     $habs[] = $temp1;
@@ -395,21 +402,36 @@ class ExitusController extends Controller
                             foreach ($query as $item) {
 
                                 $temp = array(
-                                    'patName1' => trim($item->NOMBRE1),
-                                    'patName2' => trim($item->NOMBRE2),
-                                    'patLName1' => trim($item->APE1),
-                                    'patLName2' => trim($item->APE2),
+                                    'PatName1' => trim($item->NOMBRE1),
+                                    'PatName2' => trim($item->NOMBRE2),
+                                    'PatLName1' => trim($item->APE1),
+                                    'PatLName2' => trim($item->APE2),
                                     'PatTDoc' => trim($item->TIP_DOC),
                                     'PatDoc' => trim($item->IDENTIFICACION),
                                     'PatBDate' => $item->FECHA_NACIMIENTO,
+                                    'PatCity' => trim($item->MUNICIPIO),
+                                    'PatState' => trim($item->DEPARTAMENTO),
+                                    'PatAdmConsecutive' => $item->CTVO_INGRESO,
                                     'PatAdmDate' => $item->FECHA_INGRESO,
                                     'PatAge' => $item->EDAD,
-                                    'patEpsNit' => $item->EPS_NIT,
-                                    'patEps' => $item->EPS,
+                                    'PatGender' => $item->SEXO,
+                                    'PatEpsNit' => $item->EPS_NIT,
+                                    'PatEps' => $item->EPS,
                                     'PatContract' => $item->CONTRATO,
                                     'PatPavilion' => trim($item->PABELLON),
                                     'PatHabitation' => trim($item->HABITACION),
                                     'PatContType' => $item->TIPO_CONTRATO,
+                                    'PatDiagnostic' => $item->DIAGNOSTICO,
+                                    'PatEpicrisisType' => $item->TIPO_EPICRISIS,
+                                    'PatPartialEpicrisisDate' => $item->FECHA_EPICRISIS_PARCIAL,
+                                    'PatOutEpicrisisDate' => $item->FECHA_EPICRISIS_EGRESO,
+                                    'PatEpicrisisDoctor' => $item->MEDICO_EPICRISIS,
+                                    'PatSpecialistMedicaltDisDate' => $item->HORA_ALTA_ESPECIALISTA,
+                                    'PatSpecialistMedicaltDisUser' => $item->MEDICO_ALTA_ESPECIALISTA,
+                                    'Patprealta' => $item->PREALTA,
+                                    'PatRealStay' => $item->ESTANCIAREAL,
+                                    'PatHabStatus' => $item->ESTADO_CAMA,
+                                    'consumption' => null
                                 );
 
                                 $records[] = $temp;
@@ -427,19 +449,19 @@ class ExitusController extends Controller
 
                                 return response()
                                     ->json([
-                                        'msg' => 'No hay datos en respuesta a la solicitud',
+                                        'msg' => 'La Habitación Se Encuentra Vacia',
                                         'data' => [],
-                                        'status' => 200
-                                    ], 400);
+                                        'status' => 204
+                                    ]);
                             }
                         } else {
 
                             return response()
                                 ->json([
-                                    'msg' => 'No hay datos en respuesta a la solicitud',
+                                    'msg' => 'La Habitación Se Encuentra Vacia',
                                     'data' => [],
-                                    'status' => 200
-                                ], 400);
+                                    'status' => 204
+                                ]);
                         }
                     } else {
 
@@ -447,7 +469,7 @@ class ExitusController extends Controller
                             ->json([
                                 'msg' => 'Parametro habitación no recibido',
                                 'status' => 400
-                            ]);
+                            ], 400);
                     }
                 } catch (\Throwable $e) {
                     throw $e;
@@ -542,6 +564,7 @@ class ExitusController extends Controller
                                 'patientLastName' => trim($item->APE1),
                                 'patientSecondLastName' => trim($item->APE2),
                                 'patientDocumentType' => trim($item->TIP_DOC),
+                                'patientBirthDate' => trim($item->FECHA_NACIMIENTO),
                                 'patientDocument' => trim($item->CEDULA),
                                 'patientGender' => trim($item->SEXO),
                                 'patientAge' => trim($item->EDAD),
@@ -551,6 +574,9 @@ class ExitusController extends Controller
                                 'patientPavilion' => trim($item->PABELLON),
                                 'patientHabitation' => trim($item->HABITACION),
                                 'patientActualAttentionType' => trim($item->TIPO_ATENCION_ACTUAL_DESC),
+                                'patEpsNit' => $item->EPS_NIT,
+                                'patEps' => $item->EPS,
+                                'patContract' => $item->CONTRATO,
                             );
 
                             $arrayPatientToPrintHandle[] = $tempPatientToPrintHandle;

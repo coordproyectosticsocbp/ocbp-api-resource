@@ -17,7 +17,7 @@ class IntelOptionController extends Controller
 
     /**
      * @OA\Get (
-     *     path="/api/v1/hs/populations/age/{age}/date/{init?}/{end?}",
+     *     path="/api/v1/hs/populations/age/{age?}/date/{init?}/{end?}",
      *     operationId="getDataUsersPopulation",
      *     tags={"IntelOptions"},
      *     summary="Get Patient With CP Format",
@@ -75,7 +75,7 @@ class IntelOptionController extends Controller
      *      )
      * )
      */
-    public function getDataUsersPopulation(Request $request, $age)
+    public function getDataUsersPopulation(Request $request, $age = '40')
     {
         if ($request->hasHeader('X-Authorization')) {
 
@@ -83,7 +83,7 @@ class IntelOptionController extends Controller
                 $initdate = \request('init', \Carbon\Carbon::create('1900-01-01 00:00:00')->format('Ymd H:i:s'));
                 $enddate = \request('end', \Carbon\Carbon::now()->format('Ymd H:i:s'));
 
-                if ($age >= 50) {
+                if ($age >= 40) {
                     $query = DB::connection('sqlsrv_hosvital')
                         ->select(
                             DB::raw(
@@ -181,33 +181,27 @@ class IntelOptionController extends Controller
                             'count' => count($records),
                             'data' => $records,
                         ], 200);
-
                     } else {
 
                         return response()->json([
                             'msg' => 'No Hay Datos en la Respuesta a la Solicitud',
                             'status' => 204,
                         ]);
-
                     }
                 } else {
 
                     return response()->json([
-                        'msg' => 'La Edad Debe Ser Mayor o Igual a 50 Años',
+                        'msg' => 'La Edad Debe Ser Mayor o Igual a 40 Años',
                         'status' => 200
                     ], 200);
-
                 }
-
             } else {
 
                 return response()->json([
                     'msg' => 'El Parametro Edad No Puede Estar Vacío',
                     'status' => 200
                 ], 200);
-
             }
-
         } else {
 
             return response()->json([

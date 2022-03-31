@@ -573,4 +573,126 @@ class NominaController extends Controller
             }
         }
     }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/nomina/get/immediate-bosses-by-document/{document?}",
+     *     operationId="get Immediate Bosses By Document",
+     *     tags={"Nomina"},
+     *     summary="get Immediate Bosses By Document",
+     *     description="Returns Immediate Bosses By Document",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="document?",
+     *          description="Required Document",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getAllImmediateBossByDocument(Request $request, $document = '')
+    {
+        if ($request->hasHeader('X-Authorization')) {
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                // VALIDACIÓN SI EL DOCUMENTO Y EL TIPO DE DOCUMENTO NO SE ENVIAN COMO PARAMETROS
+                // POR SOLICITUD DEL PROVEEDOR SE QUITA EL TIPO DE DOCUMENTO COMO PARAMETRO 22-03-2022 07:30
+                if (!$document) {
+
+                    // RESPUESTA PARA ESTE CASO
+                    return response()
+                        ->json([
+                            'status' => 400,
+                            'message' => 'Parameters cannot be empty'
+                        ], 400);
+                } else {
+
+                    // MANEJO DE EERORES EN CASO DE QUE EL DOCUMENTO EXISTA
+                    try {
+
+                        // QUERY PARA OBTENER EL JEFE INMEDIATO POR DOCUMENTO
+                        $queryImmediateBoss = DB::connection('sqlsrv_kactusprod')
+                            ->select("SELECT * FROM NOMINA_JEFES_INMEDIATOS() WHERE DOC_JEFE_INMEDIATO = '$document'");
+
+                        // CONVERTIR EL RESULTADO DE LA CONSULTA A JSON
+                        $arrayIB = json_decode(json_encode($queryImmediateBoss), true);
+
+                        if (count($queryImmediateBoss) > 0) {
+
+                            $records = [];
+
+                            // RECORRER EL ARREGLO PARA OBTENER LOS DATOS
+                            foreach ($arrayIB as $row) {
+                                $records[$row['DOC_JEFE_INMEDIATO']]['immediateBossDocument'] = $row['DOC_JEFE_INMEDIATO'];
+                                $records[$row['DOC_JEFE_INMEDIATO']]['immediateBossDocumentType'] = $row['TIP_DOC_JEFE_INMEDIATO'];
+                                $records[$row['DOC_JEFE_INMEDIATO']]['immediateBossName'] = $row['NOMBRE_JEFE_INMEDIATO'];
+                                $records[$row['DOC_JEFE_INMEDIATO']]['immediateBossLastName'] = $row['APELLIDO_JEFE_INMEDIATO'];
+                                $records[$row['DOC_JEFE_INMEDIATO']]['immediateBossGender'] = $row['SEXO'];
+                                $records[$row['DOC_JEFE_INMEDIATO']]['immediateBossEmail'] = $row['EMAIL'];
+                                $records[$row['DOC_JEFE_INMEDIATO']]['immediateBossPhone'] = $row['TELEFONO'];
+                                $records[$row['DOC_JEFE_INMEDIATO']]['immediateBossAddress'] = $row['DIRECCION'];
+                                $records[$row['DOC_JEFE_INMEDIATO']]['immediateBossStatus'] = $row['ESTADO_EMPLEADO'];
+                                // AQUÍ SE LISTA LOS CENTROS DE COSTO ASOCIADOS A ESTA PERSONA
+                                $records[$row['DOC_JEFE_INMEDIATO']]['immediateBossCostCenter'][] = array('center' => $row['CENTRO_COSTO']);
+                            }
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Immediate Boss Array',
+                                    'data' => $records,
+                                    'status' => 200
+                                ]);
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Immediate Boss Array',
+                                    'data' => [],
+                                    'status' => 204
+                                ]);
+                        }
+                    } catch (\Throwable $e) {
+
+                        throw $e;
+                    }
+                }
+            } else {
+                return response()
+                    ->json([
+                        'status' => 401,
+                        'message' => 'Unauthorized'
+                    ]);
+            }
+        }
+    }
 }

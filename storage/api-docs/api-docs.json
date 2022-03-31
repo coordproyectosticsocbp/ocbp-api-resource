@@ -1643,7 +1643,7 @@
                 ]
             }
         },
-        "/api/v1/hs/populations/age/{age}/date/{init?}/{end?}": {
+        "/api/v1/hs/populations/age/{age?}/date/{init?}/{end?}": {
             "get": {
                 "tags": [
                     "IntelOptions"
@@ -1970,6 +1970,49 @@
                 "summary": "get Immediate Bosses",
                 "description": "Returns Immediate Bosses",
                 "operationId": "get Immediate Bosses",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/nomina/get/immediate-bosses-by-document/{document?}": {
+            "get": {
+                "tags": [
+                    "Nomina"
+                ],
+                "summary": "get Immediate Bosses By Document",
+                "description": "Returns Immediate Bosses By Document",
+                "operationId": "get Immediate Bosses By Document",
+                "parameters": [
+                    {
+                        "name": "document?",
+                        "in": "path",
+                        "description": "Required Document",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation"
