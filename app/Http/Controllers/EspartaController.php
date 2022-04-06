@@ -16,7 +16,7 @@ class EspartaController extends Controller
     /**
      * @OA\Get (
      *     path="/api/v1/esparta/patient/{patientdoc}/type/{patientdoctype}/information",
-     *     operationId="initialPatientInfo",
+     *     operationId="initialPatientInfoEsparta",
      *     tags={"Esparta"},
      *     summary="Get Patient Informations",
      *     description="Returns Patient Information",

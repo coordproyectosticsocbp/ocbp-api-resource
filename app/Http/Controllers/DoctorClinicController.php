@@ -16,7 +16,7 @@ class DoctorClinicController extends Controller
     /**
      * @OA\Get (
      *     path="/api/v1/doctor-clinic/patient/{patientdoc?}/type/{patientdoctype?}/information",
-     *     operationId="initialPatientInfo",
+     *     operationId="initialPatientInfoDoctorClinic",
      *     tags={"Doctor Clinic"},
      *     summary="Get Patient Informations",
      *     description="Returns Patient Information",

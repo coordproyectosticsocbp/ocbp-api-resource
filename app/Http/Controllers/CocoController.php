@@ -11,7 +11,7 @@ class CocoController extends Controller
     /**
      * @OA\Get (
      *     path="/api/v1/coco/patient/{patientdoc}/type/{patientdoctype}/information",
-     *     operationId="initialPatientInfo",
+     *     operationId="initialPatientInfoCoco",
      *     tags={"COCO"},
      *     summary="Get Patient Informations",
      *     description="Returns Patient Information",
@@ -129,5 +129,4 @@ class CocoController extends Controller
             }
         }
     }
-
 }

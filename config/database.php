@@ -87,6 +87,19 @@ return [
             'prefix_indexes' => true,
         ],
 
+        'pgsql' => [
+            'driver' => 'pgsql',
+            'url' => '',
+            'host' => 'bonnadona.c8zxnvpdepuk.us-east-1.rds.amazonaws.com',
+            'port' => '4563',
+            'database' => 'Bonnadona',
+            'username' => 'postgres',
+            'password' => 'NeDSBAxreld8E9it',
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
+
     ],
 
     /*

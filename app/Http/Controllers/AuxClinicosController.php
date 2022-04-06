@@ -249,7 +249,7 @@ class AuxClinicosController extends Controller
     /**
      * @OA\Get (
      *     path="/api/v1/clinical-assistants/patient/{patientdoc?}/type/{patientdoctype?}",
-     *     operationId="initialPatientInfo",
+     *     operationId="initialPatientInfoClinicalAssistant",
      *     tags={"AuxiliaresClinicos"},
      *     summary="Get Patient Informations",
      *     description="Returns Patient Information",

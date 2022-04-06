@@ -69,7 +69,6 @@ class EthereumController extends Controller
                         );
 
                         $records[] = $temp;
-
                     }
 
 
@@ -81,7 +80,6 @@ class EthereumController extends Controller
                                 'status' => 200,
                                 'data' => $records
                             ]);
-
                     } else {
 
                         return response()
@@ -90,9 +88,7 @@ class EthereumController extends Controller
                                 'status' => 400,
                                 'data' => []
                             ]);
-
                     }
-
                 } else {
 
                     return response()
@@ -101,15 +97,11 @@ class EthereumController extends Controller
                             'status' => 400,
                             'data' => []
                         ]);
-
                 }
-
             } catch (\Throwable $e) {
 
                 throw $e;
-
             }
-
         }
     }
 
@@ -175,7 +167,6 @@ class EthereumController extends Controller
                     );
 
                     $records[] = $temp;
-
                 }
 
 
@@ -187,7 +178,6 @@ class EthereumController extends Controller
                             'status' => 200,
                             'data' => $records
                         ]);
-
                 } else {
 
                     return response()
@@ -196,9 +186,7 @@ class EthereumController extends Controller
                             'status' => 400,
                             'data' => []
                         ]);
-
                 }
-
             } else {
 
                 return response()
@@ -207,9 +195,7 @@ class EthereumController extends Controller
                         'status' => 400,
                         'data' => []
                     ]);
-
             }
-
         }
     }
 
@@ -270,7 +256,6 @@ class EthereumController extends Controller
                     );
 
                     $records[] = $temp;
-
                 }
 
 
@@ -282,7 +267,6 @@ class EthereumController extends Controller
                             'status' => 200,
                             'data' => $records
                         ]);
-
                 } else {
 
                     return response()
@@ -291,9 +275,7 @@ class EthereumController extends Controller
                             'status' => 400,
                             'data' => []
                         ]);
-
                 }
-
             } else {
 
                 return response()
@@ -302,7 +284,6 @@ class EthereumController extends Controller
                         'status' => 400,
                         'data' => []
                     ]);
-
             }
 
             /*} catch (\Throwable $e) {
@@ -310,7 +291,6 @@ class EthereumController extends Controller
                 throw $e;
 
             }*/
-
         }
     }
 
@@ -318,7 +298,7 @@ class EthereumController extends Controller
     /**
      * @OA\Get (
      *     path="/api/v1/ethereum/get/patient/{patientdoc}/type/{patientdoctype}/information",
-     *     operationId="initialPatientInfo",
+     *     operationId="initialPatientInfoEthereum",
      *     tags={"Ethereum"},
      *     summary="Get Patient Informations",
      *     description="Returns Patient Information",
@@ -436,5 +416,4 @@ class EthereumController extends Controller
             }
         }
     }
-
 }

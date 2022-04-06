@@ -17,7 +17,7 @@ class HitoController extends Controller
     /**
      * @OA\Get (
      *     path="/api/v1/hito/get/occupation-with-real-stay",
-     *     operationId="occupation",
+     *     operationId="occupationHito",
      *     tags={"Hito"},
      *     summary="Get occupation Info With Real Stay",
      *     description="Returns occupation Name",
@@ -181,7 +181,7 @@ class HitoController extends Controller
     /**
      * @OA\Get (
      *     path="/api/v1/hito/get/patient-info-by-hab-code/{hab?}",
-     *     operationId="getPatientInfoByHabCode",
+     *     operationId="getPatientInfoByHabCodeHito",
      *     tags={"Hito"},
      *     summary="Get Patient Info by Hab Code",
      *     description="Returns Patient Info by Hab Code",

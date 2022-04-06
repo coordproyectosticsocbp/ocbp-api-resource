@@ -24,6 +24,7 @@ Route::post('logout', [\App\Http\Controllers\LoginController::class, 'Logout']);
 Route::group([
     'prefix' => 'v1',
     'middleware' => 'auth.apikey'
+    //'middleware' => ['auth.apikey', 'cors']
 ], function () {
 
     /* INTEL OPTIONS */
@@ -452,11 +453,23 @@ Route::group([
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* COCO */
-    Route::get(
+    /* Route::get(
         '/coco/patient/{patientdoc}/type/{patientdoctype}/information',
         [
             \App\Http\Controllers\CocoController::class,
             'initialPatientInfo'
+        ]
+    ); */
+
+    /*-------------------------------------------------------------------------------------------------------------*/
+
+    /* ENTREGA DE TURNOS */
+
+    Route::get(
+        secure_url('/turnos/get/turns-by-date/{pavilion?}/{date?}'),
+        [
+            \App\Http\Controllers\TurnDeliveryController::class,
+            'getTurnsByDate'
         ]
     );
 });

@@ -198,8 +198,8 @@ return [
         /*
          * Uncomment to add constants which can be used in annotations
          */
-         'constants' => [
-             'L5_SWAGGER_CONST_HOST' => env('L5_SWAGGER_CONST_HOST', 'http://190.131.222.108:8088/api/v1'),
-         ],
+        'constants' => [
+            'L5_SWAGGER_CONST_HOST' => env('L5_SWAGGER_CONST_HOST', 'http://190.131.222.108:8088/api/v1'),
+        ],
     ],
 ];

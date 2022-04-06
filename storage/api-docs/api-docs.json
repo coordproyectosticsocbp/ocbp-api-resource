@@ -162,7 +162,7 @@
                 ],
                 "summary": "Get Patient Informations",
                 "description": "Returns Patient Information",
-                "operationId": "initialPatientInfo",
+                "operationId": "initialPatientInfoClinicalAssistant",
                 "parameters": [
                     {
                         "name": "patientdoc?",
@@ -246,7 +246,7 @@
                 ],
                 "summary": "Get Patient Informations",
                 "description": "Returns Patient Information",
-                "operationId": "initialPatientInfo",
+                "operationId": "initialPatientInfoCoco",
                 "parameters": [
                     {
                         "name": "patientdoc",
@@ -298,7 +298,7 @@
                 ],
                 "summary": "Get Patient Informations",
                 "description": "Returns Patient Information",
-                "operationId": "initialPatientInfo",
+                "operationId": "initialPatientInfoDoctorClinic",
                 "parameters": [
                     {
                         "name": "patientdoc?",
@@ -350,7 +350,7 @@
                 ],
                 "summary": "Get Patient Informations",
                 "description": "Returns Patient Information",
-                "operationId": "initialPatientInfo",
+                "operationId": "initialPatientInfoEsparta",
                 "parameters": [
                     {
                         "name": "patientdoc",
@@ -498,7 +498,7 @@
                 ],
                 "summary": "Get Patient Informations",
                 "description": "Returns Patient Information",
-                "operationId": "initialPatientInfo",
+                "operationId": "initialPatientInfoEthereum",
                 "parameters": [
                     {
                         "name": "patientdoc",
@@ -729,7 +729,7 @@
                 ],
                 "summary": "Get Patient Info by Hab Code",
                 "description": "Returns Patient Info by Hab Code",
-                "operationId": "getPatientInfoByHabCode",
+                "operationId": "getPatientInfoByHabCodeExitus",
                 "parameters": [
                     {
                         "name": "hab?",
@@ -824,7 +824,7 @@
                 ],
                 "summary": "Get occupation Info With Real Stay",
                 "description": "Returns occupation Name",
-                "operationId": "occupation",
+                "operationId": "occupationHito",
                 "responses": {
                     "200": {
                         "description": "Successful operation"
@@ -856,7 +856,7 @@
                 ],
                 "summary": "Get Patient Info by Hab Code",
                 "description": "Returns Patient Info by Hab Code",
-                "operationId": "getPatientInfoByHabCode",
+                "operationId": "getPatientInfoByHabCodeHito",
                 "parameters": [
                     {
                         "name": "hab?",
@@ -1099,7 +1099,7 @@
                 ],
                 "summary": "Get Providers Info",
                 "description": "Returns Providers Info",
-                "operationId": "get Providers Info",
+                "operationId": "get Providers Info Hygea",
                 "responses": {
                     "200": {
                         "description": "Successful operation"
@@ -1131,7 +1131,7 @@
                 ],
                 "summary": "Get Purchases Orders Info",
                 "description": "Returns Purchases Orders Info",
-                "operationId": "get Purchases Orders Info",
+                "operationId": "get Purchases Orders Info Hygea",
                 "parameters": [
                     {
                         "name": "date",
@@ -2007,6 +2007,58 @@
                         "name": "document?",
                         "in": "path",
                         "description": "Required Document",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/turnos/get/turns-by-date/{pavilion?}/{date?}": {
+            "get": {
+                "tags": [
+                    "Hito"
+                ],
+                "summary": "get get Turns by date",
+                "description": "Returns get Turns by date",
+                "operationId": "get Turns by date",
+                "parameters": [
+                    {
+                        "name": "pavilion?",
+                        "in": "path",
+                        "description": "Required",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date?",
+                        "in": "path",
+                        "description": "Required",
                         "required": true,
                         "schema": {
                             "type": "string"

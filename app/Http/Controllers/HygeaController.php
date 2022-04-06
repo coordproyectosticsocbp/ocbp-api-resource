@@ -119,7 +119,7 @@ class HygeaController extends Controller
     /**
      * @OA\Get (
      *     path="/api/v1/hygea/get/providers",
-     *     operationId="get Providers Info",
+     *     operationId="get Providers Info Hygea",
      *     tags={"Hygea"},
      *     summary="Get Providers Info",
      *     description="Returns Providers Info",
@@ -208,7 +208,7 @@ class HygeaController extends Controller
     /**
      * @OA\Get (
      *     path="/api/v1/hygea/get/purchase-orders/{date?}",
-     *     operationId="get Purchases Orders Info",
+     *     operationId="get Purchases Orders Info Hygea",
      *     tags={"Hygea"},
      *     summary="Get Purchases Orders Info",
      *     description="Returns Purchases Orders Info",

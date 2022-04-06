@@ -339,7 +339,7 @@ class ExitusController extends Controller
     /**
      * @OA\Get (
      *     path="/api/v1/exitus/get/patient-info-by-hab-code/{hab?}",
-     *     operationId="getPatientInfoByHabCode",
+     *     operationId="getPatientInfoByHabCodeExitus",
      *     tags={"Exitus"},
      *     summary="Get Patient Info by Hab Code",
      *     description="Returns Patient Info by Hab Code",
