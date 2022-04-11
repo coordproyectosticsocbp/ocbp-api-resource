@@ -18,6 +18,7 @@ return [
     'paths' => [
         'http://190.131.222.108:8088/*',
         'http://localhost:8080/*',
+        'https://glacial-anchorage-67584.herokuapp.com/*',
     ],
 
     'allowed_methods' => ['*'],

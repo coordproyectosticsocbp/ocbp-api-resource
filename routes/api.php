@@ -111,6 +111,22 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/hito/get/audit-get-patient-procedures/{patientdoc?}/{patientdoctype?}',
+        [
+            \App\Http\Controllers\HitoController::class,
+            'getOrderedProceduresByPatientDocTwo'
+        ]
+    );
+
+    /* Route::get(
+        '/hito/get/audit-get-patient-two/{patientdoc?}/{patientdoctype?}',
+        [
+            \App\Http\Controllers\HitoController::class,
+            'getOrderedProceduresByPatientDocTwo'
+        ]
+    ); */
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* AGOTADOS */

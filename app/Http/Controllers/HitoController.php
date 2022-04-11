@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use COM;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -970,6 +971,288 @@ class HitoController extends Controller
                         'msg' => 'Ok',
                         'status' => 204,
                     ]);
+            }
+        }
+    }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hito/get/audit-get-patient/{patientdoc?}/{patientdoctype?}",
+     *     operationId="getPatientInfoForAudit",
+     *     tags={"Hito"},
+     *     summary="Get Patient Info For Audit",
+     *     description="Returns Patient Info for Audit",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="patientdoc?",
+     *          description="Número de Documento - Opcional",
+     *          in="path",
+     *          required=true,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="patientdoctype?",
+     *          description="Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+     *          in="path",
+     *          required=true,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getOrderedProceduresByPatientDoc(Request $request, $patientDoc = '', $patientDocType = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                if (!$patientDoc || !$patientDocType) {
+                    return response()
+                        ->json([
+                            'msg' => 'Parameters Cannot be Empty',
+                            'status' => 400,
+                        ], 400);
+                } else {
+
+                    $query_procedures = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM HITO_AUDITORIA_PROCEDIMIENTOS_ANTERIORES('$patientDoc', '$patientDocType')");
+
+                    if (count($query_procedures) > 0) {
+
+                        $procedures = [];
+
+                        foreach ($query_procedures as $item) {
+
+                            $temp = array(
+                                'patientFirstName' => $item->NOMBRE1,
+                                'patientSecondName' => $item->NOMBRE2,
+                                'patientLastName' => $item->APELLIDO1,
+                                'patientSecondLastName' => $item->APELLIDO2,
+                                'patientDoc' => $item->NUM_DOC,
+                                'patientDocType' => $item->TIP_DOC,
+                                'patientBirthDate' => $item->FECHA_NAC,
+                                'patientGender' => $item->SEXO,
+                                'patientBloodType' => $item->GRUPO_SANGUINEO,
+                                'patientCity' => $item->MUNICIPIO,
+                                'patientState' => $item->DEPARTAMENTO,
+                                'patientAdmConsecutive' => $item->INGRESO,
+                                'patientAdmDate' => $item->FECHA_INGRESO,
+                                'patientEpsCode' => $item->EPS,
+                                'patientEpsName' => $item->EPS_NOM,
+                                'patientContract' => $item->CONTRATO,
+                                'patientProcedureCode' => $item->PROCEDIMIENTO_COD,
+                                'patientProcedureName' => $item->NOMB_PROCED,
+                                'patientProcedureScheduleDate' => $item->FECHA_PROGRAMACION,
+                                'patientProcedureExecutionDate' => $item->FECHA_PROCEDIMIENTO,
+                                'patientProcedureDifDate' => $item->DIFERENCIA_FP_FPROC,
+                            );
+
+                            $procedures[] = $temp;
+                        }
+
+                        if (count($procedures) < 0) {
+                            return response()
+                                ->json([
+                                    'msg' => 'Procedures Array is empty',
+                                    'status' => 204,
+                                    'data' => []
+                                ]);
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Ok',
+                                    'status' => 200,
+                                    'data' => $procedures
+                                ], 200);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+
+    // ============================================================
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hito/get/audit-get-patient-procedures/{patientdoc?}/{patientdoctype?}",
+     *     operationId="getPatientInfoForAuditTwo",
+     *     tags={"Hito"},
+     *     summary="Get Patient Info For Audit",
+     *     description="Returns Patient Info for Audit",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="patientdoc?",
+     *          description="Número de Documento - Opcional",
+     *          in="path",
+     *          required=true,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="patientdoctype?",
+     *          description="Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+     *          in="path",
+     *          required=true,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getOrderedProceduresByPatientDocTwo(Request $request, $patientDoc = '', $patientDocType = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                if (!$patientDoc || !$patientDocType) {
+                    return response()
+                        ->json([
+                            'msg' => 'Parameters Cannot be Empty',
+                            'status' => 400,
+                        ], 400);
+                } else {
+
+                    $query_procedures = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM HITO_AUDITORIA_PROCEDIMIENTOS_ANTERIORES('$patientDoc', '$patientDocType')");
+
+                    if (count($query_procedures) > 0) {
+
+                        $procedures = [];
+
+                        foreach (json_decode(json_encode($query_procedures), true) as $item) {
+
+                            if (!isset($procedures[$item['NUM_DOC']])) {
+                                $procedures[$item['NUM_DOC']] = array(
+                                    'patientFirstName' => $item['NOMBRE1'],
+                                    'patientSecondName' => $item['NOMBRE2'],
+                                    'patientLastName' => $item['APELLIDO1'],
+                                    'patientSecondLastName' => $item['APELLIDO2'],
+                                    'patientDoc' => $item['NUM_DOC'],
+                                    'patientDocType' => $item['TIP_DOC'],
+                                    'patientBirthDate' => $item['FECHA_NAC'],
+                                    'patientGender' => $item['SEXO'],
+                                    'patientBloodType' => $item['GRUPO_SANGUINEO'],
+                                    'patientCity' => $item['MUNICIPIO'],
+                                    'patientState' => $item['DEPARTAMENTO'],
+                                    'patientAdmConsecutive' => $item['INGRESO'],
+                                    'patientAdmDate' => Carbon::parse($item['FECHA_INGRESO'])->format('Y-m-d H:i:s'),
+                                    'patientEpsCode' => $item['EPS'],
+                                    'patientEpsName' => $item['EPS_NOM'],
+                                    'patientContract' => $item['CONTRATO'],
+
+                                );
+                                unset(
+                                    $procedures[$item['NUM_DOC']]['PROCEDIMIENTO_COD'],
+                                    $procedures[$item['NUM_DOC']]['NOMB_PROCED'],
+                                    $procedures[$item['NUM_DOC']]['FECHA_PROGRAMACION'],
+                                    $procedures[$item['NUM_DOC']]['FECHA_PROCEDIMIENTO'],
+                                    $procedures[$item['NUM_DOC']]['DIFERENCIA_FP_FPROC'],
+                                    $procedures[$item['NUM_DOC']]['QX_ESTADO'],
+                                    $procedures[$item['NUM_DOC']]['MOTIVO_CANCELACION'],
+                                    $procedures[$item['NUM_DOC']]['OBS_CANCELACION'],
+                                );
+                                $procedures[$item['NUM_DOC']]['procedures'] = [];
+                            }
+
+                            $procedures[$item['NUM_DOC']]['procedures'][] = array(
+                                'procedureCode' => $item['PROCEDIMIENTO_COD'],
+                                'procedureName' => $item['NOMB_PROCED'],
+                                'procedureScheduleDate' => $item['FECHA_PROGRAMACION'],
+                                'procedureExecutionDate' => $item['FECHA_PROCEDIMIENTO'],
+                                'procedureDifDate' => $item['DIFERENCIA_FP_FPROC'],
+                                'procedureState' => $item['QX_ESTADO'],
+                                'procedureCancelReason' => $item['MOTIVO_CANCELACION'],
+                                'procedureCancelObs' => $item['OBS_CANCELACION'],
+                            );
+                        }
+                        if (count($procedures) > 0) {
+                            $procedures = array_values($procedures);
+                            return response()
+                                ->json([
+                                    'msg' => 'Ok',
+                                    'status' => 200,
+                                    'data' => $procedures
+                                ], 200);
+                        } else {
+                            return response()
+                                ->json([
+                                    'msg' => 'Procedures Array is Empty',
+                                    'status' => 204,
+                                    'data' => []
+                                ], 204);
+                        }
+                    } else {
+                        return response()
+                            ->json([
+                                'msg' => 'Procedures Query is Empty',
+                                'status' => 204,
+                                'data' => []
+                            ]);
+                    }
+                }
             }
         }
     }
