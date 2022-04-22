@@ -115,7 +115,15 @@ Route::group([
         '/hito/get/audit-get-patient-procedures/{patientdoc?}/{patientdoctype?}',
         [
             \App\Http\Controllers\HitoController::class,
-            'getOrderedProceduresByPatientDocTwo'
+            'getOrderedProceduresByPatientDoc'
+        ]
+    );
+
+    Route::get(
+        '/hito/get/audit-patient-admision-history/{patientdoc?}/{patientdoctype?}',
+        [
+            \App\Http\Controllers\HitoController::class,
+            'getPatientAdmisionHistory'
         ]
     );
 

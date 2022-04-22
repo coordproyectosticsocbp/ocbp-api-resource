@@ -476,7 +476,7 @@ class HitoController extends Controller
                 $dt = Carbon::now()->format('Y-m-d');
 
                 $query_patient_info = DB::connection('sqlsrv_hosvital')
-                    ->select("SELECT * FROM HITO_INFORMACION_HISTORIAL_CLINICO('$patientDoc', '$patientTipoDoc')");
+                    ->select("SELECT * FROM HITO_INFORMACION_HISTORIAL_CLINICO_V2('$patientDoc', '$patientTipoDoc')");
 
                 if (count($query_patient_info) > 0) {
                     $patient_info = [];
@@ -628,11 +628,11 @@ class HitoController extends Controller
                             foreach ($query_antecedentes as $antecedente) {
 
                                 $temp3 = array(
-                                    'folio' => $antecedente->FOLIO,
-                                    'backDate' => $antecedente->FECHA,
-                                    'backGroup' => $antecedente->GRUPO_ANTECEDENTE,
-                                    'backSubGroup' => $antecedente->SUBGRUPO_ANTECEDENTE,
-                                    'backDesc' => $antecedente->ANTECEDENTES,
+                                    'folio' => $antecedente->FOLIO ? $antecedente->FOLIO : '',
+                                    'backDate' => $antecedente->FECHA ? $antecedente->FECHA : '',
+                                    'backGroup' => $antecedente->GRUPO_ANTECEDENTE ? $antecedente->GRUPO_ANTECEDENTE : '',
+                                    'backSubGroup' => $antecedente->SUBGRUPO_ANTECEDENTE ? $antecedente->SUBGRUPO_ANTECEDENTE : '',
+                                    'backDesc' => $antecedente->ANTECEDENTES ? $antecedente->ANTECEDENTES : '',
                                 );
 
                                 $antecedentes[] = $temp3;
@@ -669,23 +669,23 @@ class HitoController extends Controller
                                 $temp2 = array(
                                     //'folio' => $item->FOLIO,
                                     //'currentDisease' => $item->ENFEREMDAD_ACTUAL,
-                                    'lastInterConsulDoctorDoc' => $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA,
-                                    'lastInterConsulDoctor' => $item->ULTIMO_ESPECIALISTA_INTERCONSULTA,
-                                    'lastInterConsulSpeciality' => $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA,
-                                    'neutropenia' => $item->NEUTROPENIA,
-                                    'preMedicalDischarge' => $item->PREALTA,
-                                    'dxSecondaryCode' => $item->COD_DX_SECUNDARIO,
-                                    'dxSecondaryName' => $item->NOMBRE_DX_SECUNDARIO,
-                                    'consultationReason' => $cr->DESCRIPCION_EVOLUCION,
-                                    'medDiagnostics' => $item->DX_MEDICO,
-                                    'treatment' => $item->TRATAMIENTOS,
-                                    'previousStudies' => $item->ESTUDIOS_PREVIOS,
-                                    'pendingAndRecommendations' => $item->ANALISIS,
-                                    'lastEvoDoctorCode' => $item->COD_MED_ULT_EVO,
+                                    'lastInterConsulDoctorDoc' => $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA ? $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA : '',
+                                    'lastInterConsulDoctor' => $item->ULTIMO_ESPECIALISTA_INTERCONSULTA ? $item->ULTIMO_ESPECIALISTA_INTERCONSULTA : '',
+                                    'lastInterConsulSpeciality' => $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA ? $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA : '',
+                                    'neutropenia' => $item->NEUTROPENIA ? $item->NEUTROPENIA : '',
+                                    'preMedicalDischarge' => $item->PREALTA ? $item->PREALTA : '',
+                                    'dxSecondaryCode' => $item->COD_DX_SECUNDARIO ? $item->COD_DX_SECUNDARIO : '',
+                                    'dxSecondaryName' => $item->NOMBRE_DX_SECUNDARIO ? $item->NOMBRE_DX_SECUNDARIO : '',
+                                    'consultationReason' => $cr->DESCRIPCION_EVOLUCION ? $cr->DESCRIPCION_EVOLUCION : '',
+                                    'medDiagnostics' => $item->DX_MEDICO ? $item->DX_MEDICO : '',
+                                    'treatment' => $item->TRATAMIENTOS ? $item->TRATAMIENTOS : '',
+                                    'previousStudies' => $item->ESTUDIOS_PREVIOS ? $item->ESTUDIOS_PREVIOS : '',
+                                    'pendingAndRecommendations' => $item->ANALISIS ? $item->ANALISIS : '',
+                                    'lastEvoDoctorCode' => $item->COD_MED_ULT_EVO ? $item->COD_MED_ULT_EVO : '',
                                     'lastEvoDoctorName' => trim($item->NOM_MED_ULT_EVO),
-                                    'tVariable' => $item->VARIABLE_T,
-                                    'nVariable' => $item->VARIABLE_N,
-                                    'mVariable' => $item->VARIABLE_M,
+                                    'tVariable' => $item->VARIABLE_T ? $item->VARIABLE_T : '',
+                                    'nVariable' => $item->VARIABLE_N ? $item->VARIABLE_N : '',
+                                    'mVariable' => $item->VARIABLE_M ? $item->VARIABLE_M : '',
                                     'background' => $antecedentes,
                                     'risks' => $riesgos
                                 );
@@ -715,23 +715,23 @@ class HitoController extends Controller
                             $tempConsulReason = array(
                                 //'folio' => $item->FOLIO,
                                 //'currentDisease' => $item->ENFEREMDAD_ACTUAL,
-                                'lastInterConsulDoctorDoc' => $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA,
-                                'lastInterConsulDoctor' => $item->ULTIMO_ESPECIALISTA_INTERCONSULTA,
-                                'lastInterConsulSpeciality' => $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA,
-                                'neutropenia' => $item->NEUTROPENIA,
-                                'preMedicalDischarge' => $item->PREALTA,
-                                'dxSecondaryCode' => $item->COD_DX_SECUNDARIO,
-                                'dxSecondaryName' => $item->NOMBRE_DX_SECUNDARIO,
+                                'lastInterConsulDoctorDoc' => $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA ? $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA : '',
+                                'lastInterConsulDoctor' => $item->ULTIMO_ESPECIALISTA_INTERCONSULTA ? $item->ULTIMO_ESPECIALISTA_INTERCONSULTA : '',
+                                'lastInterConsulSpeciality' => $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA ? $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA : '',
+                                'neutropenia' => $item->NEUTROPENIA ? $item->NEUTROPENIA : '',
+                                'preMedicalDischarge' => $item->PREALTA ? $item->PREALTA : '',
+                                'dxSecondaryCode' => $item->COD_DX_SECUNDARIO ? $item->COD_DX_SECUNDARIO : '',
+                                'dxSecondaryName' => $item->NOMBRE_DX_SECUNDARIO ? $item->NOMBRE_DX_SECUNDARIO : '',
                                 'consultationReason' => "",
-                                'medDiagnostics' => $item->DX_MEDICO,
-                                'treatment' => $item->TRATAMIENTOS,
-                                'previousStudies' => $item->ESTUDIOS_PREVIOS,
-                                'pendingAndRecommendations' => $item->ANALISIS,
-                                'lastEvoDoctorCode' => $item->COD_MED_ULT_EVO,
+                                'medDiagnostics' => $item->DX_MEDICO ? $item->DX_MEDICO : '',
+                                'treatment' => $item->TRATAMIENTOS ? $item->TRATAMIENTOS : '',
+                                'previousStudies' => $item->ESTUDIOS_PREVIOS ? $item->ESTUDIOS_PREVIOS : '',
+                                'pendingAndRecommendations' => $item->ANALISIS ? $item->ANALISIS : '',
+                                'lastEvoDoctorCode' => $item->COD_MED_ULT_EVO ? $item->COD_MED_ULT_EVO : '',
                                 'lastEvoDoctorName' => trim($item->NOM_MED_ULT_EVO),
-                                'tVariable' => $item->VARIABLE_T,
-                                'nVariable' => $item->VARIABLE_N,
-                                'mVariable' => $item->VARIABLE_M,
+                                'tVariable' => $item->VARIABLE_T ? $item->VARIABLE_T : '',
+                                'nVariable' => $item->VARIABLE_N ? $item->VARIABLE_N : '',
+                                'mVariable' => $item->VARIABLE_M ? $item->VARIABLE_M : '',
                                 'background' => $antecedentes,
                                 'risks' => $riesgos
                             );
@@ -975,9 +975,12 @@ class HitoController extends Controller
         }
     }
 
+
+    // ============================================================
+
     /**
      * @OA\Get (
-     *     path="/api/v1/hito/get/audit-get-patient/{patientdoc?}/{patientdoctype?}",
+     *     path="/api/v1/hito/get/audit-get-patient-procedures/{patientdoc?}/{patientdoctype?}",
      *     operationId="getPatientInfoForAudit",
      *     tags={"Hito"},
      *     summary="Get Patient Info For Audit",
@@ -994,7 +997,7 @@ class HitoController extends Controller
      *          name="patientdoc?",
      *          description="Número de Documento - Opcional",
      *          in="path",
-     *          required=true,
+     *          required=false,
      *          @OA\Schema (
      *              type="date"
      *          )
@@ -1003,7 +1006,7 @@ class HitoController extends Controller
      *          name="patientdoctype?",
      *          description="Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
      *          in="path",
-     *          required=true,
+     *          required=false,
      *          @OA\Schema (
      *              type="date"
      *          )
@@ -1027,137 +1030,6 @@ class HitoController extends Controller
      * )
      */
     public function getOrderedProceduresByPatientDoc(Request $request, $patientDoc = '', $patientDocType = '')
-    {
-
-        if ($request->hasHeader('X-Authorization')) {
-
-            $token = $request->header('X-Authorization');
-            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
-
-            if (count($user) > 0) {
-
-                if (!$patientDoc || !$patientDocType) {
-                    return response()
-                        ->json([
-                            'msg' => 'Parameters Cannot be Empty',
-                            'status' => 400,
-                        ], 400);
-                } else {
-
-                    $query_procedures = DB::connection('sqlsrv_hosvital')
-                        ->select("SELECT * FROM HITO_AUDITORIA_PROCEDIMIENTOS_ANTERIORES('$patientDoc', '$patientDocType')");
-
-                    if (count($query_procedures) > 0) {
-
-                        $procedures = [];
-
-                        foreach ($query_procedures as $item) {
-
-                            $temp = array(
-                                'patientFirstName' => $item->NOMBRE1,
-                                'patientSecondName' => $item->NOMBRE2,
-                                'patientLastName' => $item->APELLIDO1,
-                                'patientSecondLastName' => $item->APELLIDO2,
-                                'patientDoc' => $item->NUM_DOC,
-                                'patientDocType' => $item->TIP_DOC,
-                                'patientBirthDate' => $item->FECHA_NAC,
-                                'patientGender' => $item->SEXO,
-                                'patientBloodType' => $item->GRUPO_SANGUINEO,
-                                'patientCity' => $item->MUNICIPIO,
-                                'patientState' => $item->DEPARTAMENTO,
-                                'patientAdmConsecutive' => $item->INGRESO,
-                                'patientAdmDate' => $item->FECHA_INGRESO,
-                                'patientEpsCode' => $item->EPS,
-                                'patientEpsName' => $item->EPS_NOM,
-                                'patientContract' => $item->CONTRATO,
-                                'patientProcedureCode' => $item->PROCEDIMIENTO_COD,
-                                'patientProcedureName' => $item->NOMB_PROCED,
-                                'patientProcedureScheduleDate' => $item->FECHA_PROGRAMACION,
-                                'patientProcedureExecutionDate' => $item->FECHA_PROCEDIMIENTO,
-                                'patientProcedureDifDate' => $item->DIFERENCIA_FP_FPROC,
-                            );
-
-                            $procedures[] = $temp;
-                        }
-
-                        if (count($procedures) < 0) {
-                            return response()
-                                ->json([
-                                    'msg' => 'Procedures Array is empty',
-                                    'status' => 204,
-                                    'data' => []
-                                ]);
-                        } else {
-
-                            return response()
-                                ->json([
-                                    'msg' => 'Ok',
-                                    'status' => 200,
-                                    'data' => $procedures
-                                ], 200);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-
-
-    // ============================================================
-
-    /**
-     * @OA\Get (
-     *     path="/api/v1/hito/get/audit-get-patient-procedures/{patientdoc?}/{patientdoctype?}",
-     *     operationId="getPatientInfoForAuditTwo",
-     *     tags={"Hito"},
-     *     summary="Get Patient Info For Audit",
-     *     description="Returns Patient Info for Audit",
-     *     security = {
-     *          {
-     *              "type": "apikey",
-     *              "in": "header",
-     *              "name": "X-Authorization",
-     *              "X-Authorization": {}
-     *          }
-     *     },
-     *     @OA\Parameter (
-     *          name="patientdoc?",
-     *          description="Número de Documento - Opcional",
-     *          in="path",
-     *          required=true,
-     *          @OA\Schema (
-     *              type="date"
-     *          )
-     *     ),
-     *     @OA\Parameter (
-     *          name="patientdoctype?",
-     *          description="Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
-     *          in="path",
-     *          required=true,
-     *          @OA\Schema (
-     *              type="date"
-     *          )
-     *     ),
-     *     @OA\Response(
-     *          response=200,
-     *          description="Successful operation",
-     *       ),
-     *      @OA\Response(
-     *          response=400,
-     *          description="Bad Request"
-     *      ),
-     *      @OA\Response(
-     *          response=401,
-     *          description="Unauthenticated",
-     *      ),
-     *      @OA\Response(
-     *          response=403,
-     *          description="Forbidden"
-     *      )
-     * )
-     */
-    public function getOrderedProceduresByPatientDocTwo(Request $request, $patientDoc = '', $patientDocType = '')
     {
 
         if ($request->hasHeader('X-Authorization')) {
@@ -1248,6 +1120,148 @@ class HitoController extends Controller
                         return response()
                             ->json([
                                 'msg' => 'Procedures Query is Empty',
+                                'status' => 204,
+                                'data' => []
+                            ]);
+                    }
+                }
+            }
+        }
+    }
+
+
+    // ============================================================
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hito/get/audit-patient-admision-history/{patientdoc?}/{patientdoctype?}",
+     *     operationId="getAuditPatientAdmisionHistory",
+     *     tags={"Hito"},
+     *     summary="Get Patient Admision History",
+     *     description="Returns Patient Admision History",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="patientdoc?",
+     *          description="Número de Documento - Opcional",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="patientdoctype?",
+     *          description="Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getPatientAdmisionHistory(Request $request, $patientDoc = '', $patientDocType = '')
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                if (!$patientDoc || !$patientDocType) {
+                    return response()
+                        ->json([
+                            'msg' => 'Parameters Cannot be Empty',
+                            'status' => 400,
+                        ], 400);
+                } else {
+
+                    $query_admisions = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM HITO_AUDITORIA_UBICACION_PACIENTES('$patientDoc', '$patientDocType') ORDER BY FECHA_INGRESO DESC");
+
+                    if (count($query_admisions) > 0) {
+
+                        $admisions = [];
+
+                        foreach (json_decode(json_encode($query_admisions), true) as $item) {
+
+                            if (!isset($admisions[$item['DOCUMENTO']])) {
+                                $admisions[$item['DOCUMENTO']] = array(
+                                    'patientFirstName' => $item['NOMBRE_1'],
+                                    'patientSecondName' => $item['NOMBRE_2'],
+                                    'patientLastName' => $item['APELLIDO_1'],
+                                    'patientSecondLastName' => $item['APELLIDO_2'],
+                                    'patientDoc' => $item['DOCUMENTO'],
+                                    'patientBirthDate' => $item['FECHA_NACIMIENTO'],
+                                    'patientGender' => $item['SEXO'],
+                                    'patientAge' => $item['EDAD'],
+                                    'patientBloodType' => $item['GRUPO_SANGUINEO'],
+                                );
+                                unset(
+                                    $admisions[$item['DOCUMENTO']]['PABELLON'],
+                                    $admisions[$item['DOCUMENTO']]['CAMA'],
+                                    $admisions[$item['DOCUMENTO']]['INGRESO'],
+                                    $admisions[$item['DOCUMENTO']]['FECHA_INGRESO'],
+                                    $admisions[$item['DOCUMENTO']]['FECHA_EGRESO'],
+                                    $admisions[$item['DOCUMENTO']]['TIPO_ATENCION_ACTUAL_DESC'],
+                                );
+                                $admisions[$item['DOCUMENTO']]['admisions'] = [];
+                            }
+
+                            $admisions[$item['DOCUMENTO']]['admisions'][] = array(
+                                'patientEpsCode' => $item['EPS_NIT'],
+                                'patientEpsName' => $item['EPS'],
+                                'patientContract' => $item['CONTRATO'],
+                                'patientPavilion' => $item['PABELLON'],
+                                'patientHabitation' => $item['CAMA'],
+                                'patientAdmConsecutive' => $item['INGRESO'],
+                                'patientAdmDate' => Carbon::parse($item['FECHA_INGRESO'])->format('Y-m-d H:i:s'),
+                                'patientOutDate' => Carbon::parse($item['FECHA_EGRESO'])->format('Y-m-d H:i:s'),
+                            );
+                        }
+                        if (count($admisions) > 0) {
+                            $admisions = array_values($admisions);
+                            return response()
+                                ->json([
+                                    'msg' => 'Ok',
+                                    'status' => 200,
+                                    'data' => $admisions
+                                ], 200);
+                        } else {
+                            return response()
+                                ->json([
+                                    'msg' => 'Admisions Array is Empty',
+                                    'status' => 204,
+                                    'data' => []
+                                ], 204);
+                        }
+                    } else {
+                        return response()
+                            ->json([
+                                'msg' => 'Admisions Query is Empty',
                                 'status' => 204,
                                 'data' => []
                             ]);

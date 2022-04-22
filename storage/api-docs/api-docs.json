@@ -1060,7 +1060,7 @@
                 ]
             }
         },
-        "/api/v1/hito/get/audit-get-patient/{patientdoc?}/{patientdoctype?}": {
+        "/api/v1/hito/get/audit-get-patient-procedures/{patientdoc?}/{patientdoctype?}": {
             "get": {
                 "tags": [
                     "Hito"
@@ -1073,7 +1073,7 @@
                         "name": "patientdoc?",
                         "in": "path",
                         "description": "Número de Documento - Opcional",
-                        "required": true,
+                        "required": false,
                         "schema": {
                             "type": "date"
                         }
@@ -1082,7 +1082,7 @@
                         "name": "patientdoctype?",
                         "in": "path",
                         "description": "Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
-                        "required": true,
+                        "required": false,
                         "schema": {
                             "type": "date"
                         }
@@ -1112,20 +1112,20 @@
                 ]
             }
         },
-        "/api/v1/hito/get/audit-get-patient-procedures/{patientdoc?}/{patientdoctype?}": {
+        "/api/v1/hito/get/audit-patient-admision-history/{patientdoc?}/{patientdoctype?}": {
             "get": {
                 "tags": [
                     "Hito"
                 ],
-                "summary": "Get Patient Info For Audit",
-                "description": "Returns Patient Info for Audit",
-                "operationId": "getPatientInfoForAuditTwo",
+                "summary": "Get Patient Admision History",
+                "description": "Returns Patient Admision History",
+                "operationId": "getAuditPatientAdmisionHistory",
                 "parameters": [
                     {
                         "name": "patientdoc?",
                         "in": "path",
                         "description": "Número de Documento - Opcional",
-                        "required": true,
+                        "required": false,
                         "schema": {
                             "type": "date"
                         }
@@ -1134,7 +1134,7 @@
                         "name": "patientdoctype?",
                         "in": "path",
                         "description": "Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
-                        "required": true,
+                        "required": false,
                         "schema": {
                             "type": "date"
                         }
