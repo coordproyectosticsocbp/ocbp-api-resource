@@ -127,6 +127,14 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/hito/get/active-doctors-to-audit',
+        [
+            \App\Http\Controllers\HitoController::class,
+            'getDoctorsListForAudit'
+        ]
+    );
+
     /* Route::get(
         '/hito/get/audit-get-patient-two/{patientdoc?}/{patientdoctype?}',
         [

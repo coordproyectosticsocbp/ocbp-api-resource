@@ -1164,6 +1164,38 @@
                 ]
             }
         },
+        "/api/v1/hito/get/active-doctors-to-audit": {
+            "get": {
+                "tags": [
+                    "Hito"
+                ],
+                "summary": "Get Doctors Database for Audit",
+                "description": "Returns Doctors Database for Audit",
+                "operationId": "ActDoctorsToAudit",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
         "/api/v1/hygea/get/warehouses": {
             "get": {
                 "tags": [

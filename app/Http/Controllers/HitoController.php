@@ -1226,7 +1226,11 @@ class HitoController extends Controller
                                     $admisions[$item['DOCUMENTO']]['INGRESO'],
                                     $admisions[$item['DOCUMENTO']]['FECHA_INGRESO'],
                                     $admisions[$item['DOCUMENTO']]['FECHA_EGRESO'],
+                                    $admisions[$item['DOCUMENTO']]['DX_CODE'],
+                                    $admisions[$item['DOCUMENTO']]['DX_NOMBRE'],
                                     $admisions[$item['DOCUMENTO']]['TIPO_ATENCION_ACTUAL_DESC'],
+                                    $admisions[$item['DOCUMENTO']]['ESTANCIA'],
+
                                 );
                                 $admisions[$item['DOCUMENTO']]['admisions'] = [];
                             }
@@ -1238,8 +1242,11 @@ class HitoController extends Controller
                                 'patientPavilion' => $item['PABELLON'],
                                 'patientHabitation' => $item['CAMA'],
                                 'patientAdmConsecutive' => $item['INGRESO'],
+                                'patientDxCode' => $item['DX_CODE'] != null ? $item['DX_CODE'] : '',
+                                'patientDxDescription' => $item['DX_NOMBRE'] != null ? $item['DX_NOMBRE'] : '',
                                 'patientAdmDate' => Carbon::parse($item['FECHA_INGRESO'])->format('Y-m-d H:i:s'),
                                 'patientOutDate' => Carbon::parse($item['FECHA_EGRESO'])->format('Y-m-d H:i:s'),
+                                'patientStay' => $item['ESTANCIA']
                             );
                         }
                         if (count($admisions) > 0) {
@@ -1267,6 +1274,113 @@ class HitoController extends Controller
                             ]);
                     }
                 }
+            }
+        }
+    }
+
+
+    // ============================================================
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hito/get/active-doctors-to-audit",
+     *     operationId="ActDoctorsToAudit",
+     *     tags={"Hito"},
+     *     summary="Get Doctors Database for Audit",
+     *     description="Returns Doctors Database for Audit",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getDoctorsListForAudit(Request $request)
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    $query_doctors = DB::connection('sqlsrv_kactusprod')
+                        ->select('SELECT * FROM EMPLEADOS_MED()');
+
+                    if (count($query_doctors) > 0) {
+
+                        $doctors = [];
+
+                        foreach ($query_doctors as $item) {
+
+                            $temp = array(
+                                'docType' => $item->TIP_DOC,
+                                'document' => $item->DOC,
+                                'name' => $item->Nombre,
+                                'lastName' => $item->Apellidos,
+                                'gender' => $item->sexo,
+                                'email' => $item->Email,
+                                'phone' => $item->Telefono,
+                                'address' => $item->Direccion,
+                                'birthDate' => $item->Fecha_Nacimiento,
+                                'immediateBoss' => $item->JEFE_INMEDIATO,
+                                'positionCode' => $item->CARGO_COD,
+                                'position' => $item->Cargo,
+                                'costCenterCod' => $item->CENTRO_COSTO_COD,
+                                'costCenter' => $item->CENTRO_COSTO
+                            );
+
+                            $doctors[] = $temp;
+                        }
+
+                        if (count($doctors) < 0) {
+                            $doctors = [];
+                        }
+
+                        return response()
+                            ->json([
+                                'msg' => 'Ok',
+                                'status' => 200,
+                                'data' => $doctors
+                            ]);
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Ok',
+                                'status' => 204,
+                            ]);
+                    }
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
+            } else {
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 403
+                    ]);
             }
         }
     }

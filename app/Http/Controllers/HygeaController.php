@@ -988,7 +988,7 @@ class HygeaController extends Controller
                             $temp = array(
                                 'balance' => (int) $item->SALDO,
                                 'rotation' => (int) $item->ROTACION,
-                                'averageCost' => $item->COSTO_PROMEDIO,
+                                'averageCost' => (int) $item->COSTO_PROMEDIO,
                                 'month' => trim($item->MES),
                                 'year' => trim($item->ANIO),
                             );
@@ -1749,50 +1749,64 @@ class HygeaController extends Controller
                 } else {
 
                     $despachos = DB::connection('sqlsrv_hosvital')
-                        ->select("SELECT * FROM DESPACHOS_SUPER_ALTO_COSTO('$sumCod') ORDER BY ULTIMO_DESPACHO DESC");
+                        ->select("SELECT * FROM HYGEA_DESPACHOS_SUPER_ALTO_COSTO('$sumCod') ORDER BY ANIO ASC, MES ASC");
 
                     if (count($despachos) > 0) {
 
                         $records = [];
 
-                        foreach ($despachos as $despacho) {
+                        foreach (json_decode(json_encode($despachos), true) as $item) {
 
-                            $temp = array(
-                                'patient' => $despacho->PACIENTE,
-                                'lastDispatch' => $despacho->ULTIMO_DESPACHO,
-                                'dispatchProduct' => $despacho->PRODUCTO,
-                                'dispatchQuantity' =>  $despacho->CANT_DESP,
-                                'dispatchDevolution' => $despacho->CANT_DEV,
-                                'dispatchTotalQuantity' => $despacho->TOTAL_CANT,
-                                'dispatchPbsNoPbs' => $despacho->PbsNoPbs,
-                                'dispatchContract' => $despacho->CONTRATO,
+                            if (!isset($records[$item['PACIENTE']])) {
+                                $records[$item['PACIENTE']] = array(
+                                    'patientName' => $item['PACIENTE'],
+                                    'patientDocument' => $item['DOCUMENTO'],
+                                    'patientDocumentType' => $item['TIPO_DOC'],
+                                    'patientAdmConsecutive' => $item['INGRESO'],
+                                    'sumCode' => $item['COD_PROD'],
+                                    'sumName' => $item['PRODUCTO'],
+                                    'patientFirstDispatchDate' => Carbon::createFromFormat('d/m/Y', $item['FECHA_PRIMER_DESPACHO'])->format('d-m-Y'),
+                                );
+                                unset(
+                                    $records[$item['PACIENTE']]['MES'],
+                                    $records[$item['PACIENTE']]['ANIO'],
+                                    $records[$item['PACIENTE']]['TOTAL_DESPACHOS'],
+                                );
+                                $records[$item['PACIENTE']]['despachos'] = [];
+                            }
+
+                            $records[$item['PACIENTE']]['despachos'][] = array(
+                                'patientDispatchMonth' => $item['MES'],
+                                'patientDispatchYear' => $item['ANIO'],
+                                'patientDispatchQuantity' => $item['TOTAL_DESPACHOS'],
                             );
-
-                            $records[] = $temp;
                         }
 
-                        if (count($records) < 0) {
+                        if (count($records) > 0) {
 
+                            $records = array_values($records);
                             return response()
                                 ->json([
-                                    'status' => 204,
-                                    'message' => 'Empty Despachos Records Array'
-                                ]);
+                                    'msg' => 'Ok',
+                                    'status' => 200,
+                                    'data' => $records
+                                ], 200);
                         } else {
 
                             return response()
                                 ->json([
-                                    'status' => 200,
-                                    'message' => 'Ok',
-                                    'data' => $records
-                                ]);
+                                    'msg' => 'Dispatch Array is Empty',
+                                    'status' => 204,
+                                    'data' => []
+                                ], 204);
                         }
                     } else {
 
                         return response()
                             ->json([
                                 'status' => 204,
-                                'message' => 'Empty Despachos Array'
+                                'message' => 'Empty Dispatch Query Response',
+                                'data' => []
                             ]);
                     }
                 }
