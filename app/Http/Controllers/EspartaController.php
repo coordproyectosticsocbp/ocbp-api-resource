@@ -15,7 +15,7 @@ class EspartaController extends Controller
 
     /**
      * @OA\Get (
-     *     path="/api/v1/esparta/patient/{patientdoc}/type/{patientdoctype}/information",
+     *     path="/api/v1/esparta/patient/{patientdoc?}/type/{patientdoctype?}/information",
      *     operationId="initialPatientInfoEsparta",
      *     tags={"Esparta"},
      *     summary="Get Patient Informations",
@@ -31,7 +31,7 @@ class EspartaController extends Controller
      *     @OA\Parameter (
      *          name="patientdoc",
      *          description="Documento del Paciente",
-     *          required=true,
+     *          required=false,
      *          in="path",
      *          @OA\Schema (
      *              type="string"
@@ -40,7 +40,7 @@ class EspartaController extends Controller
      *     @OA\Parameter (
      *          name="patientdoctype",
      *          description="Tipo de Documento del Paciente - CC, TI, RC, PE",
-     *          required=true,
+     *          required=false,
      *          in="path",
      *          @OA\Schema (
      *              type="string"
@@ -64,112 +64,123 @@ class EspartaController extends Controller
      *      )
      * )
      */
-    public function initialPatientInfo(Request $request, $patientDoc, $patientTipoDoc)
+    public function initialPatientInfo(Request $request, $patientDoc = '', $patientTipoDoc = '')
     {
 
         if ($request->hasHeader('X-Authorization')) {
 
-            //$patientDoc = '84030440';
-            //$patientTipoDoc = 'CC';
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
 
-            if ($patientDoc != "" && $patientTipoDoc != "") {
-
-                $query = DB::connection('sqlsrv_hosvital')
-                    ->select("SELECT * FROM ESPARTA_INFORMACION_PACIENTE('$patientDoc', '$patientTipoDoc')");
+            if (count($user) > 0) {
 
 
-                if (sizeOf($query) > 0) {
+                if ($patientDoc != "" || $patientTipoDoc != "") {
 
-                    $records = [];
+                    $query = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM ESPARTA_INFORMACION_PACIENTE('$patientDoc', '$patientTipoDoc')");
 
-                    foreach ($query as $item) {
 
-                        $query2 = DB::connection('sqlsrv_hosvital')
-                            ->select("SELECT * FROM ESPARTA_INFORMACION_FOLIOS_PACIENTES($item->DOCUMENTO, '$item->TIP_DOC') ORDER BY FOLIO DESC");
+                    if (sizeOf($query) > 0) {
 
-                        if (sizeOf($query2) > 0) {
+                        $records = [];
 
-                            $folios = [];
+                        foreach ($query as $item) {
 
-                            foreach ($query2 as $row) {
-                                $temp2 = array(
-                                    'document' => $row->DOCUMENTO,
-                                    'documentType' => $row->TIPO_DOC,
-                                    'attentionType' => $row->TIPO_ATENCION,
-                                    'folio' => $row->FOLIO,
-                                    'consulationDate' => $row->FECHA_CONSULTA,
-                                    'motConsulation' => $row->MOTIVO_CONSULTA,
-                                    'currentIllness' => $row->ENFERMEDAD_ACTUAL,
-                                    'physicalExam' => $row->EXAMEN_FISICO,
-                                    'systemReview' => $row->RX_SISTEMA,
-                                    'doctor' => $row->MEDICO,
-                                );
+                            $query2 = DB::connection('sqlsrv_hosvital')
+                                ->select("SELECT * FROM ESPARTA_INFORMACION_FOLIOS_PACIENTES($item->DOCUMENTO, '$item->TIP_DOC') ORDER BY FOLIO DESC");
 
-                                $folios[] = $temp2;
+                            if (sizeOf($query2) > 0) {
+
+                                $folios = [];
+
+                                foreach ($query2 as $row) {
+                                    $temp2 = array(
+                                        'document' => $row->DOCUMENTO,
+                                        'documentType' => $row->TIPO_DOC,
+                                        'attentionType' => $row->TIPO_ATENCION,
+                                        'folio' => $row->FOLIO,
+                                        'consulationDate' => $row->FECHA_CONSULTA,
+                                        'motConsulation' => $row->MOTIVO_CONSULTA,
+                                        'currentIllness' => $row->ENFERMEDAD_ACTUAL,
+                                        'physicalExam' => $row->EXAMEN_FISICO,
+                                        'systemReview' => $row->RX_SISTEMA,
+                                        'doctor' => $row->MEDICO,
+                                    );
+
+                                    $folios[] = $temp2;
+                                }
+                            } else {
+
+                                return response()
+                                    ->json([
+                                        'msg' => 'No hay datos en la respuesta a esta solicitud de folios',
+                                        'status' => 500,
+                                        'data' => $query2
+                                    ]);
                             }
-                        } else {
 
-                            return response()
-                                ->json([
-                                    'msg' => 'No hay datos en la respuesta a esta solicitud de folios',
-                                    'status' => 500,
-                                    'data' => $query2
-                                ]);
+
+                            $temp = array(
+                                'tipDoc' => $item->TIP_DOC,
+                                'document' => $item->DOCUMENTO,
+                                'patientCompany' => $item->EMPRESA,
+                                'fName' => $item->PRIMER_NOMBRE,
+                                'sName' => $item->SEGUNDO_NOMBRE,
+                                'fLastname' => $item->PRIMER_APELLIDO,
+                                'sLastname' => $item->SEGUNDO_APELLIDO,
+                                'birthDate' => $item->FECHA_NAC,
+                                'age' => $item->EDAD,
+                                'gender' => $item->SEXO,
+                                'civilStatus' => $item->ESTADOCIVIL,
+                                'bloodType' => $item->GRUPO_SANGUINEO,
+                                'mobilePhone' => $item->TELEFONO1,
+                                'address' => $item->DIRECCION,
+                                'state' => $item->DEPARTAMENTO,
+                                'city' => $item->MUNICIPIO,
+                                'neighborhood' => $item->BARRIO,
+                                'occupation' => $item->OCUPACION,
+                                'ethnicity' => $item->BARRIO,
+                                'educationLevel' => $item->NIVEL_EDUCATIVO,
+                                'specialAttention' => $item->ATEN_ESPECIAL,
+                                'disability' => $item->DISCAPACIDAD,
+                                'populationGroup' => $item->GRUPO_POBLA,
+                                'diagnostics_cod' => $item->DX_COD,
+                                'diagnostics' => $item->DX,
+                                'invoices' => $folios
+                            );
+
+                            $records[] = $temp;
                         }
 
+                        return response()
+                            ->json([
+                                'msg' => 'Ok',
+                                'status' => 200,
+                                'data' => $records
+                            ]);
+                    } else {
 
-                        $temp = array(
-                            'tipDoc' => $item->TIP_DOC,
-                            'document' => $item->DOCUMENTO,
-                            'patientCompany' => $item->EMPRESA,
-                            'fName' => $item->PRIMER_NOMBRE,
-                            'sName' => $item->SEGUNDO_NOMBRE,
-                            'fLastname' => $item->PRIMER_APELLIDO,
-                            'sLastname' => $item->SEGUNDO_APELLIDO,
-                            'birthDate' => $item->FECHA_NAC,
-                            'age' => $item->EDAD,
-                            'gender' => $item->SEXO,
-                            'civilStatus' => $item->ESTADOCIVIL,
-                            'bloodType' => $item->GRUPO_SANGUINEO,
-                            'mobilePhone' => $item->TELEFONO1,
-                            'address' => $item->DIRECCION,
-                            'state' => $item->DEPARTAMENTO,
-                            'city' => $item->MUNICIPIO,
-                            'neighborhood' => $item->BARRIO,
-                            'occupation' => $item->OCUPACION,
-                            'ethnicity' => $item->BARRIO,
-                            'educationLevel' => $item->NIVEL_EDUCATIVO,
-                            'specialAttention' => $item->ATEN_ESPECIAL,
-                            'disability' => $item->DISCAPACIDAD,
-                            'populationGroup' => $item->GRUPO_POBLA,
-                            'diagnostics_cod' => $item->DX_COD,
-                            'diagnostics' => $item->DX,
-                            'invoices' => $folios
-                        );
-
-                        $records[] = $temp;
+                        return response()
+                            ->json([
+                                'msg' => 'No hay datos en la respuesta a esta solicitud',
+                                'status' => 200
+                            ]);
                     }
-
-                    return response()
-                        ->json([
-                            'msg' => 'Ok',
-                            'status' => 200,
-                            'data' => $records
-                        ]);
                 } else {
 
                     return response()
                         ->json([
-                            'msg' => 'No hay datos en la respuesta a esta solicitud',
-                            'status' => 200
+                            'msg' => 'Parameters Cannot be Empty',
+                            'status' => 500
                         ]);
                 }
             } else {
                 return response()
                     ->json([
-                        'msg' => 'Error en el envio de los Parametros a la Solicitud',
-                        'status' => 500
-                    ]);
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ], 401);
             }
         }
     }

@@ -53,7 +53,7 @@ Route::group([
 
     /* ESPARTA */
     Route::get(
-        '/esparta/patient/{patientdoc}/type/{patientdoctype}/information',
+        '/esparta/patient/{patientdoc?}/type/{patientdoctype?}/information',
         [
             \App\Http\Controllers\EspartaController::class,
             'initialPatientInfo'
@@ -313,6 +313,14 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/hygea/get/active-mixing-center-users',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getMixingCenterUsers'
+        ]
+    );
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* MACNA */
@@ -468,10 +476,39 @@ Route::group([
         ]
     );
 
+
+    /*-------------------------------------------------------------------------------------------------------------*/
+
+    /* CIRUGÍA */
+    Route::get(
+        '/cirugia/get/patient-procedures/{patientdoc?}/{patientdoctype?}',
+        [
+            \App\Http\Controllers\CirugiaController::class,
+            'getLastPendingProcedure'
+        ]
+    );
+
+    Route::get(
+        '/cirugia/get/all-procedures/{procedurecode?}',
+        [
+            \App\Http\Controllers\CirugiaController::class,
+            'getAllQxProcedures'
+        ]
+    );
+
+    Route::get(
+        '/cirugia/get/scheduled-procedures-by-date/{initdate?}/{enddate?}',
+        [
+            \App\Http\Controllers\CirugiaController::class,
+            'getScheduledProceduresByDate'
+        ]
+    );
+
+
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* DOCTOR CLINIC */
-
     Route::get(
         '/doctor-clinic/patient/{patientdoc?}/type/{patientdoctype?}/information',
         [

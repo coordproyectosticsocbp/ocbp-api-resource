@@ -553,6 +553,7 @@ class HygeaController extends Controller
                         $controlledMedicine = 0;
                     }
 
+
                     $temp = array(
                         'sumCod' => trim($item->CODIGO),
                         'balance' => $item->DESCRIPCION,
@@ -583,7 +584,8 @@ class HygeaController extends Controller
                         'riskClasification' => $item->CLASIFICACION_RIESGO,
                         'lastEntryDate' => Carbon::parse($item->FECHA_ULTIMA_ENTRADA)->format('Y-m-d H:m:s'),
                         'controlledMedication' => $controlledMedicine,
-                        'productType' => $item->TIPO_MED_O_SUM
+                        'productType' => $item->TIPO_MED_O_SUM,
+                        'oncoClasification' => $item->ONCOLOGICO == 'ONCO' ? 1 : 0,
                     );
 
                     $drugs[] = $temp;
@@ -1749,7 +1751,7 @@ class HygeaController extends Controller
                 } else {
 
                     $despachos = DB::connection('sqlsrv_hosvital')
-                        ->select("SELECT * FROM HYGEA_DESPACHOS_SUPER_ALTO_COSTO('$sumCod') ORDER BY ANIO ASC, MES ASC");
+                        ->select("SELECT * FROM HYGEA_DESPACHOS_SUPER_ALTO_COSTO('$sumCod') ORDER BY PACIENTE ASC, ANIO ASC, MES ASC");
 
                     if (count($despachos) > 0) {
 
@@ -1762,7 +1764,7 @@ class HygeaController extends Controller
                                     'patientName' => $item['PACIENTE'],
                                     'patientDocument' => $item['DOCUMENTO'],
                                     'patientDocumentType' => $item['TIPO_DOC'],
-                                    'patientAdmConsecutive' => $item['INGRESO'],
+                                    //'patientAdmConsecutive' => $item['INGRESO'],
                                     'sumCode' => $item['COD_PROD'],
                                     'sumName' => $item['PRODUCTO'],
                                     'patientFirstDispatchDate' => Carbon::createFromFormat('d/m/Y', $item['FECHA_PRIMER_DESPACHO'])->format('d-m-Y'),
@@ -1817,6 +1819,103 @@ class HygeaController extends Controller
                         'status' => 401,
                         'message' => 'Unauthorized'
                     ]);
+            }
+        }
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/active-mixing-center-users",
+     *     operationId="ActMixingCenterUsers",
+     *     tags={"Hygea"},
+     *     summary="Get Active Mixing Center Database",
+     *     description="Returns Active Mixing Center Database",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getMixingCenterUsers(Request $request)
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    $query_doctors = DB::connection('sqlsrv_kactusprod')
+                        ->select('SELECT * FROM HYGEA_EMPLEADOS_CENTRAL_MEZCLAS()');
+
+                    if (count($query_doctors) > 0) {
+
+                        $employees = [];
+
+                        foreach ($query_doctors as $item) {
+
+                            $temp = array(
+                                'docType' => $item->TIP_DOC,
+                                'document' => $item->DOC,
+                                'name' => $item->NOMBRES,
+                                'lastName' => $item->APELLIDOS,
+                                'gender' => $item->SEXO,
+                                'email' => $item->EMAIL,
+                                'phone' => $item->TELEFONO,
+                                'address' => $item->DIRECCION,
+                                'birthDate' => $item->FECHA_NACIMIENTO,
+                                'positionCode' => $item->CARGO_COD,
+                                'position' => $item->CARGO_DESCRIPTION
+                            );
+
+                            $employees[] = $temp;
+                        }
+
+                        if (count($employees) < 0) {
+                            $employees = [];
+                        }
+
+                        return response()
+                            ->json([
+                                'msg' => 'Ok',
+                                'status' => 200,
+                                'data' => $employees
+                            ]);
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Ok',
+                                'status' => 204,
+                            ]);
+                    }
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
             }
         }
     }

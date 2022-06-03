@@ -239,6 +239,153 @@
                 ]
             }
         },
+        "/api/v1/cirugia/get/patient-procedures/{patientdoc?}/{patientdoctype?}": {
+            "get": {
+                "tags": [
+                    "Cirugia"
+                ],
+                "summary": "Get Patient Pending Procedures",
+                "description": "Returns Patient Pending Procedures",
+                "operationId": "getPatientPendingProcedures",
+                "parameters": [
+                    {
+                        "name": "patientdoc?",
+                        "in": "path",
+                        "description": "Número de Documento - Opcional",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "patientdoctype?",
+                        "in": "path",
+                        "description": "Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cirugia/get/all-procedures/{procedurecode?}": {
+            "get": {
+                "tags": [
+                    "Cirugia"
+                ],
+                "summary": "Get All Qx Procedures",
+                "description": "Returns All Qx Procedures",
+                "operationId": "getAllQxProcedures",
+                "parameters": [
+                    {
+                        "name": "procedurecode?",
+                        "in": "path",
+                        "description": "Código del procedimiento",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cirugia/get/scheduled-procedures-by-date/{initdate?}/{enddate?}": {
+            "get": {
+                "tags": [
+                    "Cirugia"
+                ],
+                "summary": "Get ScheduledProceduresByDate",
+                "description": "Returns ScheduledProceduresByDate",
+                "operationId": "getScheduledProceduresByDate",
+                "parameters": [
+                    {
+                        "name": "initdate?",
+                        "in": "path",
+                        "description": "Fecha Ini Busqueda",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "enddate?",
+                        "in": "path",
+                        "description": "Fecha Fin Busqueda",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
         "/api/v1/coco/patient/{patientdoc}/type/{patientdoctype}/information": {
             "get": {
                 "tags": [
@@ -343,7 +490,7 @@
                 ]
             }
         },
-        "/api/v1/esparta/patient/{patientdoc}/type/{patientdoctype}/information": {
+        "/api/v1/esparta/patient/{patientdoc?}/type/{patientdoctype?}/information": {
             "get": {
                 "tags": [
                     "Esparta"
@@ -356,7 +503,7 @@
                         "name": "patientdoc",
                         "in": "path",
                         "description": "Documento del Paciente",
-                        "required": true,
+                        "required": false,
                         "schema": {
                             "type": "string"
                         }
@@ -365,7 +512,7 @@
                         "name": "patientdoctype",
                         "in": "path",
                         "description": "Tipo de Documento del Paciente - CC, TI, RC, PE",
-                        "required": true,
+                        "required": false,
                         "schema": {
                             "type": "string"
                         }
@@ -1755,6 +1902,38 @@
                         }
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hygea/get/active-mixing-center-users": {
+            "get": {
+                "tags": [
+                    "Hygea"
+                ],
+                "summary": "Get Active Mixing Center Database",
+                "description": "Returns Active Mixing Center Database",
+                "operationId": "ActMixingCenterUsers",
                 "responses": {
                     "200": {
                         "description": "Successful operation"
