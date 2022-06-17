@@ -91,7 +91,7 @@ class CirugiaController extends Controller
                     } else {
 
                         $queryPendingProcedures = DB::connection('sqlsrv_hosvital')
-                            ->select("SELECT * FROM CIRUGIAX_PROCEDIMIENTOS_PENDIENTES('32666152', 'CC') ");
+                            ->select("SELECT * FROM CIRUGIAX_PROCEDIMIENTOS_PENDIENTES('$patientDoc', '$patientDocType') ");
 
                         if (count($queryPendingProcedures) > 0) {
 
@@ -157,7 +157,7 @@ class CirugiaController extends Controller
 
                             return response()->json([
                                 'msg' => 'Empty Procedures Query Result',
-                                'status' => 400
+                                'status' => 204
                             ]);
 
                             //
@@ -166,6 +166,12 @@ class CirugiaController extends Controller
                 } catch (\Throwable $th) {
                     throw $th;
                 }
+            } else {
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ]);
             }
         }
     }
@@ -351,14 +357,14 @@ class CirugiaController extends Controller
 
                         $init = Carbon::now()->format('Y-m-d');
                     } else {
-                        $init = $initDate;
+                        $init = Carbon::parse($initDate)->format('Y-m-d');
                     }
 
                     if (!$endDate) {
 
                         $end = Carbon::now()->format('Y-m-d');
                     } else {
-                        $end = $endDate;
+                        $end = Carbon::parse($endDate)->format('Y-m-d');
                     }
 
                     $queryAllScheduledProcedures = DB::connection('sqlsrv_hosvital')
@@ -432,6 +438,7 @@ class CirugiaController extends Controller
                                 ->json([
                                     'msg' => 'Ok',
                                     'status' => 200,
+                                    'count' => count($scheduledProcedures),
                                     'data' => $scheduledProcedures
                                 ], 200);
                         } else {
@@ -452,6 +459,185 @@ class CirugiaController extends Controller
                                 'data' => [],
                                 'status' => 204
                             ]);
+                    }
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
+            } else {
+
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ]);
+            }
+        }
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/cirugia/get/scheduled-procedures-by-document/{patientdoc?}/{patientdoctype?}",
+     *     operationId="getScheduledProceduresByDocument",
+     *     tags={"Cirugia"},
+     *     summary="Get ScheduledProceduresByDocument",
+     *     description="Returns ScheduledProceduresByDocumento",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="patientdoc?",
+     *          description="Número de Documento - Opcional",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="patientdoctype?",
+     *          description="Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getScheduledProceduresByDocument(Request $request, $patientDoc = '', $patientDocType = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    if (!$patientDoc || !$patientDocType) {
+                        return response()
+                            ->json([
+                                'msg' => 'Parameters patientDoc or patiendDocType Canno be Empty',
+                                'status' => 400
+                            ], 400);
+                    } else {
+
+                        $queryAllScheduledProcedures = DB::connection('sqlsrv_hosvital')
+                            ->select("SELECT * FROM CIRUGIAX_REQUISITOS_PREVIOS_ACTO_QUIRUGICO_POR_DOCUMENTO('$patientDoc', '$patientDocType')");
+
+
+                        if (count($queryAllScheduledProcedures) > 0) {
+
+                            $scheduledProcedures = [];
+
+                            foreach (json_decode(json_encode($queryAllScheduledProcedures), true) as $item) {
+
+
+                                if (!isset($scheduledProcedures[$item['NUM_DOC']])) {
+
+                                    $scheduledProcedures[$item['NUM_DOC']] = array(
+                                        'patientFirstName' => $item['NOMBRE_1'],
+                                        'patientSecondName' => $item['NOMBRE_2'],
+                                        'patientLastName' => $item['APELLIDO_1'],
+                                        'patientSecondLastName' => $item['APELLIDO_2'],
+                                        'patientDoc' => $item['NUM_DOC'],
+                                        'patientDocType' => $item['TIP_DOC'],
+                                        'patientBirthDate' => $item['FECHA_NAC'],
+                                        'patientAge' => $item['EDAD'],
+                                        'patientGender' => $item['SEXO'],
+                                        'patientAdmConsecutive' => $item['INGRESO'],
+                                        'patientEpsCode' => $item['EPS_NIT'],
+                                        'patientEpsName' => $item['EPS'],
+                                        'patientSurgeryDate' => $item['FECHA_PROCEDIMIENTO'],
+                                        'patientSurgeryHour' => $item['HORA_PROCEDIMIENTO'],
+                                        'patientSurgeryDurationInHours' => $item['HORAS_DURACION'],
+                                        'patientSurgeryDurationInMinutes' => $item['MINUTOS_DURACION'],
+                                        'patientSurgeryRoomCode' => $item['SALA_CX_CODE'],
+                                        'patientSurgeryRoomName' => $item['SALA_CX'],
+                                        'patientDxCode' => $item['COD_DX'],
+                                        'patientDxDescription' => $item['DX_NOMBRE'],
+                                        'patientSurgeryLaterality' => $item['LATERALIDAD'],
+                                        'patientSurgeryRequiresPreanestEva' => $item['VAL_PREANES'],
+                                        'patientSurgeryOtionCode' => $item['OPCION'],
+                                        'patientSurgeryOptionDescription' => $item['OPCION_NOMBRE'],
+                                        'patientNeedRoom' => $item['RESERVA_CAMA'],
+                                        'patientNeedRoomType' => $item['TIPO_CAMA'],
+                                        'patientSurgeryRequiresEE' => $item['EQUIPOS_ESPECIALES'],
+                                        'patientSurgeryRequiresME' => $item['REQ_MAT_ESPECIALES'],
+                                        'patientSurgeryBookedBy' => $item['RESERVADO'],
+                                        'patientSurgeon' => $item['CIRUJANO'],
+                                    );
+
+                                    unset(
+                                        $scheduledProcedures[$item['NUM_DOC']]['PROCEDIMIENTO_COD'],
+                                        $scheduledProcedures[$item['NUM_DOC']]['NOMB_PROCED'],
+                                        $scheduledProcedures[$item['NUM_DOC']]['CIRUJANO'],
+                                        $scheduledProcedures[$item['NUM_DOC']]['VIA_COD'],
+                                        $scheduledProcedures[$item['NUM_DOC']]['VIA_DESCRIPCION'],
+                                    );
+                                    $scheduledProcedures[$item['NUM_DOC']]['procedures'] = [];
+                                }
+
+                                $scheduledProcedures[$item['NUM_DOC']]['procedures'][] = array(
+                                    'procedureCode' => $item['PROCEDIMIENTO_COD'],
+                                    'procedureDescription' => $item['NOMB_PROCED'],
+                                    'procedureSurgeon' => $item['CIRUJANO'],
+                                    'procedureViaCode' => $item['VIA_COD'],
+                                    'procedureViaDescription' => $item['VIA_DESCRIPCION'],
+                                );
+                            }
+
+                            if (count($scheduledProcedures) > 0) {
+                                $scheduledProcedures = array_values($scheduledProcedures);
+                                return response()
+                                    ->json([
+                                        'msg' => 'Ok',
+                                        'status' => 200,
+                                        'data' => $scheduledProcedures
+                                    ], 200);
+                            } else {
+                                return response()
+                                    ->json([
+                                        'msg' => 'ScheduledProcedures Array is Empty',
+                                        'status' => 204,
+                                        'data' => []
+                                    ], 204);
+                            }
+
+                            //
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Query Result',
+                                    'data' => [],
+                                    'status' => 204
+                                ]);
+                        }
                     }
                 } catch (\Throwable $th) {
                     throw $th;

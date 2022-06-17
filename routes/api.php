@@ -321,6 +321,22 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/hygea/get/suggested-pending/{init?}/{end?}',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getSuggestedPending'
+        ]
+    );
+
+    Route::get(
+        '/hygea/get/purchase-invoices/{sumcod?}/{month?}/{year?}',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getInvoiceDetailsInPurchases'
+        ]
+    );
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* MACNA */
@@ -501,6 +517,14 @@ Route::group([
         [
             \App\Http\Controllers\CirugiaController::class,
             'getScheduledProceduresByDate'
+        ]
+    );
+
+    Route::get(
+        '/cirugia/get/scheduled-procedures-by-document/{patientdoc?}/{patientdoctype?}',
+        [
+            \App\Http\Controllers\CirugiaController::class,
+            'getScheduledProceduresByDocument'
         ]
     );
 

@@ -298,6 +298,7 @@ class HygeaController extends Controller
                         ->json([
                             'msg' => 'Ok',
                             'status' => 200,
+                            'count' => count($purchaseOrders),
                             'data' => $purchaseOrders
                         ]);
                 } else {
@@ -623,7 +624,7 @@ class HygeaController extends Controller
 
     /**
      * @OA\Get (
-     *     path="/api/v1/hygea/get/purchase-orders/{init?}{end?}",
+     *     path="/api/v1/hygea/get/purchase-orders/{init?}/{end?}",
      *     operationId="get Purchases Orders Info",
      *     tags={"Hygea"},
      *     summary="Get Purchases Orders Info",
@@ -751,6 +752,7 @@ class HygeaController extends Controller
                             ->json([
                                 'msg' => 'Ok',
                                 'status' => 200,
+                                'count' => count($purchaseOrders),
                                 'data' => $purchaseOrders
                             ]);
                     } else {
@@ -883,6 +885,7 @@ class HygeaController extends Controller
                         ->json([
                             'msg' => 'Ok',
                             'status' => 200,
+                            'count' => count($records),
                             'data' => $records
                         ]);
                 } else {
@@ -1205,7 +1208,7 @@ class HygeaController extends Controller
                     $filteDateF = carbon::parse($filterDateF)->format('Ymd');
 
                     $queryMovTransac = DB::connection('sqlsrv_hosvital')
-                        ->select("SELECT * FROM HYGEA_ANALISIS_TRANSAC('$filterDateU', '$filteDateF')");
+                        ->select("SELECT * FROM HYGEA_ANALISIS_TRANSAC_POR_BODEGA_Y_FECHA('$filterDateU', '$filteDateF')");
 
                     if (count($queryMovTransac) > 0) {
 
@@ -1250,6 +1253,7 @@ class HygeaController extends Controller
                                 ->json([
                                     'msg' => 'Ok',
                                     'status' => 200,
+                                    'count' => count($movTransac),
                                     'data' => $movTransac
                                 ]);
                         }
@@ -1916,6 +1920,291 @@ class HygeaController extends Controller
                 } catch (\Throwable $th) {
                     throw $th;
                 }
+            }
+        }
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/suggested-pending/{init?}/{end?}",
+     *     operationId="getSuggestedPending",
+     *     tags={"Hygea"},
+     *     summary="Get Pending",
+     *     description="Returns Pending",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="init?",
+     *          description="Initial Date For Search - Optional",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="end?",
+     *          description="End Date For Search - Optional",
+     *          required=false,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getSuggestedPending(Request $request, $initDate = '', $endDate = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    $init = '';
+                    $end = '';
+
+                    if (!$initDate) {
+
+                        $init = Carbon::now()->format('Y-m-d H:m:s');
+                    } else {
+                        $init = $initDate . ' 00:00:00';
+                    }
+
+                    if (!$endDate) {
+
+                        $end = Carbon::now()->format('Y-m-d H:m:s');
+                    } else {
+                        $end = $endDate . ' 23:59:59';
+                    }
+
+
+                    $querySuggested = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM HYGEA_PENDIENTES_SUGERIDOS(' $init', ' $end')");
+
+                    if (count($querySuggested) > 0) {
+
+                        $suggested = [];
+
+                        foreach (json_decode(json_encode($querySuggested), true) as $item) {
+
+                            $suggested[] = [
+                                'sumCod' => $item['CODIGO'],
+                                'sumDescription' => $item['SUMINISTRO'],
+                                'quantity' => $item['CANTIDAD'],
+                            ];
+                        }
+
+                        if (count($suggested) > 0) {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Ok',
+                                    'status' => 200,
+                                    'count' => count($suggested),
+                                    'data' => $suggested
+                                ], 200);
+                        } else {
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Suggested Array',
+                                    'status' => 204,
+                                    'data' => []
+                                ], 204);
+                        }
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Suggested Query Response',
+                                'status' => 204,
+                                'data' => []
+                            ], 204);
+                    }
+
+                    //
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
+
+                //
+            } else {
+
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ], 401);
+            }
+        }
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/purchase-invoices/{sumcod?}/{month?}/{year?}",
+     *     operationId="getPurchaseInvoicesDetails",
+     *     tags={"Hygea"},
+     *     summary="Get Purchase Invoices Details",
+     *     description="Returns Purchase Invoices Details",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="sumcod?",
+     *          description="Product Code",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="month?",
+     *          description="Month",
+     *          required=false,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="integer"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="year?",
+     *          description="Year",
+     *          required=false,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="integer"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getInvoiceDetailsInPurchases(Request $request, $sumcod = '', $mes = '', $anio = '')
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    $errors = [];
+
+                    if (!$sumcod) array_push($errors, "No se obtuvo el código del Producto");
+                    if (!$mes) array_push($errors, "No se obtuvo el mes");
+                    if (!$anio) array_push($errors, "No se obtuvo el año");
+
+                    if (sizeof($errors) > 0) {
+
+                        return response()->json([
+                            'status' => 200,
+                            'message' => 'Ok',
+                            'data' => $errors
+                        ]);
+                    } else {
+
+                        $temp = [];
+
+                        $query = DB::connection('sqlsrv_hosvital')
+                            ->select(
+                                DB::raw("SELECT * FROM DETALLADO_FACTURA_COMPRA('$mes', '$anio', '$sumcod')")
+                            );
+
+                        if (sizeof($query) > 0) {
+
+                            $records = [];
+
+                            foreach ($query as $row) {
+                                $temp = array(
+                                    'factura' => trim($row->FACTURA),
+                                    'compras' => (int) $row->COMPRAS,
+                                    'proveedor' => trim($row->TERCERO),
+                                    'fec_factura' => $row->FECHA_FACTURA,
+                                    'valor_factura' => $row->VALOR_EN_FACTURA,
+                                    //'causacion' => $row->ENTNROCAU
+                                );
+
+                                $records[] = $temp;
+                            }
+
+                            if (count($records) > 0) {
+
+                                return response()->json([
+                                    'status' => 200,
+                                    'message' => 'Ok',
+                                    'count' => count($records),
+                                    'data' => $records
+                                ]);
+                            } else {
+
+                                return response()->json([
+                                    'status' => 204,
+                                    'message' => 'Empty Array',
+                                    'data' => []
+                                ]);
+                            }
+                        }
+                    }
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
+            } else {
+
+                return response()->json([
+                    'status' => 401,
+                    'message' => 'Unauthorized',
+                    'data' => []
+                ]);
             }
         }
     }

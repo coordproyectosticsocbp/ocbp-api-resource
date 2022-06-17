@@ -1250,7 +1250,9 @@ class HitoController extends Controller
                             );
                         }
                         if (count($admisions) > 0) {
+
                             $admisions = array_values($admisions);
+
                             return response()
                                 ->json([
                                     'msg' => 'Ok',
@@ -1258,6 +1260,7 @@ class HitoController extends Controller
                                     'data' => $admisions
                                 ], 200);
                         } else {
+
                             return response()
                                 ->json([
                                     'msg' => 'Admisions Array is Empty',
@@ -1266,6 +1269,7 @@ class HitoController extends Controller
                                 ], 204);
                         }
                     } else {
+
                         return response()
                             ->json([
                                 'msg' => 'Admisions Query is Empty',
