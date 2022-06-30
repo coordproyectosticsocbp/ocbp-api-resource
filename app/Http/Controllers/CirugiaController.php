@@ -82,10 +82,11 @@ class CirugiaController extends Controller
 
                     if (!$patientDoc || !$patientDocType) {
 
-                        return response()->json([
-                            'msg' => 'Parameters Cannot Be Empty!',
-                            'status' => 400
-                        ]);
+                        return response()
+                            ->json([
+                                'msg' => 'Parameters Cannot Be Empty!',
+                                'status' => 400
+                            ]);
 
                         //
                     } else {
@@ -155,10 +156,11 @@ class CirugiaController extends Controller
                             //
                         } else {
 
-                            return response()->json([
-                                'msg' => 'Empty Procedures Query Result',
-                                'status' => 204
-                            ]);
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Procedures Query Result',
+                                    'status' => 204
+                                ]);
 
                             //
                         }
@@ -398,7 +400,7 @@ class CirugiaController extends Controller
                                     'patientSurgeryDurationInHours' => $item['HORAS_DURACION'],
                                     'patientSurgeryDurationInMinutes' => $item['MINUTOS_DURACION'],
                                     'patientSurgeryRoomCode' => $item['SALA_CX_CODE'],
-                                    'patientSurgeryRoomName' => $item['SALA_CX'],
+                                    'patientSurgeryRoomName' => trim($item['SALA_CX']),
                                     'patientDxCode' => $item['COD_DX'],
                                     'patientDxDescription' => $item['DX_NOMBRE'],
                                     'patientSurgeryLaterality' => $item['LATERALIDAD'],
@@ -577,7 +579,7 @@ class CirugiaController extends Controller
                                         'patientSurgeryDurationInHours' => $item['HORAS_DURACION'],
                                         'patientSurgeryDurationInMinutes' => $item['MINUTOS_DURACION'],
                                         'patientSurgeryRoomCode' => $item['SALA_CX_CODE'],
-                                        'patientSurgeryRoomName' => $item['SALA_CX'],
+                                        'patientSurgeryRoomName' => trim($item['SALA_CX']),
                                         'patientDxCode' => $item['COD_DX'],
                                         'patientDxDescription' => $item['DX_NOMBRE'],
                                         'patientSurgeryLaterality' => $item['LATERALIDAD'],

@@ -531,6 +531,47 @@ Route::group([
 
 
     /*-------------------------------------------------------------------------------------------------------------*/
+    /* CALADRIUS */
+    Route::get(
+        '/caladrius/get/contracts-general-info/{contract?}',
+        [
+            \App\Http\Controllers\CaladriusController::class,
+            'getContractsWithPortfoliosAndServices'
+        ]
+    );
+
+    Route::get(
+        '/caladrius/get/amb-ordered-procedures/{document?}/{doctype?}/{folio?}',
+        [
+            \App\Http\Controllers\CaladriusController::class,
+            'getOrderedProcedures'
+        ]
+    );
+
+    Route::get(
+        '/caladrius/get/patient-basic-info/{document?}/{doctype?}',
+        [
+            \App\Http\Controllers\CaladriusController::class,
+            'getPatientInfo'
+        ]
+    );
+
+    Route::get(
+        '/caladrius/get/folios-info-by-document/{document?}/{doctype?}',
+        [
+            \App\Http\Controllers\CaladriusController::class,
+            'getPatientFoliosInfo'
+        ]
+    );
+
+
+
+
+
+
+
+
+    /*-------------------------------------------------------------------------------------------------------------*/
 
     /* DOCTOR CLINIC */
     Route::get(
