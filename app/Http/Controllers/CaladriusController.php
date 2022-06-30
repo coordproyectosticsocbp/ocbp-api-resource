@@ -24,7 +24,7 @@ class CaladriusController extends Controller
 
     /**
      * @OA\Get (
-     *     path="/api/v1/cirugia/get/patient-basic-info/{document?}/{doctype?}",
+     *     path="/api/v1/caladrius/get/patient-basic-info/{document?}/{doctype?}",
      *     operationId="getCaladriusPatientInfo",
      *     tags={"Caladrius"},
      *     summary="Get getCaladriusPatientInfo",
@@ -167,7 +167,7 @@ class CaladriusController extends Controller
     // ============================================================
     /**
      * @OA\Get (
-     *     path="/api/v1/cirugia/get/folios-info-by-document/{document?}/{doctype?}",
+     *     path="/api/v1/caladrius/get/folios-info-by-document/{document?}/{doctype?}",
      *     operationId="getPatientFoliosInfo",
      *     tags={"Caladrius"},
      *     summary="Get getPatientFoliosInfo",
@@ -465,6 +465,48 @@ class CaladriusController extends Controller
         }
     } */
 
+    /**
+     * @OA\Get (
+     *     path="/api/v1/caladrius/get/contracts-general-info/{contract?}",
+     *     operationId="getContractsWithPortfoliosAndServices",
+     *     tags={"Caladrius"},
+     *     summary="Get getContractsWithPortfoliosAndServices",
+     *     description="Returns getContractsWithPortfoliosAndServices",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="contract?",
+     *          description="Número de Contrato",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
     public function getContractsWithPortfoliosAndServices(Request $request, $contractNum = '')
     {
         if ($request->hasHeader('X-Authorization')) {
@@ -573,7 +615,7 @@ class CaladriusController extends Controller
 
     /**
      * @OA\Get (
-     *     path="/api/v1/cirugia/get/amb-ordered-procedures/{document?}/{doctype?}/{folio?}",
+     *     path="/api/v1/caladrius/get/amb-ordered-procedures/{document?}/{doctype?}/{folio?}",
      *     operationId="getOrderedProcedures",
      *     tags={"Caladrius"},
      *     summary="Get OrderedProcedures",

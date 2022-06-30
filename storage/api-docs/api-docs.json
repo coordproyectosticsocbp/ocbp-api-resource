@@ -239,7 +239,7 @@
                 ]
             }
         },
-        "/api/v1/cirugia/get/patient-basic-info/{document?}/{doctype?}": {
+        "/api/v1/caladrius/get/patient-basic-info/{document?}/{doctype?}": {
             "get": {
                 "tags": [
                     "Caladrius"
@@ -291,7 +291,7 @@
                 ]
             }
         },
-        "/api/v1/cirugia/get/folios-info-by-document/{document?}/{doctype?}": {
+        "/api/v1/caladrius/get/folios-info-by-document/{document?}/{doctype?}": {
             "get": {
                 "tags": [
                     "Caladrius"
@@ -343,7 +343,50 @@
                 ]
             }
         },
-        "/api/v1/cirugia/get/amb-ordered-procedures/{document?}/{doctype?}/{folio?}": {
+        "/api/v1/caladrius/get/contracts-general-info/{contract?}": {
+            "get": {
+                "tags": [
+                    "Caladrius"
+                ],
+                "summary": "Get getContractsWithPortfoliosAndServices",
+                "description": "Returns getContractsWithPortfoliosAndServices",
+                "operationId": "getContractsWithPortfoliosAndServices",
+                "parameters": [
+                    {
+                        "name": "contract?",
+                        "in": "path",
+                        "description": "Número de Contrato",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/caladrius/get/amb-ordered-procedures/{document?}/{doctype?}/{folio?}": {
             "get": {
                 "tags": [
                     "Caladrius"
