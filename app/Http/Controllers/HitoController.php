@@ -490,8 +490,8 @@ class HitoController extends Controller
                         $query_antecedentes = DB::connection('sqlsrv_hosvital')
                             ->select("SELECT * FROM ANTECEDENTES('$item->NUM_HISTORIA', '$item->TI_DOC')");
 
-                        $query_consumo = DB::connection('sqlsrv_hosvital')
-                            ->select("SELECT * FROM HITO_CONSUMO_ESTANCIA_PACIENTE('$item->FECHA_INGRESO', '$dt', '$item->NUM_HISTORIA')");
+                        /* $query_consumo = DB::connection('sqlsrv_hosvital')
+                            ->select("SELECT * FROM HITO_CONSUMO_ESTANCIA_PACIENTE('$item->FECHA_INGRESO', '$dt', '$item->NUM_HISTORIA')"); */
 
                         $query_riesgos = DB::connection('sqlsrv_hosvital')
                             ->select("SELECT * FROM HITO_RIESGOS_PACIENTE('$item->NUM_HISTORIA', '$item->TI_DOC', '$item->FOLIO')");
@@ -602,22 +602,22 @@ class HitoController extends Controller
 
 
                         // VALIDACIÓN PARA EL CONSUMO DE LA ESTANCIA DEL PACIENTE
-                        if (count($query_consumo) > 0) {
+                        /* if (count($query_consumo) > 0) {
 
                             $consumos = [];
 
                             foreach ($query_consumo as $consumo) {
 
-                                /*$temp4 = array(
+                                $temp4 = array(
                                     'consumption' => $consumo->VENTA_TOTAL
-                                );*/
+                                );
 
                                 $consumos[] = $consumo->VENTA_TOTAL;
                             }
                         } else {
 
                             $consumos = [];
-                        }
+                        } */
 
 
                         // VALIDACIÓN PARA LOS ANTECEDENTES DEL PACIENTE
@@ -760,7 +760,8 @@ class HitoController extends Controller
                             'primaryDxDescription' => $item->DX,
                             'primaryDxDate' => $item->FECHA_1_DX,
                             'date' => $dt,
-                            'consumption' => array_sum($consumos),
+                            //'consumption' => array_sum($consumos),
+                            'consumption' => 0,
                             'realStay' => $item->EstanciaReal,
                             'clinicHistorial' => $consul_reason,
                         );

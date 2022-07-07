@@ -88,7 +88,7 @@ class EspartaController extends Controller
                         foreach ($query as $item) {
 
                             $query2 = DB::connection('sqlsrv_hosvital')
-                                ->select("SELECT * FROM ESPARTA_INFORMACION_FOLIOS_PACIENTES($item->DOCUMENTO, '$item->TIP_DOC') ORDER BY FOLIO DESC");
+                                ->select("SELECT * FROM ESPARTA_INFORMACION_FOLIOS_PACIENTES($item->DOCUMENTO, '$item->TIP_DOC')");
 
                             if (sizeOf($query2) > 0) {
 
@@ -101,9 +101,11 @@ class EspartaController extends Controller
                                         'attentionType' => $row->TIPO_ATENCION,
                                         'folio' => $row->FOLIO,
                                         'consulationDate' => $row->FECHA_CONSULTA,
-                                        'motConsulation' => $row->MOTIVO_CONSULTA,
-                                        'currentIllness' => $row->ENFERMEDAD_ACTUAL,
-                                        'physicalExam' => $row->EXAMEN_FISICO,
+                                        'motConsulation' => mb_convert_encoding(strtoupper($row->MOTIVO_CONSULTA), 'UTF-8', 'UTF-8'),
+                                        'currentIllness' => mb_convert_encoding(strtoupper($row->ENFERMEDAD_ACTUAL), 'UTF-8', 'UTF-8'),
+                                        'physicalExam' => mb_convert_encoding(strtoupper($row->EXAMEN_FISICO), 'UTF-8', 'UTF-8'),
+                                        //'currentIllness' => strtoupper($row->ENFERMEDAD_ACTUAL),
+                                        //'physicalExam' => $row->EXAMEN_FISICO,
                                         'systemReview' => $row->RX_SISTEMA,
                                         'doctor' => $row->MEDICO,
                                     );
@@ -112,12 +114,13 @@ class EspartaController extends Controller
                                 }
                             } else {
 
-                                return response()
+                                $folios = [];
+                                /* return response()
                                     ->json([
                                         'msg' => 'No hay datos en la respuesta a esta solicitud de folios',
                                         'status' => 500,
                                         'data' => $query2
-                                    ]);
+                                    ]); */
                             }
 
 
@@ -132,7 +135,7 @@ class EspartaController extends Controller
                                 'birthDate' => $item->FECHA_NAC,
                                 'age' => $item->EDAD,
                                 'gender' => $item->SEXO,
-                                'civilStatus' => $item->ESTADOCIVIL,
+                                'civilStatus' => $item->ESTADOCIVIL == null ? "" : $item->ESTADOCIVIL,
                                 'bloodType' => $item->GRUPO_SANGUINEO,
                                 'mobilePhone' => $item->TELEFONO1,
                                 'address' => $item->DIRECCION,

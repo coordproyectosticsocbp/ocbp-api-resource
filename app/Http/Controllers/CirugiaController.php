@@ -571,7 +571,7 @@ class CirugiaController extends Controller
                                         'patientBirthDate' => $item['FECHA_NAC'],
                                         'patientAge' => $item['EDAD'],
                                         'patientGender' => $item['SEXO'],
-                                        'patientAdmConsecutive' => $item['INGRESO'],
+                                        'patientAdmConsecutive' => $item['INGRESO'] == null ? "" : $item['INGRESO'],
                                         'patientEpsCode' => $item['EPS_NIT'],
                                         'patientEpsName' => $item['EPS'],
                                         'patientSurgeryDate' => $item['FECHA_PROCEDIMIENTO'],
