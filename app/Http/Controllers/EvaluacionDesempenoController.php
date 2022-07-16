@@ -93,18 +93,18 @@ class EvaluacionDesempenoController extends Controller
 
 
                         $temp = array(
-                            'empDoc' => $employee->DOC,
-                            'empDocType' => $employee->TIP_DOC,
-                            'empName' => $employee->Nombre,
-                            'empLastName' => $employee->Apellidos,
+                            'empDoc' => trim($employee->DOC),
+                            'empDocType' => trim($employee->TIP_DOC),
+                            'empName' => trim($employee->Nombre),
+                            'empLastName' => trim($employee->Apellidos),
                             'empGender' => $employee->sexo,
                             'empEmail' => $employee->Email,
                             'empPhone' => $employee->Telefono,
                             'empAddress' => $employee->Direccion,
                             'empBirthDate' => $employee->Fecha_Nacimiento,
-                            'empImmediateBoss' => $employee->JEFE_INMEDIATO,
-                            'empPosition' => $employee->Cargo,
-                            'empCostCenter' => $employee->CENTRO_COSTO,
+                            'empImmediateBoss' => trim($employee->JEFE_INMEDIATO),
+                            'empPosition' => trim($employee->Cargo),
+                            'empCostCenter' => trim($employee->CENTRO_COSTO),
                             'empLastContractInitDate' => $employee->FECHA_INI_ULT_CONTRATO,
                             'empLastContractExpDate' => $employee->FECHA_VENC_ULT_CONTRATO,
                             'empStatus' => $employeeStatus,
@@ -224,11 +224,11 @@ class EvaluacionDesempenoController extends Controller
                 foreach ($query_novelties as $novelty) {
 
                     $temp = array(
-                        'empDoc' => $novelty->DOC,
-                        'empDocType' => $novelty->TIP_DOC,
-                        'empName' => $novelty->NOMBRE,
-                        'empLastName' => $novelty->APELLIDOS,
-                        'empPosition' => $novelty->CARGO,
+                        'empDoc' => trim($novelty->DOC),
+                        'empDocType' => trim($novelty->TIP_DOC),
+                        'empName' => trim($novelty->NOMBRE),
+                        'empLastName' => trim($novelty->APELLIDOS),
+                        'empPosition' => trim($novelty->CARGO),
                         'empCostCenter' => trim($novelty->CENTRO_COSTO),
                         'empConceptCode' => trim($novelty->CODIGO_CONCEPTO),
                         'empConceptDesc' => trim($novelty->CONCEPTO),

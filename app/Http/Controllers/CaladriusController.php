@@ -811,6 +811,122 @@ class CaladriusController extends Controller
     }
 
 
+    // ============================================================
+    // Function to return all Active Contracts
+    // ============================================================
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/caladrius/get/active-contracts",
+     *     operationId="getAllActiveContracts",
+     *     tags={"Caladrius"},
+     *     summary="Get getAllActiveContracts",
+     *     description="Returns getAllActiveContracts",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getAllActiveContracts(Request $request)
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    $queryContracts = DB::connection('sqlsrv_hosvital')
+                        ->select('SELECT * FROM CALADRIUS_CONTRATOS_ACTIVOS()');
+
+                    if (sizeof($queryContracts) < 0) {
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Query Response',
+                                'status' => 204,
+                            ], 204);
+                    }
+
+                    $contracts = [];
+
+                    foreach ($queryContracts as $item) {
+
+                        $contracts[] = [
+                            'contractEpsNit' => trim($item->CODIGO_NIT),
+                            'contractEpsName' => trim($item->RAZON_SOCIAL_CLIENTE),
+                            'contractCode' => trim($item->CODIGO_CONTRATO),
+                            'contractName' => trim($item->DESCRIPCION_CONTRATO),
+                            'contractUseCopago' => $item->MANEJA_COPAGO === "NO" ? 0 : 1,
+                            'contractUseModeratorFee' => $item->MANEJA_MODERADORA === "NO" ? 0 : 1,
+                            'contractIsPgp' => $item->ES_CAPITADO === "SI" ? 1 : 0,
+                            'contractObservations' => $item->OBSERVACIONES_CONTRATO === null ? "" : strtoupper($this->replaceCharacter($item->OBSERVACIONES_CONTRATO)),
+                        ];
+                    }
+
+
+                    if (sizeof($contracts) < 0) {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Contracts Array',
+                                'status' => 204,
+                                'data' => []
+                            ], 204);
+                    }
+
+
+                    return response()
+                        ->json([
+                            'msg' => 'Ok',
+                            'status' => 200,
+                            'counter' => count($contracts),
+                            'data' => $contracts
+                        ], 200);
+
+                    //
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
+            } else {
+
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ]);
+            }
+        }
+    }
+
+
+    // ============================================================
+    // Function to place Special Characters
+    // ============================================================
+
     public function replaceCharacter($text)
     {
         if (!$text) {

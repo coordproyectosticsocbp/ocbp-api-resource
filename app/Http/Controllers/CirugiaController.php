@@ -392,7 +392,7 @@ class CirugiaController extends Controller
                                     'patientBirthDate' => $item['FECHA_NAC'],
                                     'patientAge' => $item['EDAD'],
                                     'patientGender' => $item['SEXO'],
-                                    'patientAdmConsecutive' => $item['INGRESO'],
+                                    'patientAdmConsecutive' => $item['INGRESO'] === null ? "" : $item['INGRESO'],
                                     'patientEpsCode' => $item['EPS_NIT'],
                                     'patientEpsName' => $item['EPS'],
                                     'patientSurgeryDate' => $item['FECHA_PROCEDIMIENTO'],
@@ -401,8 +401,8 @@ class CirugiaController extends Controller
                                     'patientSurgeryDurationInMinutes' => $item['MINUTOS_DURACION'],
                                     'patientSurgeryRoomCode' => $item['SALA_CX_CODE'],
                                     'patientSurgeryRoomName' => trim($item['SALA_CX']),
-                                    'patientDxCode' => $item['COD_DX'],
-                                    'patientDxDescription' => $item['DX_NOMBRE'],
+                                    'patientDxCode' => $item['COD_DX'] === null || $item['COD_DX'] === "" ? "" : $item['COD_DX'],
+                                    'patientDxDescription' => $item['DX_NOMBRE'] === null ? "" : $item['DX_NOMBRE'],
                                     'patientSurgeryLaterality' => $item['LATERALIDAD'],
                                     'patientSurgeryRequiresPreanestEva' => $item['VAL_PREANES'],
                                     'patientSurgeryOtionCode' => $item['OPCION'],
@@ -640,6 +640,204 @@ class CirugiaController extends Controller
                                     'status' => 204
                                 ]);
                         }
+                    }
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
+            } else {
+
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ]);
+            }
+        }
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/cirugia/get/scheduled-procedures-with-tags/{initdate?}/{enddate?}",
+     *     operationId="getScheduledProceduresByDateWithTags",
+     *     tags={"Cirugia"},
+     *     summary="Get getScheduledProceduresByDateWithTags",
+     *     description="Returns getScheduledProceduresByDateWithTags",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="initdate?",
+     *          description="Fecha Ini Busqueda",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="enddate?",
+     *          description="Fecha Fin Busqueda",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getScheduledProceduresByDateWithTags(Request $request, $initDate = '', $endDate = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    $init = '';
+                    $end = '';
+
+                    if (!$initDate) {
+
+                        $init = Carbon::now()->format('Y-m-d');
+                    } else {
+                        $init = Carbon::parse($initDate)->format('Y-m-d');
+                    }
+
+                    if (!$endDate) {
+
+                        $end = Carbon::now()->format('Y-m-d');
+                    } else {
+                        $end = Carbon::parse($endDate)->format('Y-m-d');
+                    }
+
+                    $queryAllScheduledProcedures = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM CIRUGIAX_REQUISITOS_PREVIOS_ACTO_QUIRUGICO_POR_FECHA_TAGS('$init', '$end')");
+
+
+                    if (count($queryAllScheduledProcedures) > 0) {
+
+                        $scheduledProcedures = [];
+
+                        foreach (json_decode(json_encode($queryAllScheduledProcedures), true) as $item) {
+
+
+                            if (!isset($scheduledProcedures[$item['NUM_DOC']])) {
+
+                                $scheduledProcedures[$item['NUM_DOC']] = array(
+                                    'patientFirstName' => $item['NOMBRE_1'],
+                                    'patientSecondName' => $item['NOMBRE_2'],
+                                    'patientLastName' => $item['APELLIDO_1'],
+                                    'patientSecondLastName' => $item['APELLIDO_2'],
+                                    'patientDoc' => $item['NUM_DOC'],
+                                    'patientDocType' => $item['TIP_DOC'],
+                                    'patientBirthDate' => $item['FECHA_NAC'],
+                                    'patientAge' => $item['EDAD'],
+                                    'patientGender' => $item['SEXO'],
+                                    'patientAdmConsecutive' => $item['INGRESO'] ? $item['INGRESO'] : "",
+                                    'patientEpsCode' => $item['EPS_NIT'],
+                                    'patientEpsName' => $item['EPS'],
+                                    'patientSurgeryDate' => $item['FECHA_PROCEDIMIENTO'],
+                                    'patientSurgeryHour' => $item['HORA_PROCEDIMIENTO'],
+                                    'patientSurgeryDurationInHours' => $item['HORAS_DURACION'],
+                                    'patientSurgeryDurationInMinutes' => $item['MINUTOS_DURACION'],
+                                    'patientSurgeryRoomCode' => $item['SALA_CX_CODE'],
+                                    'patientSurgeryRoomName' => trim($item['SALA_CX']),
+                                    'patientDxCode' => $item['COD_DX'] ? $item['COD_DX'] : "",
+                                    'patientDxDescription' => $item['DX_NOMBRE'] ? $item['DX_NOMBRE'] : "",
+                                    'patientSurgeryLaterality' => $item['LATERALIDAD'],
+                                    'patientSurgeryRequiresPreanestEva' => $item['VAL_PREANES'],
+                                    'patientSurgeryOtionCode' => $item['OPCION'],
+                                    'patientSurgeryOptionDescription' => $item['OPCION_NOMBRE'],
+                                    'patientNeedRoom' => $item['RESERVA_CAMA'],
+                                    'patientNeedRoomType' => $item['TIPO_CAMA'],
+                                    'patientSurgeryRequiresEE' => $item['EQUIPOS_ESPECIALES'],
+                                    'patientSurgeryRequiresME' => $item['REQ_MAT_ESPECIALES'],
+                                    'patientSurgeryBookedBy' => $item['RESERVADO'],
+                                    'patientSurgeon' => $item['CIRUJANO'],
+                                    // Tags
+                                    'surgeryHasPreAnestAppointment' => $item['CITA_VAL_PREANESTESICA'] == 'S' ? 1 : 0,
+                                    'surgeryWithPendingAuthorization' => $item['AUTORIZADA_O_PDTE'] == 'S' ? 1 : 0,
+                                    'surgeryAuthorizationInProcess' => $item['AUTORIZADA_O_PDTE'] == 'N' ? 1 : 0,
+                                    'surgeryAuthorized' => $item['AUTORIZADA_O_PDTE'] == 'N' ? 1 : 0,
+                                    'surgeryIsOncological' => "",
+                                    'surgeryIsUrgent' => $item['PRIORIDAD'] == 'URGENCIA' ? 1 : 0,
+                                );
+
+                                unset(
+                                    $scheduledProcedures[$item['NUM_DOC']]['PROCEDIMIENTO_COD'],
+                                    $scheduledProcedures[$item['NUM_DOC']]['NOMB_PROCED'],
+                                    $scheduledProcedures[$item['NUM_DOC']]['CIRUJANO'],
+                                    $scheduledProcedures[$item['NUM_DOC']]['VIA_COD'],
+                                    $scheduledProcedures[$item['NUM_DOC']]['VIA_DESCRIPCION'],
+                                );
+                                $scheduledProcedures[$item['NUM_DOC']]['procedures'] = [];
+                            }
+
+                            $scheduledProcedures[$item['NUM_DOC']]['procedures'][] = array(
+                                'procedureCode' => $item['PROCEDIMIENTO_COD'],
+                                'procedureDescription' => $item['NOMB_PROCED'],
+                                'procedureSurgeon' => $item['CIRUJANO'],
+                                'procedureViaCode' => $item['VIA_COD'],
+                                'procedureViaDescription' => $item['VIA_DESCRIPCION'],
+                            );
+                            $scheduledProcedures[$item['NUM_DOC']]['surgeryHasMoreThanOneProc'] =
+                                count($scheduledProcedures[$item['NUM_DOC']]['procedures']) > 1 ? 1 : 0;
+                        }
+
+                        if (count($scheduledProcedures) > 0) {
+
+                            $scheduledProcedures = array_values($scheduledProcedures);
+                            return response()
+                                ->json([
+                                    'msg' => 'Ok',
+                                    'status' => 200,
+                                    'count' => count($scheduledProcedures),
+                                    'data' => $scheduledProcedures
+                                ], 200);
+                        } else {
+                            return response()
+                                ->json([
+                                    'msg' => 'ScheduledProcedures Array is Empty',
+                                    'status' => 204,
+                                    'data' => []
+                                ], 204);
+                        }
+
+                        //
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Query Result',
+                                'data' => [],
+                                'status' => 204
+                            ]);
                     }
                 } catch (\Throwable $th) {
                     throw $th;

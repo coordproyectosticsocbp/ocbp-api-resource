@@ -528,6 +528,14 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/cirugia/get/scheduled-procedures-with-tags/{initdate?}/{enddate?}',
+        [
+            \App\Http\Controllers\CirugiaController::class,
+            'getScheduledProceduresByDateWithTags'
+        ]
+    );
+
 
 
     /*-------------------------------------------------------------------------------------------------------------*/
@@ -561,6 +569,14 @@ Route::group([
         [
             \App\Http\Controllers\CaladriusController::class,
             'getPatientFoliosInfo'
+        ]
+    );
+
+    Route::get(
+        '/caladrius/get/active-contracts',
+        [
+            \App\Http\Controllers\CaladriusController::class,
+            'getAllActiveContracts'
         ]
     );
 
