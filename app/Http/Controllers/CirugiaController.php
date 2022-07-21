@@ -395,6 +395,7 @@ class CirugiaController extends Controller
                                     'patientAdmConsecutive' => $item['INGRESO'] === null ? "" : $item['INGRESO'],
                                     'patientEpsCode' => $item['EPS_NIT'],
                                     'patientEpsName' => $item['EPS'],
+                                    'patientSurgeryCode' => trim($item['PROCEDIMIENTO_ORDER_NUM']),
                                     'patientSurgeryDate' => $item['FECHA_PROCEDIMIENTO'],
                                     'patientSurgeryHour' => $item['HORA_PROCEDIMIENTO'],
                                     'patientSurgeryDurationInHours' => $item['HORAS_DURACION'],
@@ -574,6 +575,7 @@ class CirugiaController extends Controller
                                         'patientAdmConsecutive' => $item['INGRESO'] == null ? "" : $item['INGRESO'],
                                         'patientEpsCode' => $item['EPS_NIT'],
                                         'patientEpsName' => $item['EPS'],
+                                        'patientSurgeryCode' => trim($item['PROCEDIMIENTO_ORDER_NUM']),
                                         'patientSurgeryDate' => $item['FECHA_PROCEDIMIENTO'],
                                         'patientSurgeryHour' => $item['HORA_PROCEDIMIENTO'],
                                         'patientSurgeryDurationInHours' => $item['HORAS_DURACION'],
@@ -762,6 +764,7 @@ class CirugiaController extends Controller
                                     'patientAdmConsecutive' => $item['INGRESO'] ? $item['INGRESO'] : "",
                                     'patientEpsCode' => $item['EPS_NIT'],
                                     'patientEpsName' => $item['EPS'],
+                                    'patientSurgeryCode' => trim($item['PROCEDIMIENTO_ORDER_NUM']),
                                     'patientSurgeryDate' => $item['FECHA_PROCEDIMIENTO'],
                                     'patientSurgeryHour' => $item['HORA_PROCEDIMIENTO'],
                                     'patientSurgeryDurationInHours' => $item['HORAS_DURACION'],
@@ -976,7 +979,20 @@ class CirugiaController extends Controller
                     ];
                 }
 
-                if (sizeof($surgery) < 0) {
+                if (sizeof($surgery) > 0) {
+
+                    $surgery = array_values($surgery);
+
+                    return response()
+                        ->json([
+                            'msg' => 'Ok',
+                            'status' => 200,
+                            'counter' => count($surgery),
+                            'data' => $surgery
+                        ]);
+
+                    //
+                } else {
 
                     return response()
                         ->json([
@@ -986,14 +1002,6 @@ class CirugiaController extends Controller
                             'data' => []
                         ]);
                 }
-
-                return response()
-                    ->json([
-                        'msg' => 'Ok',
-                        'status' => 200,
-                        'counter' => count($surgery),
-                        'data' => $surgery
-                    ]);
             } catch (\Throwable $th) {
                 throw $th;
             }
