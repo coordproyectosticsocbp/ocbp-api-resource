@@ -852,4 +852,151 @@ class CirugiaController extends Controller
             }
         }
     }
+
+
+
+    // =========================================================================================
+    // Function to get Surgery Details By SurgeryCode
+    // =========================================================================================
+    /**
+     * @OA\Get (
+     *     path="/api/v1/cirugia/get/surgery-details/{sugerycode?}",
+     *     operationId="getSurgeryDetailBySurgeryCode",
+     *     tags={"Cirugia"},
+     *     summary="Get getSurgeryDetailBySurgeryCode",
+     *     description="Returns getSurgeryDetailBySurgeryCode",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="sugerycode?",
+     *          description="Código de la Cirugía",
+     *          in="path",
+     *          required=true,
+     *          @OA\Schema (
+     *              type="String"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getSurgeryDetailBySurgeryCode(Request $request, $surgeryCode = '')
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (!$user) {
+
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ]);
+            }
+
+            try {
+
+                if (!$surgeryCode) {
+
+                    return response()
+                        ->json([
+                            'msg' => 'Parameters Cannot be Empty',
+                            'status' => 400
+                        ]);
+                }
+
+                $querySurgeryDetails = DB::connection('sqlsrv_hosvital')
+                    ->select("SELECT * FROM CIRUGIAX_DETALLE_CIRUGIA('$surgeryCode')");
+
+                if (sizeof($querySurgeryDetails) < 0) {
+
+                    return response()
+                        ->json([
+                            'msg' => 'Empty SurgeryDetails Query',
+                            'status' => 204
+                        ]);
+                }
+
+                $surgery = [];
+
+                foreach (json_decode(json_encode($querySurgeryDetails), true) as $item) {
+
+                    if (!isset($surgery[$item['CODIGO_CIRUGIA']])) {
+                        $surgery[$item['CODIGO_CIRUGIA']] = [
+                            'patientDocument'  => trim($item['DOCUMENTO']),
+                            'patientDocumentType'  => trim($item['TIP_DOC']),
+                            'surgeryCode'  => trim($item['CODIGO_CIRUGIA']),
+                            'surgeryDate'  => trim($item['FECHA_PROGRAMACION']),
+                            'surgeryHour'  => trim($item['HORA_PROCEDIMIENTO']),
+                            'surgeryDurationInHours'  => trim($item['HORAS_DURACION']),
+                            'surgeryDurationInMinutes'  => trim($item['MINUTOS_DURACION']),
+                            'surgeryRoomCode'  => trim($item['SALA_CX_CODE']),
+                            'surgeryRoomDescription'  => trim($item['SALA_CX']),
+                            'surgeon' => trim($item['CIRUJANO']),
+                            'surgeryObservation1' => trim($item['OBSERVACION_CIRUGIA']),
+                            'surgeryObservation2' => trim($item['OBSERVACION_CIRUGIA_2']),
+                            'surgerySpecialEquipmentObservation' => trim($item['OBSERVACION_EQUIPOS_ESPECIALES']),
+                            'surgeryHemoDObservation' => trim($item['OBSERVACION_HEMODINAMIA']),
+                        ];
+
+                        unset(
+                            $surgery[$item['CODIGO_CIRUGIA']]['PROCEDIMIENTO_CODIGO'],
+                            $surgery[$item['CODIGO_CIRUGIA']]['PROCEDIMIENTO_NOMBRE'],
+                        );
+                        $surgery[$item['CODIGO_CIRUGIA']]['procedures'] = [];
+                    }
+
+
+                    $surgery[$item['CODIGO_CIRUGIA']]['procedures'][] = [
+                        'procedureCode' => $item['PROCEDIMIENTO_CODIGO'],
+                        'procedureDescription' => $item['PROCEDIMIENTO_NOMBRE'],
+                    ];
+                }
+
+                if (sizeof($surgery) < 0) {
+
+                    return response()
+                        ->json([
+                            'msg' => 'Empty SurgeryDetails Array',
+                            'status' => 204,
+                            'counter' => 0,
+                            'data' => []
+                        ]);
+                }
+
+                return response()
+                    ->json([
+                        'msg' => 'Ok',
+                        'status' => 200,
+                        'counter' => count($surgery),
+                        'data' => $surgery
+                    ]);
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
+    }
 }

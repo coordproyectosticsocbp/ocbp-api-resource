@@ -536,6 +536,14 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/cirugia/get/surgery-details/{sugerycode?}',
+        [
+            \App\Http\Controllers\CirugiaController::class,
+            'getSurgeryDetailBySurgeryCode'
+        ]
+    );
+
 
 
     /*-------------------------------------------------------------------------------------------------------------*/
