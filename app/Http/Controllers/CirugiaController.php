@@ -784,12 +784,12 @@ class CirugiaController extends Controller
                                     'patientSurgeryBookedBy' => $item['RESERVADO'],
                                     'patientSurgeon' => $item['CIRUJANO'],
                                     // Tags
-                                    'surgeryHasPreAnestAppointment' => $item['CITA_VAL_PREANESTESICA'] == 'S' ? 1 : 0,
-                                    'surgeryWithPendingAuthorization' => $item['AUTORIZADA_O_PDTE'] == 'S' ? 1 : 0,
-                                    'surgeryAuthorizationInProcess' => $item['AUTORIZADA_O_PDTE'] == 'N' ? 1 : 0,
-                                    'surgeryAuthorized' => $item['AUTORIZADA_O_PDTE'] == 'N' ? 1 : 0,
+                                    'surgeryHasPreAnestAppointment' => $item['CITA_VAL_PREANESTESICA'] === 'S' ? 1 : 0,
+                                    'surgeryWithPendingAuthorization' => $item['AUTORIZADA_O_PDTE'] === 'S' ? 1 : 0,
+                                    'surgeryAuthorizationInProcess' => $item['AUTORIZADA_O_PDTE'] === 'N' ? 1 : 0,
+                                    'surgeryAuthorized' => $item['AUTORIZADA_O_PDTE'] === 'N' ? 1 : 0,
                                     'surgeryIsOncological' => "",
-                                    'surgeryIsUrgent' => $item['PRIORIDAD'] == 'URGENCIA' ? 1 : 0,
+                                    'surgeryIsUrgent' => $item['PRIORIDAD'] === 'URGENCIA' ? 1 : 0,
                                 );
 
                                 unset(
