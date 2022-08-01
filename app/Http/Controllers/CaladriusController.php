@@ -465,149 +465,7 @@ class CaladriusController extends Controller
         }
     } */
 
-    /**
-     * @OA\Get (
-     *     path="/api/v1/caladrius/get/contracts-general-info/{contract?}",
-     *     operationId="getContractsWithPortfoliosAndServices",
-     *     tags={"Caladrius"},
-     *     summary="Get getContractsWithPortfoliosAndServices",
-     *     description="Returns getContractsWithPortfoliosAndServices",
-     *     security = {
-     *          {
-     *              "type": "apikey",
-     *              "in": "header",
-     *              "name": "X-Authorization",
-     *              "X-Authorization": {}
-     *          }
-     *     },
-     *     @OA\Parameter (
-     *          name="contract?",
-     *          description="Número de Contrato",
-     *          in="path",
-     *          required=false,
-     *          @OA\Schema (
-     *              type="date"
-     *          )
-     *     ),
-     *     @OA\Response(
-     *          response=200,
-     *          description="Successful operation",
-     *       ),
-     *      @OA\Response(
-     *          response=400,
-     *          description="Bad Request"
-     *      ),
-     *      @OA\Response(
-     *          response=401,
-     *          description="Unauthenticated",
-     *      ),
-     *      @OA\Response(
-     *          response=403,
-     *          description="Forbidden"
-     *      )
-     * )
-     */
-    public function getContractsWithPortfoliosAndServices(Request $request, $contractNum = '')
-    {
-        if ($request->hasHeader('X-Authorization')) {
 
-            $token = $request->header('X-Authorization');
-            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
-
-
-            if (count($user) > 0) {
-
-                try {
-
-                    if (!$contractNum) {
-
-                        return response()
-                            ->json([
-                                'msg' => 'Parameters Cannot be Empty',
-                                'status' => 400
-                            ]);
-                    }
-
-                    $queryContracts = DB::connection('sqlsrv_hosvital')
-                        ->select("SELECT * FROM CALADRIUS_2_DETALLE_CONTRATOS_POR_NUMERO_CONTRATO('$contractNum')");
-
-                    if (sizeof($queryContracts) > 0) {
-
-                        $contracts = [];
-
-                        foreach (json_decode(json_encode($queryContracts), true) as $item) {
-
-                            $contractObs = $this->replaceCharacter(trim($item['OBSERVACIONES_CONTRATO']));
-
-                            if (!isset($contracts[$item['CODIGO_CONTRATO']])) {
-                                $contracts[$item['CODIGO_CONTRATO']] = [
-                                    'contractEpsNit' => trim($item['CODIGO_NIT']),
-                                    'contractEpsDescription' => trim($item['RAZON_SOCIAL_CLIENTE']),
-                                    'contractCode' => trim($item['CODIGO_CONTRATO']),
-                                    'contractDescription' => trim($item['DESCRIPCION_CONTRATO']),
-                                    'contractStatus' => trim($item['ESTADO_CONTRATO']),
-                                    'contractUseCoPago' => trim($item['MANEJA_COPAGO']),
-                                    'contractUseFee' => trim($item['MANEJA_MODERADORA']),
-                                    'contractIsCapitado' => trim($item['ES_CAPITADO']),
-                                    'contractObservations' => $contractObs
-                                ];
-
-                                unset(
-                                    $contracts[$item['CODIGO_CONTRATO']]['CODIGO_RIPS'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['ULTIMA_VIGENCIA_PROCEDIMIENTO'],
-                                    //$contracts[$item['CODIGO_CONTRATO']]['PORTAFOLIO_PROCEDIMIENTOS'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['ULTIMA_VIGENCIA_SUMINISTRO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['CODIGO_PORTAFOLIO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['DESCRIPCION_PORTAFOLIO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['COD_CPTO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['DESCRIPCION_CONCEPTO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['CODIGO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['DESCRIPCION_PROCEDIMIENTO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['TARIFA'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['FORMA_LIQUIDACION'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['VALOR_FORLIQ'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['VALOR_FIJO'],
-                                );
-                                $contracts[$item['CODIGO_CONTRATO']]['portfolios'] = [];
-                            }
-
-                            $contracts[$item['CODIGO_CONTRATO']]['portfolios'][] = array(
-                                //'proceduresPortfolioLastValidity' => trim($item['ULTIMA_VIGENCIA_PROCEDIMIENTO']),
-                                'proceduresPortfolioCode' => trim($item['CODIGO_PORTAFOLIO']),
-                                'proceduresPortfolioDescription' => trim($item['DESCRIPCION_PORTAFOLIO']),
-                                'proceduresPortfolioConceptCode' => (int) trim($item['COD_CPTO']),
-                                'proceduresPortfolioConceptDescription' => trim($item['DESCRIPCION_CONCEPTO']),
-                                'proceduresPortfolioServiceCode' => trim($item['CODIGO']),
-                                'proceduresPortfolioServiceDescription' => trim($item['DESCRIPCION_PROCEDIMIENTO']),
-                                'proceduresPortfolioServiceValue' => (int) (trim($item['VALOR_FORLIQ']) != null ? $item['VALOR_FORLIQ'] : $item['VALOR_FIJO']),
-                            );
-                        }
-
-                        $contracts = array_values($contracts);
-
-                        return response()
-                            ->json([
-                                'msg' => 'Ok',
-                                'status' => 200,
-                                'data' => $contracts
-                            ]);
-                        //return $contracts;
-                    }
-
-                    //
-                } catch (\Throwable $th) {
-                    throw $th;
-                }
-            } else {
-
-                return response()
-                    ->json([
-                        'msg' => 'Unauthorized',
-                        'status' => 401
-                    ]);
-            }
-        }
-    }
 
     // ============================================================
     // Function to return all ordered procedures
@@ -906,6 +764,155 @@ class CaladriusController extends Controller
                             'counter' => count($contracts),
                             'data' => $contracts
                         ], 200);
+
+                    //
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
+            } else {
+
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ]);
+            }
+        }
+    }
+
+
+    // ============================================================
+    // Function to return contract with portfolio and services
+    // ============================================================
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/caladrius/get/contracts-general-info/{contract?}",
+     *     operationId="getContractsWithPortfoliosAndServices",
+     *     tags={"Caladrius"},
+     *     summary="Get getContractsWithPortfoliosAndServices",
+     *     description="Returns getContractsWithPortfoliosAndServices",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="contract?",
+     *          description="Número de Contrato",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getContractsWithPortfoliosAndServices(Request $request, $contractNum = '')
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+
+            if (count($user) > 0) {
+
+                try {
+
+                    if (!$contractNum) {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Parameters Cannot be Empty',
+                                'status' => 400
+                            ]);
+                    }
+
+                    $queryContracts = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM CALADRIUS_2_DETALLE_CONTRATOS_POR_NUMERO_CONTRATO('$contractNum')");
+
+                    if (sizeof($queryContracts) > 0) {
+
+                        $contracts = [];
+
+                        foreach (json_decode(json_encode($queryContracts), true) as $item) {
+
+                            $contractObs = $this->replaceCharacter(trim($item['OBSERVACIONES_CONTRATO']));
+
+                            if (!isset($contracts[$item['CODIGO_CONTRATO']])) {
+                                $contracts[$item['CODIGO_CONTRATO']] = [
+                                    'contractEpsNit' => trim($item['CODIGO_NIT']),
+                                    'contractEpsDescription' => trim($item['RAZON_SOCIAL_CLIENTE']),
+                                    'contractCode' => trim($item['CODIGO_CONTRATO']),
+                                    'contractDescription' => trim($item['DESCRIPCION_CONTRATO']),
+                                    'contractStatus' => trim($item['ESTADO_CONTRATO']),
+                                    'contractUseCoPago' => trim($item['MANEJA_COPAGO']),
+                                    'contractUseFee' => trim($item['MANEJA_MODERADORA']),
+                                    'contractIsCapitado' => trim($item['ES_CAPITADO']),
+                                    'contractObservations' => $contractObs
+                                ];
+
+                                unset(
+                                    $contracts[$item['CODIGO_CONTRATO']]['CODIGO_RIPS'],
+                                    $contracts[$item['CODIGO_CONTRATO']]['ULTIMA_VIGENCIA_PROCEDIMIENTO'],
+                                    //$contracts[$item['CODIGO_CONTRATO']]['PORTAFOLIO_PROCEDIMIENTOS'],
+                                    $contracts[$item['CODIGO_CONTRATO']]['ULTIMA_VIGENCIA_SUMINISTRO'],
+                                    $contracts[$item['CODIGO_CONTRATO']]['CODIGO_PORTAFOLIO'],
+                                    $contracts[$item['CODIGO_CONTRATO']]['DESCRIPCION_PORTAFOLIO'],
+                                    $contracts[$item['CODIGO_CONTRATO']]['COD_CPTO'],
+                                    $contracts[$item['CODIGO_CONTRATO']]['DESCRIPCION_CONCEPTO'],
+                                    $contracts[$item['CODIGO_CONTRATO']]['CODIGO'],
+                                    $contracts[$item['CODIGO_CONTRATO']]['DESCRIPCION_PROCEDIMIENTO'],
+                                    $contracts[$item['CODIGO_CONTRATO']]['TARIFA'],
+                                    $contracts[$item['CODIGO_CONTRATO']]['FORMA_LIQUIDACION'],
+                                    $contracts[$item['CODIGO_CONTRATO']]['VALOR_FORLIQ'],
+                                    $contracts[$item['CODIGO_CONTRATO']]['VALOR_FIJO'],
+                                );
+                                $contracts[$item['CODIGO_CONTRATO']]['portfolios'] = [];
+                            }
+
+                            $contracts[$item['CODIGO_CONTRATO']]['portfolios'][] = array(
+                                //'proceduresPortfolioLastValidity' => trim($item['ULTIMA_VIGENCIA_PROCEDIMIENTO']),
+                                'proceduresPortfolioCode' => trim($item['CODIGO_PORTAFOLIO']),
+                                'proceduresPortfolioDescription' => trim($item['DESCRIPCION_PORTAFOLIO']),
+                                'proceduresPortfolioConceptCode' => (int) trim($item['COD_CPTO']),
+                                'proceduresPortfolioConceptDescription' => trim($item['DESCRIPCION_CONCEPTO']),
+                                'proceduresPortfolioServiceCode' => trim($item['CODIGO']),
+                                'proceduresPortfolioServiceDescription' => trim($item['DESCRIPCION_PROCEDIMIENTO']),
+                                'proceduresPortfolioServiceValue' => (int) (trim($item['VALOR_FORLIQ']) != null ? $item['VALOR_FORLIQ'] : $item['VALOR_FIJO']),
+                            );
+                        }
+
+                        $contracts = array_values($contracts);
+
+                        return response()
+                            ->json([
+                                'msg' => 'Ok',
+                                'status' => 200,
+                                'data' => $contracts
+                            ]);
+                        //return $contracts;
+                    }
 
                     //
                 } catch (\Throwable $th) {

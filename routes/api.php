@@ -322,6 +322,14 @@ Route::group([
     );
 
     Route::get(
+        '/hygea/get/active-pharm-service-users',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getPharmServiceUsers'
+        ]
+    );
+
+    Route::get(
         '/hygea/get/suggested-pending/{init?}/{end?}',
         [
             \App\Http\Controllers\HygeaController::class,

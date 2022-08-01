@@ -294,7 +294,7 @@ class HygeaController extends Controller
                         'sumDesc' => $item->SUMINISTRO,
                         'sumStatus' => $item->ESTADO_ITEM,
                         'quantity' => $item->CANTIDAD,
-                        'receivedQuantity' => $item->RECIBIDO,
+                        'receivedQuantity' => (int) $item->RECIBIDO,
                         'unitValue' => $item->VALOR_UNITARIO,
                         'orderDate' => $item->FECHA_ORDEN,
                         'warehouse' => $item->BODEGA,
@@ -1830,7 +1830,11 @@ class HygeaController extends Controller
                                     'patientName' => $item['PACIENTE'],
                                     'patientDocument' => $item['DOCUMENTO'],
                                     'patientDocumentType' => $item['TIPO_DOC'],
-                                    //'patientAdmConsecutive' => $item['INGRESO'],
+                                    'patientAge' => (int) $item['EDAD'],
+                                    'patientEpsCode' => "",
+                                    'patientEpsDescription' => "",
+                                    'patientContractCode' => "",
+                                    'patientContractDescription' => "",
                                     'sumCode' => $item['COD_PROD'],
                                     'sumName' => $item['PRODUCTO'],
                                     'patientFirstDispatchDate' => Carbon::createFromFormat('d/m/Y', $item['FECHA_PRIMER_DESPACHO'])->format('d-m-Y'),
@@ -1982,6 +1986,111 @@ class HygeaController extends Controller
                 } catch (\Throwable $th) {
                     throw $th;
                 }
+            }
+        }
+    }
+
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/active-pharm-service-users",
+     *     operationId="getPharmServiceUsers",
+     *     tags={"Hygea"},
+     *     summary="Get Active getPharmServiceUsers",
+     *     description="Returns getPharmServiceUsers",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getPharmServiceUsers(Request $request)
+    {
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    $query_doctors = DB::connection('sqlsrv_kactusprod')
+                        ->select('SELECT * FROM HYGEA_EMPLEADOS_SERVICIO_FARMACEUTICO()');
+
+                    if (count($query_doctors) > 0) {
+
+                        $employees = [];
+
+                        foreach ($query_doctors as $item) {
+
+                            $temp = array(
+                                'docType' => $item->TIP_DOC,
+                                'document' => $item->DOC,
+                                'name' => $item->NOMBRES,
+                                'lastName' => $item->APELLIDOS,
+                                'gender' => $item->SEXO,
+                                'email' => $item->EMAIL,
+                                'phone' => $item->TELEFONO,
+                                'address' => $item->DIRECCION,
+                                'birthDate' => $item->FECHA_NACIMIENTO,
+                                'positionCode' => $item->CARGO_COD,
+                                'position' => $item->CARGO_DESCRIPTION
+                            );
+
+                            $employees[] = $temp;
+                        }
+
+                        if (count($employees) < 0) {
+                            $employees = [];
+                        }
+
+                        return response()
+                            ->json([
+                                'msg' => 'Ok',
+                                'status' => 200,
+                                'data' => $employees
+                            ]);
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Ok',
+                                'status' => 204,
+                            ]);
+                    }
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
+            } else {
+
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ]);
             }
         }
     }
