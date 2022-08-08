@@ -891,7 +891,7 @@ class HygeaController extends Controller
                             'patientHabitation' => $item->CAMA,
                             'sumCod' => $item->CODIGO,
                             'sumGName' => $item->NOMBRE_SUMINISTRO,
-                            'sumDose' => (int)$item->DOSIS,
+                            'sumDose' => (float) $item->DOSIS,
                             'sumUnity' => $item->UNIDAD,
                             'ordObservation' => $item->OBSERVACION,
                             'ordFrecuency' => $item->FRECUENCIA,
@@ -1831,6 +1831,7 @@ class HygeaController extends Controller
                                     'patientDocument' => $item['DOCUMENTO'],
                                     'patientDocumentType' => $item['TIPO_DOC'],
                                     'patientAge' => (int) $item['EDAD'],
+                                    'patientGender' => $item['SEXO'],
                                     'patientEpsCode' => "",
                                     'patientEpsDescription' => "",
                                     'patientContractCode' => "",
@@ -2376,6 +2377,285 @@ class HygeaController extends Controller
                     'message' => 'Unauthorized',
                     'data' => []
                 ]);
+            }
+        }
+    }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/patient-basic-info/{document?}/{doctype?}",
+     *     operationId="getHygeaPatientInfo",
+     *     tags={"Hygea"},
+     *     summary="Get getCaladriusPatientInfo",
+     *     description="Returns getCaladriusPatientInfo",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="document?",
+     *          description="Número de Documento - Opcional",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="doctype?",
+     *          description="Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getHygeaPatientInfo(Request $request, $patientDoc = '', $patientDocType = '')
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    if (!$patientDoc || !$patientDocType) {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Parameters Cannot Be Empty!',
+                                'status' => 400
+                            ]);
+                    }
+
+                    $queryPatientInfo = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM HYGEA_INFORMACION_BASICA_PACIENTE('$patientDoc', '$patientDocType')");
+
+                    if (sizeof($queryPatientInfo) > 0) {
+
+                        $patients = [];
+
+                        foreach ($queryPatientInfo as $item) {
+                            $patients[] = [
+                                'patientFirstName' => $item->PRIMER_NOMBRE,
+                                'patientSecondName' => $item->SEGUNDO_NOMBRE,
+                                'patientFirstLastName' => $item->PRIMER_APELLIDO,
+                                'patientSecondLastName' => $item->SEGUNDO_APELLIDO,
+                                'patientDocument' => $item->DOCUMENTO,
+                                'patientDocType' => $item->T_DOC,
+                                'patientBirthDate' => $item->FECHA_NAC,
+                                'patientAge' => $item->EDAD,
+                                'patientGender' => $item->SEXO,
+                                'patientBloodType' => $item->GRUPO_SANGUINEO == null ? "" : $item->GRUPO_SANGUINEO,
+                                'patientPhone' => $item->TELEFONO1,
+                                'patientEmail' => $item->EMAIL,
+                                'patientAddress' => $item->DIRECCION,
+                                'patientEpsCode' => $item->EPS_NIT,
+                                'patientEpsDescription' => $item->EPS_NOMBRE,
+                                'patientContractCode' => $item->CONTRATO_COD,
+                                'patientContractDescription' => $item->CONTRATO_NOMBRE,
+                            ];
+                        }
+
+                        if (sizeof($patients) > 0) {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Ok',
+                                    'count' => count($patients),
+                                    'status' => 200,
+                                    'data' => $patients
+                                ]);
+                        } else {
+
+                            return response()
+                                ->json([
+                                    'msg' => 'Empty Patient Array',
+                                    'status' => 204,
+                                    'data' => []
+                                ]);
+                        }
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty PatientInfo Query',
+                                'status' => 204,
+                                'data' => []
+                            ]);
+                    }
+
+                    //
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
+            } else {
+
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ]);
+            }
+        }
+    }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hygea/get/all-repacking-drugs",
+     *     operationId="get getRepackingProducts",
+     *     tags={"Hygea"},
+     *     summary="Get All getRepackingProducts",
+     *     description="Returns All getRepackingProducts",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getRepackingProducts(Request $request)
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    $queryMedicines = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM HYGEA_PRODUCTOS_ACTIVOS_REEMPAQUE() ORDER BY DESCRIPCION");
+
+                    if (sizeof($queryMedicines) < 0) {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Query Response',
+                                'status' => 204
+                            ], 204);
+                    }
+
+                    $medicines = [];
+                    $controlledMedicine = '';
+
+                    foreach ($queryMedicines as $item) {
+
+                        if ($item->MEDICAMENTO_CONTROLADO === 'S') {
+                            $controlledMedicine = 1;
+                        } else if ($item->MEDICAMENTO_CONTROLADO === 'N') {
+                            $controlledMedicine = 0;
+                        }
+
+                        $medicines[] = array(
+                            'sumCod' => trim($item->CODIGO),
+                            'balance' => $item->DESCRIPCION,
+                            'activePrinciple' => $item->PRINCIPIO_ACTIVO,
+                            'invimaCode' => trim($item->REGISTRO_INVIMA),
+                            'cumCod' => trim($item->CODIGO_CUM),
+                            'concentration' => trim($item->CONCENTRACION),
+                            'pharmForm' => $item->FORMA_FARMACEUTICA,
+                            'pharmFormDesc' => trim($item->FORMA_FARMACEUTICA_DESC),
+                            'posNoPos' => $item->POS,
+                            'atcCode' => trim($item->ATC),
+                            'price' => $item->VALOR,
+                            'groupCode' => trim($item->GRUPO_COD),
+                            'group' => trim($item->GRUPO),
+                            'subGroupCode' => trim($item->SUBGRUPO_COD),
+                            'subGroup' => trim($item->SUBGRUPO),
+                            'storageCondition' => trim($item->CONDICION_ALMACENAJE),
+                            'dispatchAdditional' => $item->DESPACHAR_COMO_ADICIONAL,
+                            'medicationControl' => $item->MEDICAMENTO_CONTROL,
+                            'remission' => $item->REMISION,
+                            'warehouse' => $item->ADMITE_ADICIONALES,
+                            'highPrice' => $item->ALTO_COSTO,
+                            'applyForNursing' => $item->SOLICITA_ENFERMERIA,
+                            'refusedType' => $item->TIPO_REHUSO,
+                            'riskClass' => $item->CLASE_RIESGO,
+                            'averageCost' => $item->COSTO_PROMEDIO,
+                            'creationDate' => Carbon::parse($item->FECHA_CREACION)->format('Y-m-d H:m:s'),
+                            'riskClasification' => $item->CLASIFICACION_RIESGO,
+                            'lastEntryDate' => Carbon::parse($item->FECHA_ULTIMA_ENTRADA)->format('Y-m-d H:m:s'),
+                            'controlledMedication' => $controlledMedicine,
+                            'productType' => $item->TIPO_MED_O_SUM,
+                            'oncoClasification' => $item->ONCOLOGICO == 'ONCO' ? 1 : 0,
+                        );
+                    }
+
+                    if (sizeof($medicines) < 0) {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Medicines Array',
+                                'status' => 204,
+                                'data' => []
+                            ], 204);
+                    }
+
+                    return response()
+                        ->json([
+                            'msg' => 'Ok',
+                            'status' => 200,
+                            'count' => count($medicines),
+                            'data' => $medicines
+                        ], 200);
+
+                    //
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
+            } else {
+
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ]);
             }
         }
     }

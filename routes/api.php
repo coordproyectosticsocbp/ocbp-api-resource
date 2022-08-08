@@ -345,6 +345,22 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/hygea/get/patient-basic-info/{document?}/{doctype?}',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getHygeaPatientInfo'
+        ]
+    );
+
+    Route::get(
+        '/hygea/get/all-repacking-drugs',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'getRepackingProducts'
+        ]
+    );
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* MACNA */

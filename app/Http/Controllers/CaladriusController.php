@@ -848,70 +848,117 @@ class CaladriusController extends Controller
                             ]);
                     }
 
-                    $queryContracts = DB::connection('sqlsrv_hosvital')
-                        ->select("SELECT * FROM CALADRIUS_2_DETALLE_CONTRATOS_POR_NUMERO_CONTRATO('$contractNum')");
+                    $queryContractsDetail = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM CALADRIUS_2_DETALLE_CONTRATO_POR_CODIGO('$contractNum')");
 
-                    if (sizeof($queryContracts) > 0) {
+                    if (sizeof($queryContractsDetail) < 0) {
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Contract Detail Query',
+                                'status' => 204
+                            ]);
+                    }
 
-                        $contracts = [];
+                    $contractsDetails = [];
 
-                        foreach (json_decode(json_encode($queryContracts), true) as $item) {
+                    $queryProceduresPortfoliosDetail = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM CALADRIUS_2_DETALLE_PORTAFOLIO_PROCEDIMIENTOS_POR_CODIGO_CONTRATO('$contractNum')");
 
-                            $contractObs = $this->replaceCharacter(trim($item['OBSERVACIONES_CONTRATO']));
+                    if (sizeof($queryProceduresPortfoliosDetail) < 0) {
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Procedures Portfolio Query',
+                                'status' => 204
+                            ]);
+                    }
 
-                            if (!isset($contracts[$item['CODIGO_CONTRATO']])) {
-                                $contracts[$item['CODIGO_CONTRATO']] = [
-                                    'contractEpsNit' => trim($item['CODIGO_NIT']),
-                                    'contractEpsDescription' => trim($item['RAZON_SOCIAL_CLIENTE']),
-                                    'contractCode' => trim($item['CODIGO_CONTRATO']),
-                                    'contractDescription' => trim($item['DESCRIPCION_CONTRATO']),
-                                    'contractStatus' => trim($item['ESTADO_CONTRATO']),
-                                    'contractUseCoPago' => trim($item['MANEJA_COPAGO']),
-                                    'contractUseFee' => trim($item['MANEJA_MODERADORA']),
-                                    'contractIsCapitado' => trim($item['ES_CAPITADO']),
-                                    'contractObservations' => $contractObs
-                                ];
+                    $proceduresPortfolio = [];
 
-                                unset(
-                                    $contracts[$item['CODIGO_CONTRATO']]['CODIGO_RIPS'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['ULTIMA_VIGENCIA_PROCEDIMIENTO'],
-                                    //$contracts[$item['CODIGO_CONTRATO']]['PORTAFOLIO_PROCEDIMIENTOS'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['ULTIMA_VIGENCIA_SUMINISTRO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['CODIGO_PORTAFOLIO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['DESCRIPCION_PORTAFOLIO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['COD_CPTO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['DESCRIPCION_CONCEPTO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['CODIGO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['DESCRIPCION_PROCEDIMIENTO'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['TARIFA'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['FORMA_LIQUIDACION'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['VALOR_FORLIQ'],
-                                    $contracts[$item['CODIGO_CONTRATO']]['VALOR_FIJO'],
-                                );
-                                $contracts[$item['CODIGO_CONTRATO']]['portfolios'] = [];
-                            }
+                    $queryMedicinesPortfoliosDetail = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM CALADRIUS_2_DETALLE_PORTAFOLIO_MEDICAMENTOS_POR_CODIGO_CONTRATO('$contractNum')");
 
-                            $contracts[$item['CODIGO_CONTRATO']]['portfolios'][] = array(
-                                //'proceduresPortfolioLastValidity' => trim($item['ULTIMA_VIGENCIA_PROCEDIMIENTO']),
-                                'proceduresPortfolioCode' => trim($item['CODIGO_PORTAFOLIO']),
-                                'proceduresPortfolioDescription' => trim($item['DESCRIPCION_PORTAFOLIO']),
-                                'proceduresPortfolioConceptCode' => (int) trim($item['COD_CPTO']),
-                                'proceduresPortfolioConceptDescription' => trim($item['DESCRIPCION_CONCEPTO']),
-                                'proceduresPortfolioServiceCode' => trim($item['CODIGO']),
-                                'proceduresPortfolioServiceDescription' => trim($item['DESCRIPCION_PROCEDIMIENTO']),
-                                'proceduresPortfolioServiceValue' => (int) (trim($item['VALOR_FORLIQ']) != null ? $item['VALOR_FORLIQ'] : $item['VALOR_FIJO']),
-                            );
-                        }
+                    if (sizeof($queryMedicinesPortfoliosDetail) < 0) {
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Medicines Portfolio Query',
+                                'status' => 204
+                            ]);
+                    }
 
-                        $contracts = array_values($contracts);
+                    $medicinesPortfolio = [];
+
+                    // ==============================================
+                    // Iterating the procedures
+                    // ==============================================
+                    foreach ($queryProceduresPortfoliosDetail as $procedure) {
+
+                        $proceduresPortfolio[] = [
+                            'procedurePortfolioCode' => trim($procedure->CODIGO_PORTAFOLIO_PROCEDIMIENTOS),
+                            'procedurePortfolioDescription' => trim($procedure->DESCRIPCION_PORTAFOLIO_PROCEDIMIENTOS),
+                            'procedurePortfolioValididty' => $procedure->ULTIMA_VIGENCIA_PORTAFOLIO,
+                            'procedureCode' => trim($procedure->CODIGO_PROCEDIMIENTO),
+                            'procedureDescription' => trim($procedure->DESCRIPCION_PROCEDIMIENTO),
+                            'procedureGroupCode' => trim($procedure->CODIGO_CONCEPTO),
+                            'procedureGroupDescription' => trim($procedure->DESCRIPCION_CONCEPTO),
+                            'procedurePrice' => $procedure->VALOR_FORLIQ === null || $procedure->VALOR_FORLIQ === '' ? (float) $procedure->VALOR_FIJO : (float) $procedure->VALOR_FORLIQ,
+                        ];
+                    }
+
+                    if (sizeof($proceduresPortfolio) < 0) {
+                        $proceduresPortfolio = [];
+                    }
+
+                    // ==============================================
+                    // Iterating the medicines
+                    // ==============================================
+                    foreach ($queryMedicinesPortfoliosDetail as $medicine) {
+
+                        $medicinesPortfolio[] = [
+                            'medicinePortfolioCode' => trim($medicine->CODIGO_PORTAFOLIO),
+                            'medicinePortfolioDescription' => trim($medicine->DESCRIPCION_PORTAFOLIO),
+                            'medicinePortfolioValididty' => $medicine->ULTIMA_VIGENCIA_PORTAFOLIO,
+                            'medicineCode' => trim($medicine->CODIGO_SUMINISTRO),
+                            'medicineDescription' => trim($medicine->DESCRIPCION_SUMINISTRO),
+                            'medicineGroupCode' => trim($medicine->COD_CPTO),
+                            'medicineGroupDescription' => trim($medicine->DESCRIPCION_CONCEPTO),
+                            'medicinePrice' => $medicine->VALOR_FORLIQ === null || $medicine->VALOR_FORLIQ === '' ? (float) $medicine->VALOR_FIJO : (float) $medicine->VALOR_FORLIQ,
+                        ];
+                    }
+
+                    if (sizeof($medicinesPortfolio) < 0) {
+                        $medicinesPortfolio = [];
+                    }
+
+
+                    // ==============================================
+                    // Iterating the contract array
+                    // ==============================================
+                    foreach ($queryContractsDetail as $item) {
+
+                        $contractsDetails[] = [
+                            'contractCode' => trim($item->CODIGO_CONTRATO),
+                            'contractDescription' => $item->DESCRIPCION_CONTRATO,
+                            'contractUseCopago' => $item->MANEJA_COPAGO,
+                            'contractWithModFee' => $item->MANEJA_MODERADORA,
+                            'contractisPGP' => $item->ES_CAPITADO,
+                            'contractObservations' => $item->OBSERVACIONES_CONTRATO,
+                            'contractStatus' => $item->ESTADO_CONTRATO,
+                            'procedures' => $proceduresPortfolio,
+                            'medicines' => $medicinesPortfolio
+                        ];
+                    }
+
+
+
+                    if (sizeof($contractsDetails) > 0) {
 
                         return response()
                             ->json([
                                 'msg' => 'Ok',
                                 'status' => 200,
-                                'data' => $contracts
+                                'count' => count($contractsDetails),
+                                'data' => $contractsDetails
                             ]);
-                        //return $contracts;
                     }
 
                     //
