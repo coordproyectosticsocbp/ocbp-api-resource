@@ -1007,4 +1007,229 @@ class CirugiaController extends Controller
             }
         }
     }
+
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/cirugia/get/top-completed-surgeries/{initdate?}/{enddate?}",
+     *     operationId="getTopCompletedSurgeries",
+     *     tags={"Cirugia"},
+     *     summary="Get getTopCompletedSurgeries",
+     *     description="Returns getTopCompletedSurgeries",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="initdate?",
+     *          description="Fecha Ini Busqueda",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="enddate?",
+     *          description="Fecha Fin Busqueda",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getTopCompletedSurgeries(Request $request, $initDate = '', $endDate = '')
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) return response()->json([
+                'msg' => 'Unauthorized',
+                'status' => 401
+            ]);
+
+
+            try {
+
+                $init = !$initDate ? Carbon::now()->format('Y-m-d') : Carbon::parse($initDate)->format('Y-m-d');
+                $end = !$endDate ? Carbon::now()->format('Y-m-d') : Carbon::parse($endDate)->format('Y-m-d');
+
+                $queryCompletedSurgeries = DB::connection('sqlsrv_hosvital')
+                    ->select("SELECT * FROM CIRUGIAX_TOP_PROCEDIMIENTOS_REALIZADOS('$init', '$end')");
+
+                if ($queryCompletedSurgeries < 0) return response()->json([
+                    'msg' => 'Empty Completed Surgeries Query Response',
+                    'status' => 204
+                ]);
+
+                $surgeries = [];
+
+                foreach ($queryCompletedSurgeries as $surgery) $surgeries[] = [
+                    'surgeryProcedureCode' => $surgery->PROCEDIMIENTO_COD,
+                    'surgeryProcedureDescription' => $surgery->NOMB_PROCED,
+                    'surgeryProcedureQuantity' => $surgery->CANTIDAD,
+                ];
+
+                if ($surgeries < 0) return response()->json([
+                    'msg' => 'Empty Surgeries Array',
+                    'status' => 204,
+                    'data' => []
+                ]);
+
+                return response()->json([
+                    'msg' => 'Ok',
+                    'status' => 204,
+                    'count' => count($surgeries),
+                    'data' => $surgeries
+                ]);
+
+                /*
+                    if (!$initDate) {
+
+                        $init = Carbon::now()->format('Y-m-d');
+                    } else {
+
+                        $init = Carbon::parse($initDate)->format('Y-m-d');
+                    }
+
+                    if (!$endDate) {
+
+                        $end = Carbon::now()->format('Y-m-d');
+                    } else {
+
+                        $end = Carbon::parse($endDate)->format('Y-m-d');
+                    }
+                */
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
+    }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/cirugia/get/top-canceled-surgeries/{initdate?}/{enddate?}",
+     *     operationId="getTopCanceledSurgeries",
+     *     tags={"Cirugia"},
+     *     summary="Get getTopCanceledSurgeries",
+     *     description="Returns getTopCanceledSurgeries",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="initdate?",
+     *          description="Fecha Ini Busqueda",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="enddate?",
+     *          description="Fecha Fin Busqueda",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getTopCanceledSurgeries(Request $request, $initDate = '', $endDate = '')
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) return response()->json([
+                'msg' => 'Unauthorized',
+                'status' => 401
+            ]);
+
+
+            try {
+
+                $init = !$initDate ? Carbon::now()->format('Y-m-d') : Carbon::parse($initDate)->format('Y-m-d');
+                $end = !$endDate ? Carbon::now()->format('Y-m-d') : Carbon::parse($endDate)->format('Y-m-d');
+
+                $queryCompletedSurgeries = DB::connection('sqlsrv_hosvital')
+                    ->select("SELECT * FROM CIRUGIAX_TOP_PROCEDIMIENTOS_CANCELADOS('$init', '$end')");
+
+                if ($queryCompletedSurgeries < 0) return response()->json([
+                    'msg' => 'Empty Canceled Surgeries Query Response',
+                    'status' => 204
+                ]);
+
+                $surgeries = [];
+
+                foreach ($queryCompletedSurgeries as $surgery) $surgeries[] = [
+                    'surgeryProcedureCode' => $surgery->PROCEDIMIENTO_COD,
+                    'surgeryProcedureDescription' => $surgery->NOMB_PROCED,
+                    'surgeryProcedureQuantity' => $surgery->CANTIDAD,
+                ];
+
+                if ($surgeries < 0) return response()->json([
+                    'msg' => 'Empty Surgeries Array',
+                    'status' => 204,
+                    'data' => []
+                ]);
+
+                return response()->json([
+                    'msg' => 'Ok',
+                    'status' => 204,
+                    'count' => count($surgeries),
+                    'data' => $surgeries
+                ]);
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
+    }
 }

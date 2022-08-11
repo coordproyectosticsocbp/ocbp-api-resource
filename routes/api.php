@@ -568,6 +568,22 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/cirugia/get/top-completed-surgeries/{initdate?}/{enddate?}',
+        [
+            \App\Http\Controllers\CirugiaController::class,
+            'getTopCompletedSurgeries'
+        ]
+    );
+
+    Route::get(
+        '/cirugia/get/top-canceled-surgeries/{initdate?}/{enddate?}',
+        [
+            \App\Http\Controllers\CirugiaController::class,
+            'getTopCanceledSurgeries'
+        ]
+    );
+
 
 
     /*-------------------------------------------------------------------------------------------------------------*/
