@@ -613,7 +613,7 @@ Route::group([
     );
 
     Route::get(
-        '/caladrius/get/folios-info-by-document/{document?}/{doctype?}',
+        '/caladrius/get/folios-info-by-document/{document?}/{doctype?}/folio/{folio?}',
         [
             \App\Http\Controllers\CaladriusController::class,
             'getPatientFoliosInfo'
@@ -625,6 +625,14 @@ Route::group([
         [
             \App\Http\Controllers\CaladriusController::class,
             'getAllActiveContracts'
+        ]
+    );
+
+    Route::get(
+        '/caladrius/get/active-diagnoses',
+        [
+            \App\Http\Controllers\CaladriusController::class,
+            'getAllActiveDiagnoses'
         ]
     );
 

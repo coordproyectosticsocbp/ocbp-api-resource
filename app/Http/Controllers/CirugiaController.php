@@ -857,7 +857,6 @@ class CirugiaController extends Controller
     }
 
 
-
     // =========================================================================================
     // Function to get Surgery Details By SurgeryCode
     // =========================================================================================
@@ -944,13 +943,23 @@ class CirugiaController extends Controller
                 }
 
                 $surgery = [];
+                $email = "";
+                $email_default = 'PACIENTESPARTICULARES@ORGANIZACIONCBP.ORG';
 
                 foreach (json_decode(json_encode($querySurgeryDetails), true) as $item) {
 
+
+
                     if (!isset($surgery[$item['CODIGO_CIRUGIA']])) {
+
+                        if ($item['CORREO'] === $email_default || $item['CORREO'] === strtolower($email_default)) $email = "";
+
                         $surgery[$item['CODIGO_CIRUGIA']] = [
                             'patientDocument'  => trim($item['DOCUMENTO']),
                             'patientDocumentType'  => trim($item['TIP_DOC']),
+                            'patientEmail' => $email,
+                            'patientPhone' => $item['TELEFONO'] === 'NA' || $item['TELEFONO'] === null || strlen(trim($item['TELEFONO'])) < 10 ? trim($item["TELEFONO_1"]) : "",
+                            'patientPhone2' => $item['TELEFONO_1'] === 'NA' || $item['TELEFONO_1'] === null || strlen(trim($item['TELEFONO_1'])) <= 10 ? trim($item["TELEFONO_2"]) : "",
                             'surgeryCode'  => trim($item['CODIGO_CIRUGIA']),
                             'surgeryDate'  => trim($item['FECHA_PROGRAMACION']),
                             'surgeryHour'  => trim($item['HORA_PROCEDIMIENTO']),
@@ -1091,7 +1100,7 @@ class CirugiaController extends Controller
                 foreach ($queryCompletedSurgeries as $surgery) $surgeries[] = [
                     'surgeryProcedureCode' => $surgery->PROCEDIMIENTO_COD,
                     'surgeryProcedureDescription' => $surgery->NOMB_PROCED,
-                    'surgeryProcedureQuantity' => $surgery->CANTIDAD,
+                    'surgeryProcedureQuantity' => (int) $surgery->CANTIDAD,
                 ];
 
                 if ($surgeries < 0) return response()->json([
@@ -1212,7 +1221,7 @@ class CirugiaController extends Controller
                 foreach ($queryCompletedSurgeries as $surgery) $surgeries[] = [
                     'surgeryProcedureCode' => $surgery->PROCEDIMIENTO_COD,
                     'surgeryProcedureDescription' => $surgery->NOMB_PROCED,
-                    'surgeryProcedureQuantity' => $surgery->CANTIDAD,
+                    'surgeryProcedureQuantity' => (int) $surgery->CANTIDAD,
                 ];
 
                 if ($surgeries < 0) return response()->json([
