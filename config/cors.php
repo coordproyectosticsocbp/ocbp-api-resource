@@ -17,8 +17,9 @@ return [
 
     'paths' => [
         'http://190.131.222.108:8088/*',
-        'http://localhost:8080/*',
-        'https://glacial-anchorage-67584.herokuapp.com/*',
+        'https://api.clinicabonnadona.com/*',
+        'https://hub.clinicabonnadona.com/*',
+        'https://users.clinicabonnadona.com/*'
     ],
 
     'allowed_methods' => ['*'],
@@ -33,7 +34,8 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
+
     'Access-Control-Allow-Origin' => ['*']
 
 ];

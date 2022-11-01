@@ -19,7 +19,7 @@ class CaladriusController extends Controller
 
 
     // ============================================================
-    // Function to return the patient Information
+    // Function to return the patient Information Ambulatory
     // ============================================================
 
     /**
@@ -502,7 +502,6 @@ class CaladriusController extends Controller
         }
     }
 
-
     // ============================================================
     // Function to return contract with portfolio and services
     // ============================================================
@@ -802,6 +801,8 @@ class CaladriusController extends Controller
                             $procedures[] = [
                                 'orderPAdmConsecutive' => (int) $procedure->INGRESO,
                                 'orderPFolio' => (int) $procedure->FOLIO,
+                                'orderPEpsNit' => trim($procedure->EPS_NIT),
+                                'orderPEpsDescription' => trim($procedure->EPS_NOMBRE),
                                 'orderPContractCode' => trim($procedure->CODIGO_CONTRATO),
                                 'orderPContractDescription' => trim($procedure->CONTRATO),
                                 'orderPPortfolioCode' => (int) $procedure->CODIGO_PORTAFOLIO,
@@ -839,6 +840,8 @@ class CaladriusController extends Controller
                                 'orderDSumQuantity' => (int) $medicine->CANTIDAD,
                                 'orderDSumUnity' => trim($medicine->UNIDAD_MEDIDA),
                                 'orderDSumFrecuency' => trim($medicine->FRECUENCIA),
+                                'orderDEpsNit' => trim($procedure->EPS_NIT),
+                                'orderDEpsDescription' => trim($procedure->EPS_NOMBRE),
                                 'orderDSumContractCode' => $medicine->CODIGO_CONTRATO,
                                 'orderDSumContractDescription' => trim($medicine->CONTRATO),
                                 'orderDSumPrice' => $medicine->VALOR_MEDICAMENTO,
@@ -895,13 +898,18 @@ class CaladriusController extends Controller
                                 'attentionDxDescription' => trim($item['DESCRIPCION_PRIMER_DX_EGRESO']),
                                 'attentionRecomendation' => $this->replaceCharacter(trim($item['RECOMENDACION'])) != false ? $this->replaceCharacter(trim($item['RECOMENDACION'])) : "",
                                 'attentionAppointmentReason' => $this->replaceCharacter(trim($item['MOTIVO_CONSULTA'])),
-                                'attentionCurrentIllness' => $this->replaceCharacter(trim($item['ENF_ACTUAL'])),
+                                'attentionCurrentIllness' => $this->replaceCharacter(trim($item['ENF_ACTUAL'])) != false ? $this->replaceCharacter(trim($item['ENF_ACTUAL'])) : "",
+                                'attentionEpsNit' => trim($item['EPS_NIT']),
+                                'attentionEpsDescription' => trim($item['EPS_NOMBRE']),
                                 'attentionContractCode' => trim($item['CODIGO_CONTRATO']),
                                 'attentionContractDescription' => trim($item['CONTRATO_DESCRIPCION']),
                                 'orderedProcedures' => $procedures,
                                 'orderedDrugs' => $medicines,
                             ];
                         }
+                    } else {
+
+                        $folios = [];
                     }
 
 
@@ -1027,6 +1035,429 @@ class CaladriusController extends Controller
         }
     }
 
+    // ============================================================
+    // Function to return the patient Information Hospitalization
+    // ============================================================
+    /**
+     * @OA\Get (
+     *     path="/api/v1/caladrius/get/patient-basic-info-hosp/{document?}/{doctype?}",
+     *     operationId="getPatientInfoHosp",
+     *     tags={"Caladrius"},
+     *     summary="Get getPatientInfoHosp",
+     *     description="Returns getPatientInfoHosp",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="document?",
+     *          description="Número de Documento - Opcional",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="doctype?",
+     *          description="Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getPatientInfoHosp(Request $request, $patientDoc = '', $patientDocType = '')
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) return response()->json([
+                'msg' => 'Unauthorized',
+                'status' => 401
+            ]);
+
+
+            try {
+
+                if (!$patientDoc || !$patientDocType) {
+
+                    return response()->json([
+                        'msg' => 'Parameters Cannot Be Empty!',
+                        'status' => 400
+                    ]);
+                }
+
+                $queryPatientInfo = DB::connection('sqlsrv_hosvital')
+                    ->select("SELECT * FROM CALADRIUS_2_INFORMACION_BASICA_PACIENTE('$patientDoc', '$patientDocType')");
+
+                if (sizeof($queryPatientInfo) > 0) {
+
+                    $patients = [];
+                    $foliosArray = [];
+
+                    // ====================================================================
+                    // Checking the folios Nums
+                    // ====================================================================
+                    $queryFolios = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT FOLIO FROM CALADRIUS_2_FOLIOS_CONSULTAS_HOSP_SIN_FOLIO('$patientDoc', '$patientDocType') ORDER BY FOLIO DESC");
+
+                    if (sizeof($queryFolios) < 0) {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Folios Query Response',
+                                'status' => 204,
+                            ]);
+                    }
+
+                    foreach ($queryFolios as $folio) $foliosArray[] = (int) $folio->FOLIO;
+
+                    if (sizeof($foliosArray) < 0) $foliosArray = [];
+
+
+                    foreach ($queryPatientInfo as $item) {
+                        $patients[] = [
+                            'patientFirstName' => $item->PRIMER_NOMBRE,
+                            'patientSecondName' => $item->SEGUNDO_NOMBRE,
+                            'patientFirstLastName' => $item->PRIMER_APELLIDO,
+                            'patientSecondLastName' => $item->SEGUNDO_APELLIDO,
+                            'patientDocument' => $item->DOCUMENTO,
+                            'patientDocType' => $item->T_DOC,
+                            'patientBirthDate' => $item->FECHA_NAC,
+                            'patientAge' => (int) $item->EDAD,
+                            'patientGender' => $item->SEXO,
+                            'patientBloodType' => $item->GRUPO_SANGUINEO == null ? "" : $item->GRUPO_SANGUINEO,
+                            'patientPhone' => $item->TELEFONO1,
+                            'patientEmail' => $item->EMAIL,
+                            'patientAddress' => $item->DIRECCION,
+                            'folios' => $foliosArray
+                        ];
+                    }
+
+                    if (sizeof($patients) > 0) {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Ok',
+                                'count' => count($patients),
+                                'status' => 200,
+                                'data' => $patients
+                            ]);
+                    } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty Patient Array',
+                                'status' => 204,
+                                'data' => []
+                            ]);
+                    }
+                } else {
+
+                    return response()
+                        ->json([
+                            'msg' => 'Empty PatientInfo Query',
+                            'status' => 204,
+                            'data' => []
+                        ]);
+                }
+
+                //
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
+    }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/caladrius/get/folios-info-by-document-hosp/{document?}/{doctype?}/folio/{folio?}",
+     *     operationId="getPatientFoliosInfoHosp",
+     *     tags={"Caladrius"},
+     *     summary="Get getPatientFoliosInfoHosp",
+     *     description="Returns getPatientFoliosInfoHosp",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="document?",
+     *          description="Número de Documento - Opcional",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="doctype?",
+     *          description="Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="folio?",
+     *          description="Number",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getPatientFoliosInfoHosp(Request $request, $patientDoc = '', $patientDocType = '', $folio = '')
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) > 0) {
+
+                try {
+
+                    if (!$patientDoc || !$patientDocType || !$folio) {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Parameters Cannot Be Empty!',
+                                'status' => 400
+                            ]);
+                    }
+
+                    $procedures = [];
+                    $medicines = [];
+
+                    $queryOrderedProcedures = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM CALADRIUS_2_PROCEDIMIENTOS_ORDENADOS_HOSP('$patientDoc', '$patientDocType', '$folio')");
+
+                    //=========================================================
+                    // Iterating the Procedures
+                    //=========================================================
+                    if (sizeof($queryOrderedProcedures) > 0) {
+
+                        foreach ($queryOrderedProcedures as $procedure) {
+                            $procedures[] = [
+                                'orderPAdmConsecutive' => (int) $procedure->INGRESO,
+                                'orderPFolio' => (int) $procedure->FOLIO,
+                                'orderPEpsNit' => trim($procedure->EPS_NIT),
+                                'orderPEpsDescription' => trim($procedure->EPS_NOMBRE),
+                                'orderPContractCode' => trim($procedure->CODIGO_CONTRATO),
+                                'orderPContractDescription' => trim($procedure->CONTRATO),
+                                'orderPPortfolioCode' => (int) $procedure->CODIGO_PORTAFOLIO,
+                                'orderPServiceCode' => (int) $procedure->CODIGO_PROCEDIMIENTO,
+                                'orderPServiceDescription' => trim($procedure->DESCRIPCION_PROCEDIMIENTO),
+                                'orderPServicePrice' => (float) trim($procedure->VALOR),
+                                'orderPServiceQuantity' => (int) $procedure->CANTIDAD,
+                                'orderPProcedureServiceGroup' => trim($procedure->GRUPO_SERVICIO),
+                                'orderPProcedureOrderDate' => $procedure->FECHA_ORDEN,
+                                'orderPProcedureObservation' => trim($procedure->OBSERVACION),
+                            ];
+                        }
+
+                        if (sizeof($procedures) < 0) {
+                            $procedures = [];
+                        }
+                    }
+
+                    $queryOrderedMedicines = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT * FROM CALADRIUS_2_SUMINISTROS_ORDENADOS('$patientDoc', '$patientDocType', '$folio')");
+
+                    //=========================================================
+                    // Iterating the Medicines
+                    //=========================================================
+                    if (sizeof($queryOrderedMedicines) > 0) {
+
+                        foreach ($queryOrderedMedicines as $medicine) {
+                            $medicines[] = [
+                                'orderDDocument' => trim($medicine->DOCUMENTO),
+                                'orderDDocType' => trim($medicine->TIP_DOC),
+                                'orderDPortfolioCode' => (int) $medicine->FOLIO,
+                                'orderDSumCode' => trim($medicine->COD_MED),
+                                'orderDSumDescription' => trim($medicine->DESCRIPCION_MEDICAMENTO),
+                                'orderDSumDose' => (int) $medicine->DOSIS,
+                                'orderDSumQuantity' => (int) $medicine->CANTIDAD,
+                                'orderDSumUnity' => trim($medicine->UNIDAD_MEDIDA),
+                                'orderDSumFrecuency' => trim($medicine->FRECUENCIA),
+                                'orderDEpsNit' => trim($medicine->EPS_NIT),
+                                'orderDEpsDescription' => trim($medicine->EPS_NOMBRE),
+                                'orderDSumContractCode' => $medicine->CODIGO_CONTRATO,
+                                'orderDSumContractDescription' => trim($medicine->CONTRATO),
+                                'orderDSumPrice' => $medicine->VALOR_MEDICAMENTO,
+                                'orderDSumOrderDate' => trim($medicine->FECHA),
+                            ];
+                        }
+
+                        if (sizeof($medicines) < 0) {
+                            $medicines = [];
+                        }
+                    }
+
+
+                    $queryFoliosInfo = DB::connection('sqlsrv_hosvital')
+                        //->select("SELECT * FROM CALADRIUS_2_FOLIOS_CONSULTAS_AMBU('$patientDoc', '$patientDocType', '$folio') ORDER BY FOLIO + 0 DESC");
+                        ->select("SELECT * FROM CALADRIUS_2_FOLIOS_CONSULTAS_HOSP('$patientDoc', '$patientDocType', '$folio') ORDER BY FOLIO + 0 DESC");
+
+
+
+                    if (sizeof($queryFoliosInfo) > 0) {
+
+                        $folios = [];
+
+                        foreach (json_decode(json_encode($queryFoliosInfo), true) as $item) {
+
+                            if (!isset($folios[$item['CEDULA']])) {
+                                $folios[$item['CEDULA']] = array(
+                                    'patientDocument' => trim($item['CEDULA']),
+                                    'patientDocType' => trim($item['TIP_DOC']),
+
+                                );
+                                unset(
+                                    $folios[$item['CEDULA']]['TIPO_ATENCION_ACTUAL'],
+                                    $folios[$item['CEDULA']]['TIPO_ATENCION_ACTUAL_DESC'],
+                                    $folios[$item['CEDULA']]['DX_EGRESO1'],
+                                    $folios[$item['CEDULA']]['DESCRIPCION_PRIMER_DX_EGRESO'],
+                                    $folios[$item['CEDULA']]['RECOMENDACION'],
+                                    $folios[$item['CEDULA']]['MOTIVO_CONSULTA'],
+                                    $folios[$item['CEDULA']]['ENF_ACTUAL'],
+                                    $folios[$item['CEDULA']]['CODIGO_CONTRATO'],
+                                    $folios[$item['CEDULA']]['CONTRATO_DESCRIPCION'],
+                                );
+                                $folios[$item['CEDULA']]['folio'] = [];
+                            }
+
+                            $folios[$item['CEDULA']]['folio'][] = [
+                                'attentionAdmConsecutive' => (float) $item['INGRESO'],
+                                'attentionAdmDate' => $item['FECHA_INGRESO'],
+                                'attentionFolio' => (float) $item['FOLIO'],
+                                'attentionDate' => $item['HORA_CONSULTA'],
+                                'attentionTypeCode' => (int) trim($item['TIPO_ATENCION_ACTUAL']),
+                                'attentionTypeDescription' => trim($item['TIPO_ATENCION_ACTUAL_DESC']),
+                                'attentionDxCode' => trim($item['DX_EGRESO1']),
+                                'attentionDxDescription' => trim($item['DESCRIPCION_PRIMER_DX_EGRESO']),
+                                //'attentionRecomendation' => $this->replaceCharacter(trim($item['RECOMENDACION'])) != false ? $this->replaceCharacter(trim($item['RECOMENDACION'])) : "",
+                                //'attentionAppointmentReason' => $this->replaceCharacter(trim($item['MOTIVO_CONSULTA'])),
+                                'attentionCurrentIllness' => $this->replaceCharacter(trim($item['ENF_ACTUAL'])),
+                                'attentionEpsNit' => trim($item['EPS_NIT']),
+                                'attentionEpsDescription' => trim($item['EPS_NOMBRE']),
+                                'attentionContractCode' => trim($item['CODIGO_CONTRATO']),
+                                'attentionContractDescription' => trim($item['CONTRATO_DESCRIPCION']),
+                                'orderedProcedures' => $procedures,
+                                'orderedDrugs' => $medicines,
+                            ];
+                        }
+
+                        if (sizeof($folios[$item['CEDULA']]['folio']) < 0) return response()
+                            ->json([
+                                'msg' => 'Empty Folios Array',
+                                'status' => 204,
+                                'data' => []
+                            ]);
+
+                        $folios = array_values($folios);
+
+                        return response()->json([
+                            'msg' => "Ok",
+                            'status' => 200,
+                            'count' => count($folios),
+                            'data' => $folios
+                        ]);
+
+                        //
+                    } else {
+
+                        return response()->json([
+                            'msg' => "Patient not Found!",
+                            'status' => 204,
+                            'data' => []
+                        ]);
+                    }
+
+
+
+
+                    /* return response()->json([
+                        'msg' => $returnMsg,
+                        'status' => 200,
+                        'count' => count($folios),
+                        'data' => $folios
+                    ]); */
+
+                    /* } else {
+
+                        return response()
+                            ->json([
+                                'msg' => 'Empty PatientInfo Query',
+                                'status' => 204,
+                                'data' => []
+                            ]);
+                    } */
+
+
+
+                    //
+                } catch (\Throwable $th) {
+                    throw $th;
+                }
+            } else {
+
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ]);
+            }
+        }
+    }
 
     // ============================================================
     // Function to place Special Characters

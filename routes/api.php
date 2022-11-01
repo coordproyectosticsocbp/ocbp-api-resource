@@ -604,6 +604,7 @@ Route::group([
         ]
     );
 
+    /** Ambulatorio */
     Route::get(
         '/caladrius/get/patient-basic-info/{document?}/{doctype?}',
         [
@@ -619,6 +620,28 @@ Route::group([
             'getPatientFoliosInfo'
         ]
     );
+
+
+    /** Hospitalización */
+    Route::get(
+        '/caladrius/get/patient-basic-info-hosp/{document?}/{doctype?}',
+        [
+            \App\Http\Controllers\CaladriusController::class,
+            'getPatientInfoHosp'
+        ]
+    );
+
+    Route::get(
+        '/caladrius/get/folios-info-by-document-hosp/{document?}/{doctype?}/folio/{folio?}',
+        [
+            \App\Http\Controllers\CaladriusController::class,
+            'getPatientFoliosInfoHosp'
+        ]
+    );
+
+
+
+    /** =========================================== */
 
     Route::get(
         '/caladrius/get/active-contracts',

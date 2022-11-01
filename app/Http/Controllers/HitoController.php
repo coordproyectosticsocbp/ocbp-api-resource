@@ -494,7 +494,7 @@ class HitoController extends Controller
                             ->select("SELECT * FROM HITO_CONSUMO_ESTANCIA_PACIENTE('$item->FECHA_INGRESO', '$dt', '$item->NUM_HISTORIA')"); */
 
                         $query_riesgos = DB::connection('sqlsrv_hosvital')
-                            ->select("SELECT * FROM HITO_RIESGOS_PACIENTE('$item->NUM_HISTORIA', '$item->TI_DOC', '$item->FOLIO')");
+                            ->select("SELECT * FROM HITO_RIESGOS_PACIENTE('$item->NUM_HISTORIA', '$item->TI_DOC', '$item->FOLIO_FORMATO')");
 
 
                         // VALIDACIÓN PARA LOS RIESGOS DEL PACIENTE
@@ -504,7 +504,7 @@ class HitoController extends Controller
 
                             foreach ($query_riesgos as $riesgo) {
                                 $temp4 = array(
-                                    'Hipotensión_por_uso_de_vasodilatador' => $riesgo->UCI_HIPOTENSION_VASODILATADOR === 1 ? 1  : 0,
+                                    /* 'Hipotensión_por_uso_de_vasodilatador' => $riesgo->UCI_HIPOTENSION_VASODILATADOR === 1 ? 1  : 0,
                                     'Arritmias_asociadas_a_uso_de_vasopresores' => $riesgo->UCI_ARRITMIA_VASOPRESORES === 1 ? 1  : 0,
                                     'Evento_Cerebrovascular_asociado_a_uso_de_vasopresor' => $riesgo->UCI_CEREBROVASCULAR_VASOPRESORES === 1 ? 1  : 0,
                                     'Desarrollo_de_delirium_en_paciente_critico' => $riesgo->UCI_DELIRIUM_PACIENTE === 1 ? 1  : 0,
@@ -549,22 +549,23 @@ class HitoController extends Controller
                                     'Obstrucción_de_sonda_vesical_en_post_quirúrgico_de_prostatectomía_transvesical' => $riesgo->CIR_OBSTRUCCION_SONDA_VESICAL === 1 ? 1  : 0,
                                     'Hematórax_o_colección_residual_por_drenaje_inadecuado_de_pleurovac_en_cirugía_de_tórax' => $riesgo->CIR_HEMOTORAX_POR_DRENAJE === 1 ? 1  : 0,
                                     'Peritonitis_por_dolor_abdominal' => $riesgo->CIR_PERITONITIS_DOLOR_ABDOMINAL === 1 ? 1  : 0,
-                                    'Infeccion_de_sitio_quirurgico' => $riesgo->CIR_INFECCION_SITIO_QX === 1 ? 1  : 0,
-                                    'Neutropenia_febril_en_pacientes_con_quimioterapia_hospitalaria' => $riesgo->HOSP_NEUTROPENIA_FEBRIL === 1 ? 1  : 0,
-                                    'Mucositis_oral_en_pacientes_con_quimioterapia' => $riesgo->HOSP_MUCOSITIS === 1 ? 1  : 0,
-                                    'Progresion_de_las_complicaciones_por_radioterapia_' => $riesgo->HOSP_PROGRESION_COMPLICACIONES_RADIOTERAPIA === 1 ? 1  : 0,
-                                    'Malnutricion_en_paciente_oncologico' => $riesgo->HOSP_MALNUTRICION === 1 ? 1  : 0,
-                                    'Dolor_en_paciente_oncologico' => $riesgo->HOSP_DOLOR === 1 ? 1  : 0,
-                                    'Riesgo_de_Suicidio' => $riesgo->HOSP_SUICIDIO === 1 ? 1  : 0,
-                                    'Infeccion_de_sitio_quirurgico' => $riesgo->HOSP_INFECCION_SITIO_QX === 1 ? 1  : 0,
-                                    'Hemorragia_o_trombosis_en_paciente_anticoagulado' => $riesgo->HOSP_HEMORRAGIA_TROMBOSIS === 1 ? 1  : 0,
-                                    'Retraso_en_atencion_en_pacientes_con_patologia_oncologica_(Ca_de_mama,_Leucemia_en_pediatria)' => $riesgo->HOSP_RETRASO_ATENCION === 1 ? 1  : 0,
-                                    'Hematoma_por_obstrucción_de_hemovac_en_cirugía_de_mama_con_vaciamiento' => $riesgo->HOSP_HEMATOMA_OBSTRUCCION_HEMOVAC === 1 ? 1  : 0,
-                                    'Íleo_paralítico_en_pos_quirúrgico_de_colon_por_movilización_tardía' => $riesgo->HOSP_ILEO_PARALITICO_POSTQX === 1 ? 1  : 0,
-                                    'Linfaedema_post_cirugía_de_mama_con_vaciamiento_axilar' => $riesgo->HOSP_LINFAEDEMA_POSTQX === 1 ? 1  : 0,
-                                    'Obstrucción_de_sonda_vesical_en_post_quirúrgico_de_prostatectomía_transvesical' => $riesgo->HOSP_OBSTRUCCION_SONDA_VESICAL === 1 ? 1  : 0,
-                                    'Hematórax_o_colección_residual_por_drenaje_inadecuado_de_pleurovac_en_cirugía_de_tórax' => $riesgo->HOSP_HEMOTORAX_POR_DRENAJE === 1 ? 1  : 0,
-                                    'Peritonitis_por_dolor_abdominal' => $riesgo->URG_PERITONITIS_DOLOR_ABDOMINAL === 1 ? 1  : 0,
+                                    'Infeccion_de_sitio_quirurgico' => $riesgo->CIR_INFECCION_SITIO_QX === 1 ? 1  : 0, */
+                                    'Neutropenia_febril_en_pacientes_con_quimioterapia_hospitalaria' => $riesgo->HOSP_NEUTROPENIA_FEBRIL === "1" ? 1  : 0,
+                                    'Mucositis_oral_en_pacientes_con_quimioterapia' => $riesgo->HOSP_MUCOSITIS === "1" ? 1  : 0,
+                                    'Progresion_de_las_complicaciones_por_radioterapia' => $riesgo->HOSP_PROGRESION_COMPLICACIONES_RADIOTERAPIA === "1" ? 1  : 0,
+                                    'Malnutricion_en_paciente_oncologico' => $riesgo->HOSP_MALNUTRICION === "1" ? 1  : 0,
+                                    'Dolor_en_paciente_oncologico' => $riesgo->HOSP_DOLOR === "1" ? 1 : 0,
+                                    'Riesgo_de_Suicidio_' => $riesgo->HOSP_SUICIDIO === "1" ? 1  : 0,
+                                    'Infeccion_de_sitio_quirurgico' => $riesgo->HOSP_INFECCION_SITIO_QX === "1" ? 1  : 0,
+                                    'Hemorragia_o_trombosis_en_paciente_anticoagulado' => $riesgo->HOSP_HEMORRAGIA_TROMBOSIS === "1" ? 1  : 0,
+                                    /* 'Retraso_en_atencion_en_pacientes_con_patologia_oncologica_(Ca_de_mama,_Leucemia_en_pediatria)' => $riesgo->HOSP_RETRASO_ATENCION === "1" ? 1  : 0, */
+                                    'Retraso_en_atencion_en_pacientes_con_patologia_oncologica' => $riesgo->HOSP_RETRASO_ATENCION === "1" ? 1  : 0,
+                                    'Hematoma_por_obstrucción_de_hemovac_en_cirugía_de_mama_con_vaciamiento' => $riesgo->HOSP_HEMATOMA_OBSTRUCCION_HEMOVAC === "1" ? 1  : 0,
+                                    'Íleo_paralítico_en_pos_quirúrgico_de_colon_por_movilización_tardía' => $riesgo->HOSP_ILEO_PARALITICO_POSTQX === "1" ? 1  : 0,
+                                    'Linfaedema_post_cirugía_de_mama_con_vaciamiento_axilar' => $riesgo->HOSP_LINFAEDEMA_POSTQX === "1" ? 1  : 0,
+                                    'Obstrucción_de_sonda_vesical_en_post_quirúrgico_de_prostatectomía_transvesical' => $riesgo->HOSP_OBSTRUCCION_SONDA_VESICAL === "1" ? 1  : 0,
+                                    'Hematórax_o_colección_residual_por_drenaje_inadecuado_de_pleurovac_en_cirugía_de_tórax' => $riesgo->HOSP_HEMOTORAX_POR_DRENAJE === "1" ? 1  : 0,
+                                    /* 'Peritonitis_por_dolor_abdominal' => $riesgo->URG_PERITONITIS_DOLOR_ABDOMINAL === 1 ? 1  : 0,
                                     'Neutropenia_febril_en_pacientes_con_quimioterapia_hospitalaria' => $riesgo->URG_NEUTROPENIA_FEBRIL === 1 ? 1  : 0,
                                     'Mucositis_oral_en_pacientes_con_quimioterapia' => $riesgo->URG_MUCOSITIS === 1 ? 1  : 0,
                                     'Progresion_de_las_complicaciones_por_radioterapia_' => $riesgo->URG_PROGRESION_COMPLICACIONES_RADIOTERAPIA === 1 ? 1  : 0,
@@ -589,7 +590,7 @@ class HitoController extends Controller
                                     'Sepsis_severa_en_aplasia_medular' => $riesgo->TAMO_SEPSIS_APLASIA_MEDULAR === 1 ? 1  : 0,
                                     'Edema_agudo_de_pulmon_por_sobrecarga_de_volumen' => $riesgo->TAMO_EDEMA_AGUDO_PULMON === 1 ? 1  : 0,
                                     'Reaccion_alergica_a_acondicionamiento_con_melfalan' => $riesgo->TAMO_REACCION_ALERGICA === 1 ? 1  : 0,
-                                    'Deshidratación_por_diarrea_y/o_vomito_postquimioterapia_con_alquilantes' => $riesgo->TAMO_DESHIDRATACION_DIARREA === 1 ? 1  : 0,
+                                    'Deshidratación_por_diarrea_y/o_vomito_postquimioterapia_con_alquilantes' => $riesgo->TAMO_DESHIDRATACION_DIARREA === 1 ? 1  : 0, */
 
                                 );
 

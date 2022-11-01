@@ -520,6 +520,119 @@
                 ]
             }
         },
+        "/api/v1/caladrius/get/patient-basic-info-hosp/{document?}/{doctype?}": {
+            "get": {
+                "tags": [
+                    "Caladrius"
+                ],
+                "summary": "Get getPatientInfoHosp",
+                "description": "Returns getPatientInfoHosp",
+                "operationId": "getPatientInfoHosp",
+                "parameters": [
+                    {
+                        "name": "document?",
+                        "in": "path",
+                        "description": "Número de Documento - Opcional",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "doctype?",
+                        "in": "path",
+                        "description": "Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/caladrius/get/folios-info-by-document-hosp/{document?}/{doctype?}/folio/{folio?}": {
+            "get": {
+                "tags": [
+                    "Caladrius"
+                ],
+                "summary": "Get getPatientFoliosInfoHosp",
+                "description": "Returns getPatientFoliosInfoHosp",
+                "operationId": "getPatientFoliosInfoHosp",
+                "parameters": [
+                    {
+                        "name": "document?",
+                        "in": "path",
+                        "description": "Número de Documento - Opcional",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "doctype?",
+                        "in": "path",
+                        "description": "Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "folio?",
+                        "in": "path",
+                        "description": "Number",
+                        "required": false,
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
         "/api/v1/cirugia/get/patient-procedures/{patientdoc?}/{patientdoctype?}": {
             "get": {
                 "tags": [
