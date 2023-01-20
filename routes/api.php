@@ -695,10 +695,48 @@ Route::group([
     /* ENTREGA DE TURNOS */
 
     Route::get(
-        secure_url('/turnos/get/turns-by-date/{pavilion?}/{date?}'),
+        '/turnos/get/turns-by-date/{pavilion?}/{date?}',
         [
             \App\Http\Controllers\TurnDeliveryController::class,
             'getTurnsByDate'
+        ]
+    );
+
+    /* INDICADORES PQRSF */
+
+    Route::get(
+        '/indicadores/get/felicitacionesvsquejas/{fechaInicial?}/{fechaFinal?}',
+        [
+            \App\Http\Controllers\TorreControl\PQRSFController::class,
+            'getFelicitacionesVsQuejas'
+        ]
+    );
+    Route::get(
+       '/indicadores/get/porcentaje/{fechaInicial?}/{fechaFinal?}/{idType?}',
+        [
+            \App\Http\Controllers\TorreControl\PQRSFController::class,
+            'getPorcentajePQR'
+        ]
+    );
+    Route::get(
+        '/indicadores/get/tiempopromedio/{fechaInicial?}/{fechaFinal?}/{idType?}',
+        [
+            \App\Http\Controllers\TorreControl\PQRSFController::class,
+            'getTiempoPromedio'
+        ]
+    );
+    Route::get(
+        ('/indicadores/get/oportunidadpqr/{fechaInicial?}/{fechaFinal?}/{idType?}'),
+        [
+            \App\Http\Controllers\TorreControl\PQRSFController::class,
+            'getOportunidadPQR'
+        ]
+    );
+    Route::get(
+        ('/indicadores/get/felicitacionesvsquejasporarea/{fechaInicial?}/{fechaFinal?}'),
+        [
+            \App\Http\Controllers\TorreControl\PQRSFController::class,
+            'getFelicitacionesVsQuejasPorArea'
         ]
     );
 });

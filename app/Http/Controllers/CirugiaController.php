@@ -739,7 +739,7 @@ class CirugiaController extends Controller
                     }
 
                     $queryAllScheduledProcedures = DB::connection('sqlsrv_hosvital')
-                        ->select("SELECT * FROM CIRUGIAX_REQUISITOS_PREVIOS_ACTO_QUIRUGICO_POR_FECHA_TAGS('$init', '$end')");
+                        ->select("SELECT * FROM CIRUGIAX_REQUISITOS_PREVIOS_ACTO_QUIRUGICO_POR_FECHA_TAGS('$init', '$end') ORDER BY FECHA_PROCEDIMIENTO ASC, HORA_PROCEDIMIENTO ASC");
 
 
                     if (count($queryAllScheduledProcedures) > 0) {

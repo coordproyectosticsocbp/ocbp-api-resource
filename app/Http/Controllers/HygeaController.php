@@ -1393,6 +1393,7 @@ class HygeaController extends Controller
                             $loteBySumCod = [];
 
                             foreach ($queryLoteBySumCod as $item) {
+                                
                                 $tempLoteBySumCod = array(
                                     'sumCod' => trim($item->COD_SUM),
                                     'sumDesc' => trim($item->DESCRIPCION_SUM),
