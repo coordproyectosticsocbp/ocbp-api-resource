@@ -143,7 +143,7 @@ class PQRSFController extends Controller
     }
     /**
      * @OA\Get (
-     *     path="/api/v1/indicadores/get/porcentaje/{fechaInicial?}/{fechaFinal?}/{idType?}",
+     *     path="/api/v1/indicadores/get/porcentaje/{idType?}",
      *     operationId="getPorcentajePQR",
      *     tags={"Indicadores"},
      *     summary="Get getPorcentajePQR",
@@ -200,7 +200,7 @@ class PQRSFController extends Controller
      *      )
      * )
      */
-    public function getPorcentajePQR(Request $request, $fechaInicial = '', $fechaFinal = '', $idType = null)
+    public function getPorcentajePQR(Request $request, $idType = null)
     {
         if ($request->hasHeader('X-Authorization')) {
 
@@ -214,7 +214,7 @@ class PQRSFController extends Controller
             //$fechaFinal= '2022-01-01';
             //$fechaInicial='2022-12-12';
             //$idType='5';
-            if (!$fechaInicial || !$fechaFinal || $idType > 4 || $idType == null) {
+            if ($idType > 4 || $idType == null) {
 
                 return response()
                     ->json([
@@ -245,43 +245,61 @@ class PQRSFController extends Controller
                         }
                     }
                 }
-
+                $fechaInicial=date("Y").'-01-01';
+                $fechaActual = date('Y-m-d');
+                $fecha="'".$fechaInicial."' AND '".$fechaActual."'";
                 //$subquery='(SELECT COUNT(id) FROM issues WHERE "type" =1)';
                 $query = DB::connection('pgsql')
                     ->table('issues')
-                    ->whereBetween('createdAt', [$fechaInicial, $fechaFinal])
+                    ->whereBetween('createdAt', [$fechaInicial, $fechaActual])
                     ->select(
                         DB::raw('count(type) as totales'),
-                        DB::raw('(SELECT COUNT(id) as quejas FROM issues WHERE "type" =' . $idType . ')')
-                    )
-
-                    ->get();
+                        DB::raw('(SELECT COUNT(id) as quejas FROM issues WHERE "type" =' . $idType . ' AND "createdAt" between '.$fecha.' )')
+                    )->get();
 
                 if (sizeof($query) < 0) return response()->json([
                     'msg' => 'Empty Diagnoses Query Response',
                     'status' => 204
                 ], 204);
 
+               
 
-                foreach ($query as $result) $resultado[] = [
-                    'Porcentaje ' => trim(($result->quejas / $result->totales) * 100),
-                    'Quejas' => $result->quejas,
-                    'Totales de PQR' => $result->totales,
-                    'type' => $descripcion,
-                ];
+                foreach ($query as $result){
+                    $cantidadPQR=0;
+                    $cantidadPQR=$result->quejas;
+                    if($result->totales >0){
+                        $resultado[] = [
+                            'Porcentaje ' => trim(($cantidadPQR / $result->totales) * 100),
+                            'Quejas' => $cantidadPQR,
+                            'Totales de PQR' => $result->totales,
+                            'Type' => $descripcion,
+                            'FechaInicial'=>$fechaInicial,
+                            'FechaActual'=>$fechaActual,
+                        ];
+                    }else{
+                        $resultado[] = [
+                            'Porcentaje ' => '0',
+                            'Quejas' => '0',
+                            'Totales de PQR' => '0',
+                            'Type' => $descripcion,
+                            'FechaInicial'=>$fechaInicial,
+                            'FechaActual'=>$fechaActual,
+                        ];
+                    }
+                    
+                } 
 
-
-                //if (count($resultado) < 0) return response()->json([
-                //  'msg' => 'Empty Diagnoses Array',
-                //'status' => 204,
-                //'data' => []
-                //], 204);
+                if (count($resultado) < 0) return response()->json([
+                  'msg' => 'Empty Diagnoses Array',
+                'status' => 204,
+                'data' => []
+                ], 204);
 
 
                 return response()->json([
                     'msg' => 'Ok',
                     'status' => 200,
-                    'count' => count($resultado),
+                    'count' => count($query),
                     'data' => $resultado
                 ], 200);
 
@@ -293,7 +311,7 @@ class PQRSFController extends Controller
     }
     /**
      * @OA\Get (
-     *     path="/api/v1/indicadores/get/tiempopromedio/{fechaInicial?}/{fechaFinal?}/{idType?}",
+     *     path="/api/v1/indicadores/get/tiempopromedio/{idType?}",
      *     operationId="getTiempoPromedio",
      *     tags={"Indicadores"},
      *     summary="Get getTiempoPromedio",
@@ -350,7 +368,7 @@ class PQRSFController extends Controller
      *      )
      * )
      */
-    public function getTiempoPromedio(Request $request, $fechaInicial = '', $fechaFinal = '')
+    public function getTiempoPromedio(Request $request)
     {
         if ($request->hasHeader('X-Authorization')) {
 
@@ -364,14 +382,10 @@ class PQRSFController extends Controller
             //$fechaFinal= '2022-01-01';
             //$fechaInicial='2022-12-12';
             //$idType='5';
-            if (!$fechaInicial || !$fechaFinal) {
+            
+            $fechaInicial=date("Y").'-01-01';
+            $fechaActual = date('Y-m-d');
 
-                return response()
-                    ->json([
-                        'msg' => 'Parameters Cannot Be Empty!',
-                        'status' => 400
-                    ]);
-            }
             try {
 
                 $query = DB::connection('pgsql')
@@ -384,7 +398,7 @@ class PQRSFController extends Controller
                     LEFT JOIN issues_logs il ON i.id = il."issueId"
                     where il.status=9 and
                     I."type" =1
-                    and i."createdAt" BETWEEN ' . "'" . $fechaInicial . "'" . ' and ' . "'" . $fechaFinal . "'" . '
+                    and i."createdAt" BETWEEN ' . "'" . $fechaInicial . "'" . ' and ' . "'" . $fechaActual . "'" . '
                     order by i.id asc
                     ');
 
@@ -407,7 +421,7 @@ class PQRSFController extends Controller
                 }
                 $resultado = ($acu / $contador);
                 $resultadoData = [
-                    'Tiempo promedio representado en dias' => $resultado,
+                    'Tiempo promedio representado en dias de quejas' => $resultado,
                     'Diferencia de dias por reportes acumulados' => $acu
                 ];
 
@@ -541,7 +555,7 @@ class PQRSFController extends Controller
                 foreach ($query as $result) $resultado[] = [
                     'Oportunidad' => trim(($result->respondido / $result->reportes) * 100),
                     'Type' => $descripcion,
-                    'Total reportes' => $result->reportes,
+                    'TotalReportes' => $result->reportes,
                     'Respondidos' => $result->respondido
                 ];
 
@@ -617,7 +631,7 @@ class PQRSFController extends Controller
      *      )
      * )
      */
-    public function getFelicitacionesVsQuejasPorArea(Request $request, $fechaInicial = '', $fechaFinal = '')
+    public function getFelicitacionesVsQuejasPorArea(Request $request)
     {
 
         if ($request->hasHeader('X-Authorization')) {
@@ -631,14 +645,10 @@ class PQRSFController extends Controller
             ]);
             // $fechaFinal = '2022-12-12';
             //$fechaInicial = '2022-01-01';
-            if (!$fechaInicial || !$fechaFinal) {
+            
+            $fechaInicial=date("Y").'-01-01';
+            $fechaActual = date('Y-m-d');
 
-                return response()
-                    ->json([
-                        'msg' => 'Parameters Cannot Be Empty!',
-                        'status' => 400
-                    ]);
-            }
             try {
 
                 $nameCasosQuery = "
@@ -649,21 +659,20 @@ class PQRSFController extends Controller
                 when 4 then 'Felicitacion'
                 ";
 
-
                 $query = DB::connection('pgsql')
-                    ->select('
-                                select a."name" as area,case i."type"
-                                ' . $nameCasosQuery . '
-                                end tipo,COUNT(i."type") cantidad from issues i
-                                LEFT JOIN issue_areas ia
-                                ON   i.id = ia."issueId"
-                                LEFT JOIN "area" a
-                                ON ia."areaId"  = a.id
-                                where i."createdAt" between ' . "'" . $fechaInicial . "'" . ' and ' . "'" . $fechaFinal . "'" . '
-                                GROUP BY i."type",a."name"
-                                order by a."name"
-                            ');
 
+                    ->select('
+                    select a."name" as area,case i."type"
+                    ' . $nameCasosQuery . '
+                     end tipo,COUNT(i."type") cantidad from issues i
+                    LEFT JOIN issue_areas ia
+                    ON   i.id = ia."issueId"
+                    LEFT JOIN "area" a
+                    ON ia."areaId"  = a.id
+                    where i."createdAt" between ' . "'" . $fechaInicial . "'" . ' and ' . "'" . $fechaActual . "'" . '
+                    GROUP BY i."type",a."name"
+                    order by a."name",tipo
+                ');
                 //return $query;
 
                 if (sizeof($query) < 0) return response()->json([
@@ -671,30 +680,75 @@ class PQRSFController extends Controller
                     'status' => 204
                 ], 204);
 
-                $re = [];
-                $typeOfCase = json_decode(json_encode($this->typeOfCase()));
-                $casesArray = [];
+                $temp = '';
+                $tempinicial = 0;
+                $arraytemp = [];
 
-                foreach ($typeOfCase as $tc) {
-                    foreach ($re as $case) {
+                foreach ($query as $result) {
 
-                        if (array_search($case->tipo, $typeOfCase)) {
-
-                            return 'ok';
-                        }
+                    if ($tempinicial == 0) {
+                        $temp = $result->area;
+                        $tempinicial = 1;
                     }
+                    if ($temp == $result->area) {
+                        $arraytemp[] = ['tipo' => $result->tipo, 'cantidad' => $result->cantidad];
+                    } else {
+                        $felicitacion = 0;
+                        $peticion = 0;
+                        $queja = 0;
+                        $peticion = 0;
+                        $sugerencia = 0;
+                        $reclamo = 0;
+
+                        foreach ($arraytemp as $atm) {
+
+
+                            if ($atm['tipo'] == 'Felicitacion') {
+                                $felicitacion = $atm['cantidad'];
+                            }
+                            if ($atm['tipo'] == 'Peticion') {
+                                $peticion = $atm['cantidad'];
+                            }
+                            if ($atm['tipo'] == 'Queja') {
+                                $queja = $atm['cantidad'];
+                            }
+                            if ($atm['tipo'] == 'Peticion') {
+                                $peticion = $atm['cantidad'];
+                            }
+                            if ($atm['tipo'] == 'Sugerencia') {
+                                $sugerencia = $atm['cantidad'];
+                            }
+                            if ($atm['tipo'] == 'Reclamo') {
+                                $reclamo = $atm['cantidad'];
+                            }
+                        }
+                        $re[] = ['Name' => $temp, 'PQRS' => [
+                            ['Tipo' => 'Felicitación', 'Cantidad' => $felicitacion], ['Tipo' => 'Petición', 'Cantidad' => $peticion], ['Tipo' => 'Queja', 'Cantidad' => $queja], ['Tipo' => 'Sugerencia', 'Cantidad' => $sugerencia], ['Tipo' => 'Reclamo', 'Cantidad' => $reclamo]
+
+                        ]];
+                        $arraytemp = [];
+                        $arraytemp[] = ['tipo' => $result->tipo, 'cantidad' => $result->cantidad];
+                    }
+
+
+                    $temp = $result->area;
                 }
 
+                /*
 
+                if (count($resultado) < 0) return response()->json([
+                    'msg' => 'Empty Diagnoses Array',
+                    'status' => 204,
+                    'data' => []
+                ], 204);
 
-
-                $casesArray = array_values($re);
-
+                */
                 return response()->json([
-                    'msg' => 'Casos',
+                    'msg' => 'Ok',
                     'status' => 200,
-                    'array' => $casesArray
-                ]);
+                    'count' => count($query),
+                    'data' => $re
+                ], 200);
 
                 //
             } catch (\Throwable $th) {
@@ -702,31 +756,203 @@ class PQRSFController extends Controller
             }
         }
     }
+    /**
+     * @OA\Get (
+     *     path="/api/v1/indicadores/get/prioridadcasos",
+     *     operationId="getPrioridadCasos",
+     *     tags={"Indicadores"},
+     *     summary="Get getPrioridadCasos",
+     *     description="Returns getPrioridadCasos",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },@OA\Parameter (
+     *          name="fechaInicial?",
+     *          description="Required",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="fechaFinal?",
+     *          description="Required",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
 
-    function typeOfCase()
+    public function getPrioridadCasos(Request $request)
     {
+        if ($request->hasHeader('X-Authorization')) {
 
-        return  [
-            (object)[
-                'id' => 0,
-                'description' => 'Peticion'
-            ],
-            (object)[
-                'id' => 1,
-                'description' => 'Queja'
-            ],
-            (object)[
-                'id' => 2,
-                'description' => 'Reclamo'
-            ],
-            (object)[
-                'id' => 3,
-                'description' => 'Sugerencia'
-            ],
-            (object)[
-                'id' => 4,
-                'description' => 'Felicitacion'
-            ],
-        ];
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) return response()->json([
+                'msg' => 'Unauthorized',
+                'status' => 401
+            ]);
+            $fechaInicial=date("Y").'-01-01';
+            $fechaActual = date('Y-m-d');
+            //$idType='5';
+            //if (!$fechaInicial || !$fechaFinal) {
+
+             //   return response()
+               //     ->json([
+            //            'msg' => 'Parameters Cannot Be Empty!',
+                   //     'status' => 400
+             //       ]);
+           // }
+            try {
+                $concatName = "concat( ip.name, ' ' ,ip.lastname  ) nombres";
+
+                $tipo = "when 0 then 'Petición'
+                when 1 then 'Queja'
+                when 2 then 'Reclamo'
+                when 3 then 'Sugerencia'
+                when 4 then 'Felicitación'
+                end tipo";
+
+                $case2 = "case id.legal when true then 'SI' else 'NO' end REQUERIMIENTO_DE_JURIDICA_LEGAL
+                , case id.risk when true then 'SI' else 'NO' end RIESGO_DE_VIDA
+                , case id.relevant when true then 'SI' else 'NO' end PROCEDENTE_NO_PROCEDENTE";
+
+                $ultimocase = "case i.management_type
+                when 0 then 'Administrativo'
+                when 1 then 'Asistencial'
+                when 2 then 'Asistencial y Administrativo'
+                end TIPO_DE_GESTION";
+
+                $query = DB::connection('pgsql')
+                    ->select('
+                select i.serial,ip."document",case i."type"
+                ' . $tipo . '
+                ,' . $concatName . '
+                ,ip.birthday  fecha_nacimiento
+                ,m.name minoria
+                ,id.description
+                ,e.name Entidad
+                ,a.name "area"
+                ,c.name categoria
+                ,ip.country
+                ,ip.city
+                ,' . $case2 . '
+                , p."name" prioridad
+                , i."createdAt" fecha_creacion
+                ,' . $ultimocase . '
+                ,rights."name" DERECHO_VULNERADO
+                from issues i
+                LEFT JOIN issue_patient ip
+                ON ip.id = i."patientId"
+                LEFT JOIN minorities m
+                ON m.id = ip."minorityId"
+                LEFT JOIN issues_details id
+                ON id."issueId" =i.id
+                LEFT JOIN entity e
+                ON e.id = ip."entityId"
+                LEFT JOIN issue_areas ia
+                ON   i.id = ia."issueId" and ia.main =true 
+                LEFT JOIN "area" a
+                ON ia."areaId"  = a.id 
+                LEFT JOIN priority p 
+                ON i."priorityId"  = p.id
+                LEFT JOIN categories c
+                ON i."categoryId"  = c.id
+                left join categories_rights cr
+                on c.id = cr."categoryId"
+                left join rights
+                on rights.id = cr."rightId"
+                where i."type" != 3 and i."type" != 4 and i."createdAt" BETWEEN ' . "'" . $fechaInicial . "'" . ' and ' . "'" . $fechaActual . "'" . '
+
+                    ');
+
+                if (sizeof($query) < 0) return response()->json([
+                    'msg' => 'Empty Diagnoses Query Response',
+                    'status' => 204
+                ], 204);
+
+
+                $ahora = new DateTime(date("Y-m-d"));
+
+
+                foreach ($query as $result) {
+
+                    $nacimiento = new DateTime($result->fecha_nacimiento);
+                    $dif = $ahora->diff($nacimiento);
+                    $edad = $dif->format("%y");
+                    $prioridad = '';
+
+                    
+                        if ($edad < 18 || $edad > 60) {
+
+                            $prioridad = 'PRIORIDAD ALTA';
+
+                        }else{
+
+                            if ($edad >= 18 ||$edad <= 60) {
+    
+                                $prioridad = 'PRIORIDAD MEDIA';
+                            } else {
+    
+                                $prioridad = 'PRIORIDAD BAJA';
+                            }
+
+                        }
+                   
+                        
+                    
+
+                    $resultado[] = [
+                        'N°Caso: ' => $result->serial, 'N°Documento' => $result->document,'Nombre'=>$result->nombres, 'Edad' => $edad,'Pais' => $result->country, 'Ciudad' => $result->city, 'Tipo' => $result->tipo, 'Entidad' => $result->entidad, 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria,  'RequerimientoDeJuridicaLegal' => $result->requerimiento_de_juridica_legal, 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad, 'Descripcion' => $result->description
+                    ];
+                }
+
+
+
+                if (count($query) < 0) return response()->json([
+                    'msg' => 'Empty Diagnoses Array',
+                    'status' => 204,
+                    'data' => []
+                ], 204);
+
+
+                return response()->json([
+                    'msg' => 'Ok',
+                    'status' => 200,
+                    'count' => count($resultado),
+                    'data' => $resultado
+                ], 200);
+
+                //
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
     }
 }

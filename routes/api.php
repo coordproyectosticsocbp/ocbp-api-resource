@@ -584,6 +584,13 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/cirugia/get/patient-info-by-document/{patientdoc?}/{patientdoctype?}',
+        [
+            \App\Http\Controllers\CirugiaController::class,
+            'getPatientInfoByDocument'
+        ]
+    );
 
 
     /*-------------------------------------------------------------------------------------------------------------*/
@@ -712,7 +719,7 @@ Route::group([
         ]
     );
     Route::get(
-       '/indicadores/get/porcentaje/{fechaInicial?}/{fechaFinal?}/{idType?}',
+        '/indicadores/get/porcentaje/{fechaInicial?}/{fechaFinal?}/{idType?}',
         [
             \App\Http\Controllers\TorreControl\PQRSFController::class,
             'getPorcentajePQR'
@@ -737,6 +744,13 @@ Route::group([
         [
             \App\Http\Controllers\TorreControl\PQRSFController::class,
             'getFelicitacionesVsQuejasPorArea'
+        ]
+    );
+    Route::get(
+        ('/indicadores/get/prioridadcasos/{fechaInicial?}/{fechaFinal?}'),
+        [
+            \App\Http\Controllers\TorreControl\PQRSFController::class,
+            'getPrioridadCasos'
         ]
     );
 });

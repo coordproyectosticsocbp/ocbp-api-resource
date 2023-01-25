@@ -101,11 +101,11 @@ class CirugiaController extends Controller
                             foreach (json_decode(json_encode($queryPendingProcedures), true) as $item) {
 
                                 if (!isset($procedures[$item['NUM_DOC']])) {
-                                    $procedures[$item['NUM_DOC']] = array(
-                                        'patientFirstName' => $item['NOMBRE1'],
-                                        'patientSecondName' => $item['NOMBRE2'],
-                                        'patientLastName' => $item['APELLIDO1'],
-                                        'patientSecondLastName' => $item['APELLIDO2'],
+                                    $procedures[$item['NUM_DOC']] =  [
+                                        'patientFirstName' => $item['NOMBRE_1'],
+                                        'patientSecondName' => $item['NOMBRE_2'],
+                                        'patientLastName' => $item['APELLIDO_1'],
+                                        'patientSecondLastName' => $item['APELLIDO_2'],
                                         'patientDoc' => $item['NUM_DOC'],
                                         'patientDocType' => $item['TIP_DOC'],
                                         'patientBirthDate' => $item['FECHA_NAC'],
@@ -113,10 +113,10 @@ class CirugiaController extends Controller
                                         'patientGender' => $item['SEXO'],
                                         'patientAdmConsecutive' => $item['INGRESO'],
                                         'patientAdmDate' => $item['FECHA_INGRESO'] != '' ? Carbon::parse($item['FECHA_INGRESO'])->format('Y-m-d H:i:s') : '',
-                                        'patientEpsCode' => $item['EPS'],
-                                        'patientEpsName' => $item['EPS_NOM'],
+                                        'patientEpsCode' => $item['EPS_NIT'],
+                                        'patientEpsName' => $item['EPS'],
                                         'patientContract' => $item['CONTRATO'],
-                                    );
+                                    ];
                                     unset(
                                         $procedures[$item['NUM_DOC']]['PROCEDIMIENTO_ORDER_NUM'],
                                         $procedures[$item['NUM_DOC']]['PROCEDIMIENTO_COD'],
@@ -138,6 +138,7 @@ class CirugiaController extends Controller
 
                             if (count($procedures) > 0) {
                                 $procedures = array_values($procedures);
+
                                 return response()
                                     ->json([
                                         'msg' => 'Ok',
@@ -1239,6 +1240,121 @@ class CirugiaController extends Controller
             } catch (\Throwable $th) {
                 throw $th;
             }
+        }
+    }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/cirugia/get/patient-info-by-document/{patientdoc?}/{patientdoctype?}",
+     *     operationId="getPatientInfoByDocument",
+     *     tags={"Cirugia"},
+     *     summary="Get PatientInfoByDocument",
+     *     description="Returns getPatientInfoByDocument",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="patientdoc?",
+     *          description="Número de Documento - Opcional",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="patientdoctype?",
+     *          description="Tipo de Documento - Opcional - RC - TI - CC - CE - NIT - MS - PA - PE - AS",
+     *          in="path",
+     *          required=false,
+     *          @OA\Schema (
+     *              type="date"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getPatientInfoByDocument(Request $request, $patientDoc = '', $patientDocType = '')
+    {
+        try {
+
+            if (!$request->hasHeader('X-Authorization')) {
+                return response()->json(500);
+            }
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) {
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ], 401);
+            }
+
+            if (!$patientDoc || !$patientDocType) {
+                return response()
+                    ->json([
+                        'msg' => 'Parameters patientDoc or patiendDocType Canno be Empty',
+                        'status' => 400
+                    ], 400);
+            }
+
+            $queryPatient = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM CIRUGIAX_INFO_BASICA_PACIENTE('$patientDoc', '$patientDocType')");
+
+
+            if (count($queryPatient) < 0) return response()
+                ->json([
+                    'msg' => 'Nose se encontro ningun paciente con la información ingresada',
+                    'status' => 204
+                ], 204);
+
+            $patientArray = [];
+
+            foreach ($queryPatient as $key => $value) {
+                $patientArray = (object) $value;
+            }
+
+            if (empty($patientArray)) return response()
+                ->json([
+                    'msg' => 'Error Returning Data',
+                    'status' => 500,
+                    'data' => []
+                ]);
+
+
+            return response()
+                ->json([
+                    'msg' => 'Ok',
+                    'status' => 200,
+                    'data' => $patientArray
+                ], 200);
+
+            //
+        } catch (\Throwable $th) {
+            throw $th;
         }
     }
 }
