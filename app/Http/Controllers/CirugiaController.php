@@ -1357,4 +1357,112 @@ class CirugiaController extends Controller
             throw $th;
         }
     }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/cirugia/get/proc-info-by-code/{procCode?}",
+     *     operationId="getProcedureInfoByCode",
+     *     tags={"Cirugia"},
+     *     summary="Get getProcedureInfoByCode",
+     *     description="Returns getProcedureInfoByCode",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="procCode?",
+     *          description="Código Procedimiento - Obligatorio",
+     *          in="path",
+     *          required=true,
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getProcedureInfoByCode(Request $request, $procCode = '')
+    {
+
+        try {
+
+            if (!$request->hasHeader('X-Authorization')) {
+                return response()->json(500);
+            }
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) {
+                return response()
+                    ->json([
+                        'msg' => 'Unauthorized',
+                        'status' => 401
+                    ], 401);
+            }
+
+            if (!$procCode) {
+                return response()
+                    ->json([
+                        'msg' => 'procCode Cannot be Empty',
+                        'status' => 400
+                    ], 400);
+            }
+
+            $queryProcedure = DB::connection('sqlsrv_hosvital')
+                ->table('MAEPRO')
+                ->select(DB::raw('RTRIM(MAEPRO.PRCODI) AS procedureCode, RTRIM(MAEPRO.PrNomb) AS procedureDescription'))
+                ->where('MAEPRO.PrSta', '=', 'S')
+                ->where('MAEPRO.PRCODI', '=', $procCode)
+                ->get();
+
+            if (!$queryProcedure) return response()
+                ->json([
+                    'msg' => 'Empty Query',
+                    'status' => 204
+                ], 204);
+
+            $procedure = [];
+
+            foreach ($queryProcedure as $key => $value) {
+                $procedure = (object) $value;
+            }
+
+            if (empty($procedure)) return response()
+                ->json([
+                    'msg' => 'Error Returning Data',
+                    'status' => 500,
+                    'data' => []
+                ]);
+
+
+            return response()
+                ->json([
+                    'msg' => 'Ok',
+                    'status' => 200,
+                    'data' => $procedure
+                ], 200);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
 }

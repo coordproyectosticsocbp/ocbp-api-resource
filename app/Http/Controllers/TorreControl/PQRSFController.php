@@ -69,7 +69,7 @@ class PQRSFController extends Controller
      *      )
      * )
      */
-    public function getFelicitacionesVsQuejas(Request $request, $fechaInicial = '', $fechaFinal = '')
+    public function getFelicitacionesVsQuejas(Request $request)
     {
 
         if ($request->hasHeader('X-Authorization')) {
@@ -83,20 +83,14 @@ class PQRSFController extends Controller
             ]);
             // $fechaFinal = '2022-12-12';
             //$fechaInicial = '2022-01-01';
-            if (!$fechaInicial || !$fechaFinal) {
-
-                return response()
-                    ->json([
-                        'msg' => 'Parameters Cannot Be Empty!',
-                        'status' => 400
-                    ]);
-            }
+            $fechaInicial=date("Y").'-01-01';
+            $fechaActual = date('Y-m-d');
             try {
 
 
                 $query = DB::connection('pgsql')
                     ->table('issues')
-                    ->whereBetween('createdAt', [$fechaInicial, $fechaFinal])
+                    ->whereBetween('createdAt', [$fechaInicial, $fechaActual])
                     ->select('type', DB::raw('count(type) as total'), DB::raw("
                 (CASE type WHEN 0 THEN 'Peticion'
                 when 1 then 'Queja'
@@ -851,7 +845,7 @@ class PQRSFController extends Controller
 
                 $query = DB::connection('pgsql')
                     ->select('
-                select i.serial,ip."document",case i."type"
+                    select i.serial,ip."document",i."createdAt" ,case i."type"
                 ' . $tipo . '
                 ,' . $concatName . '
                 ,ip.birthday  fecha_nacimiento
@@ -911,8 +905,11 @@ class PQRSFController extends Controller
                     
                         if ($edad < 18 || $edad > 60) {
 
-                            $prioridad = 'PRIORIDAD ALTA';
-
+                            if($edad > 120){
+                                $prioridad = 'PRIORIDAD BAJA';
+                            }else{
+                                $prioridad = 'PRIORIDAD ALTA';
+                            }
                         }else{
 
                             if ($edad >= 18 ||$edad <= 60) {
@@ -925,11 +922,14 @@ class PQRSFController extends Controller
 
                         }
                    
-                        
-                    
 
                     $resultado[] = [
-                        'N°Caso: ' => $result->serial, 'N°Documento' => $result->document,'Nombre'=>$result->nombres, 'Edad' => $edad,'Pais' => $result->country, 'Ciudad' => $result->city, 'Tipo' => $result->tipo, 'Entidad' => $result->entidad, 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria,  'RequerimientoDeJuridicaLegal' => $result->requerimiento_de_juridica_legal, 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad, 'Descripcion' => $result->description
+                        'N°Caso: ' => $result->serial, 'N°Documento' => $result->document
+                        ,'Nombre'=>$result->nombres, 'Edad' => $edad,'Pais' => $result->country,'FechaCasos'=>$result->createdAt
+                        , 'Ciudad' => $result->city, 'Tipo' => $result->tipo, 'Entidad' => $result->entidad
+                        , 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria
+                        ,  'RequerimientoDeJuridicaLegal' => $result->requerimiento_de_juridica_legal
+                        , 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad, 'Descripcion' =>$result->description
                     ];
                 }
 
@@ -954,5 +954,12 @@ class PQRSFController extends Controller
                 throw $th;
             }
         }
+    }
+    public function replaceCharacter($text)
+    {
+        if (!$text) {
+            return false;
+        }
+        return str_replace(array("\r", "\n", "*", "**"), '', $text);
     }
 }

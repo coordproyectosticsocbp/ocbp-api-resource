@@ -72,6 +72,14 @@ Route::group([
     );
 
     Route::get(
+        '/hito/get/occupation-with-real-stay-two',
+        [
+            \App\Http\Controllers\HitoController::class,
+            'getCensoNew'
+        ]
+    );
+
+    Route::get(
         '/hito/get/patient-info-by-hab-code/{hab?}',
         [
             \App\Http\Controllers\HitoController::class,
@@ -589,6 +597,14 @@ Route::group([
         [
             \App\Http\Controllers\CirugiaController::class,
             'getPatientInfoByDocument'
+        ]
+    );
+
+    Route::get(
+        '/cirugia/get/proc-info-by-code/{procCode?}',
+        [
+            \App\Http\Controllers\CirugiaController::class,
+            'getProcedureInfoByCode'
         ]
     );
 

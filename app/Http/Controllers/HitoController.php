@@ -50,21 +50,23 @@ class HitoController extends Controller
      */
     public function getCenso(Request $request)
     {
+
         if ($request->hasHeader('X-Authorization')) {
 
             try {
                 // CONSULTA PATA OBTENER LAS TORRES QUE ESTEN ACTIVAS EN LA ORGANIZACIÓN
                 $query_torres = DB::connection('sqlsrv')
-                    ->select("SELECT * FROM TORRES WHERE towerState = 1");
+                    ->select("SELECT towerCode, towerDescription FROM TORRES WHERE towerState = 1");
 
                 if (count($query_torres) > 0) {
+
                     $torres = [];
 
                     foreach ($query_torres as $tower) {
 
                         // CONSULTA PARA OBTENER LA RELACIÓN DE TORRE PABELLÓN TENIENDO COMO PARAMETRO EL CÓDIGO DE LA TORRE
                         $query_torres_pavs = DB::connection('sqlsrv')
-                            ->select("SELECT * FROM HITO_TOWER_PAVILIONS('$tower->towerCode') ORDER BY pavFloor DESC");
+                            ->select("SELECT pavCode, pavFloor FROM HITO_TOWER_PAVILIONS('$tower->towerCode') ORDER BY pavFloor DESC");
 
                         if (count($query_torres_pavs) > 0) {
 
@@ -74,7 +76,7 @@ class HitoController extends Controller
 
                                 // CONSULTA PARA OBTENER LOS PABELLONES TENIIENDO COMO PARAMETRO EL CÓDIGO DEL PABELLÓN
                                 $query = DB::connection('sqlsrv_hosvital')
-                                    ->select("SELECT * FROM HITO_PABELLONES('$tower_pav->pavCode')");
+                                    ->select("SELECT CODIGO_PABELLON, NOMBRE_PABELLON, DESCRIPCION_CENTRO_COSTO FROM HITO_PABELLONES('$tower_pav->pavCode')");
 
                                 if (count($query) > 0) {
 
@@ -84,7 +86,10 @@ class HitoController extends Controller
 
                                         // CONSULTA PARA TRAER PACIENTES DE LAS HABITACIONES ENVIANDO COMO PARAMETRO EL CÓDIGO DEL PABELLÓN
                                         $query2 = DB::connection('sqlsrv_hosvital')
-                                            ->select("SELECT * FROM HITO_CENSOREAL('$item->CODIGO_PABELLON')");
+                                            ->select("SELECT    COD_PAB, PABELLON, CAMA, ESTADO, NUM_HISTORIA, TI_DOC, NOMBRE_PACIENTE,
+                                                                EPS_NIT, EPS, EPS_EMAIL, CONTRATO, TIPO, FECHA_INGRESO, INGRESO, EDAD,
+                                                                SEXO, PREALTA, EstanciaReal, DX
+                                                        FROM HITO_CENSOREAL('$item->CODIGO_PABELLON')");
 
                                         if (count($query2) > 0) {
 
@@ -176,6 +181,176 @@ class HitoController extends Controller
             } catch (\Throwable $e) {
                 throw $e;
             }
+        }
+    }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hito/get/occupation-with-real-stay-two",
+     *     operationId="getCensoNew",
+     *     tags={"Hito"},
+     *     summary="Get getCensoNew",
+     *     description="Returns getCensoNew",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getCensoNew(Request $request)
+    {
+        try {
+
+            if (!$request->hasHeader('X-Authorization')) return response()->json([
+                'msg' => 'Api token not found in Header, please Check it!',
+                'status' => 500
+            ], 500);
+
+
+            // VALIDACIÓN SI ENCUENTRA USUARIO CON TOKEN EN BD
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) return response()->json([
+                'msg' => 'Unauthorized!',
+                'status' => 401
+            ]);
+
+            // CONSULTA PATA OBTENER LAS TORRES QUE ESTEN ACTIVAS EN LA ORGANIZACIÓN
+            $query_torres = DB::connection('sqlsrv')
+                ->select("SELECT towerCode, towerDescription FROM TORRES WHERE towerState = 1");
+
+            if (count($query_torres) < 0) return response()->json([
+                'msg' => 'Empty Torres Query Result',
+                'status' => 204
+            ]);
+
+            $torres = [];
+
+            foreach ($query_torres as $tower) {
+
+                // CONSULTA PARA OBTENER LA RELACIÓN DE TORRE PABELLÓN TENIENDO COMO PARAMETRO EL CÓDIGO DE LA TORRE
+                $query_torres_pavs = DB::connection('sqlsrv')
+                    ->select("SELECT pavCode, pavFloor FROM HITO_TOWER_PAVILIONS('$tower->towerCode') ORDER BY pavFloor DESC");
+
+                if (count($query_torres_pavs) < 0) return response()->json([
+                    'msg' => 'Empty Torres Pav Query Result',
+                    'status' => 204
+                ]);
+
+                $torres_pav = [];
+
+                foreach ($query_torres_pavs as $tower_pav) {
+
+                    // CONSULTA PARA OBTENER LOS PABELLONES TENIIENDO COMO PARAMETRO EL CÓDIGO DEL PABELLÓN
+                    $query_pav = DB::connection('sqlsrv_hosvital')
+                        ->select("SELECT CODIGO_PABELLON, NOMBRE_PABELLON, DESCRIPCION_CENTRO_COSTO FROM HITO_PABELLONES('$tower_pav->pavCode')");
+
+                    if (count($query_pav) < 0) return response()->json([
+                        'msg' => 'Empty Pavilions Query Result',
+                        'status' => 204
+                    ]);
+
+                    //$records = [];
+
+                    foreach ($query_pav as $item) {
+
+                        // CONSULTA PARA TRAER PACIENTES DE LAS HABITACIONES ENVIANDO COMO PARAMETRO EL CÓDIGO DEL PABELLÓN
+                        $query_censo = DB::connection('sqlsrv_hosvital')
+                            ->select("SELECT    COD_PAB, PABELLON, CAMA, ESTADO, NUM_HISTORIA, TI_DOC, NOMBRE_PACIENTE,
+                                                            EPS_NIT, EPS, EPS_EMAIL, CONTRATO, TIPO, FECHA_INGRESO, INGRESO, EDAD,
+                                                            SEXO, PREALTA, EstanciaReal, DX
+                                                    FROM HITO_CENSOREAL('$item->CODIGO_PABELLON')");
+
+                        if (count($query_censo) < 0) return response()->json([
+                            'msg' => 'Empty Censo Query Result',
+                            'status' => 204
+                        ]);
+
+                        $habs = [];
+
+                        foreach ($query_censo as $cat) {
+
+                            if ($cat->PREALTA != null) {
+                                $cat->PREALTA = 1;
+                            } else {
+                                $cat->PREALTA = 0;
+                            }
+
+                            // ARRAY QUE ALMACENA LA INFORMACIÓN DE LOS PACIENTES POR CAMA
+                            $habs[] = [
+                                'pavCode' => $cat->COD_PAB,
+                                'pavName' => $cat->PABELLON,
+                                'habitation' => $cat->CAMA,
+                                'hab_status' => $cat->ESTADO,
+                                'patient_doc' => $cat->NUM_HISTORIA,
+                                'patient_doctype' => $cat->TI_DOC,
+                                'patient_name' => $cat->NOMBRE_PACIENTE,
+                                'patient_eps_nit' => $cat->EPS_NIT,
+                                'patient_eps' => $cat->EPS,
+                                'patient_eps_email' => $cat->EPS_EMAIL,
+                                'contract' => $cat->CONTRATO,
+                                'attention_type' => $cat->TIPO,
+                                'admission_date' => $cat->FECHA_INGRESO,
+                                'admission_num' => $cat->INGRESO,
+                                'age' => $cat->EDAD,
+                                'gender' => $cat->SEXO,
+                                'real_stay' => $cat->EstanciaReal,
+                                'diagnosis' => $cat->DX,
+                                'prealta' => $cat->PREALTA,
+                            ];
+                        }
+
+                        // ARRAY QUE ALMACENA LA INFORMACIÓN DE CADA CAMA POR PABELLÓN
+                        $torres_pav[] = [
+                            //'towerCode' => $tower_pav->towerCode,
+                            'pavCode' => $item->CODIGO_PABELLON,
+                            'pavName' => $item->NOMBRE_PABELLON,
+                            'pavFloor' => $tower_pav->pavFloor,
+                            'habs' => $habs
+                        ];
+                    }
+
+                    //$torres_pav[] = $records;
+                }
+
+                $torres[] = [
+                    'towerCode' => $tower->towerCode,
+                    'towerDescription' => $tower->towerDescription,
+                    'pavilions' => $torres_pav
+                ];
+            }
+
+            return response()
+                ->json([
+                    'msg' => 'Ok',
+                    'data' => $torres,
+                    'status' => 200
+                ]);
+
+            //
+        } catch (\Throwable $e) {
+            throw $e;
         }
     }
 
@@ -488,10 +663,8 @@ class HitoController extends Controller
                             ->select("SELECT * FROM HITO_MOTIVO_CONSULTA('$item->NUM_HISTORIA', '$item->TI_DOC')");
 
                         $query_antecedentes = DB::connection('sqlsrv_hosvital')
-                            ->select("SELECT * FROM ANTECEDENTES('$item->NUM_HISTORIA', '$item->TI_DOC')");
+                            ->select("SELECT TOP 5 * FROM HITO_ANTECEDENTES('$item->NUM_HISTORIA', '$item->TI_DOC')");
 
-                        /* $query_consumo = DB::connection('sqlsrv_hosvital')
-                            ->select("SELECT * FROM HITO_CONSUMO_ESTANCIA_PACIENTE('$item->FECHA_INGRESO', '$dt', '$item->NUM_HISTORIA')"); */
 
                         $query_riesgos = DB::connection('sqlsrv_hosvital')
                             ->select("SELECT * FROM HITO_RIESGOS_PACIENTE('$item->NUM_HISTORIA', '$item->TI_DOC', '$item->FOLIO_FORMATO')");
@@ -602,25 +775,6 @@ class HitoController extends Controller
                         }
 
 
-                        // VALIDACIÓN PARA EL CONSUMO DE LA ESTANCIA DEL PACIENTE
-                        /* if (count($query_consumo) > 0) {
-
-                            $consumos = [];
-
-                            foreach ($query_consumo as $consumo) {
-
-                                $temp4 = array(
-                                    'consumption' => $consumo->VENTA_TOTAL
-                                );
-
-                                $consumos[] = $consumo->VENTA_TOTAL;
-                            }
-                        } else {
-
-                            $consumos = [];
-                        } */
-
-
                         // VALIDACIÓN PARA LOS ANTECEDENTES DEL PACIENTE
                         if (count($query_antecedentes) > 0) {
 
@@ -629,11 +783,11 @@ class HitoController extends Controller
                             foreach ($query_antecedentes as $antecedente) {
 
                                 $temp3 = array(
-                                    'folio' => $antecedente->FOLIO ? $antecedente->FOLIO : '',
-                                    'backDate' => $antecedente->FECHA ? $antecedente->FECHA : '',
-                                    'backGroup' => $antecedente->GRUPO_ANTECEDENTE ? $antecedente->GRUPO_ANTECEDENTE : '',
-                                    'backSubGroup' => $antecedente->SUBGRUPO_ANTECEDENTE ? $antecedente->SUBGRUPO_ANTECEDENTE : '',
-                                    'backDesc' => $antecedente->ANTECEDENTES ? $antecedente->ANTECEDENTES : '',
+                                    'folio' => $antecedente->FOLIO ?: '',
+                                    'backDate' => $antecedente->FECHA ?: '',
+                                    'backGroup' => $antecedente->GRUPO_ANTECEDENTE ?: '',
+                                    'backSubGroup' => $antecedente->SUBGRUPO_ANTECEDENTE ?: '',
+                                    'backDesc' => $antecedente->ANTECEDENTES ?: '',
                                 );
 
                                 $antecedentes[] = $temp3;
@@ -663,30 +817,24 @@ class HitoController extends Controller
                                     $item->PREALTA = 0;
                                 }
 
-                                /*  if ($cr->MOTIVO != null) {
-                                    $cr->MOTIVO = [];
-                                } */
-
                                 $temp2 = array(
-                                    //'folio' => $item->FOLIO,
-                                    //'currentDisease' => $item->ENFEREMDAD_ACTUAL,
-                                    'lastInterConsulDoctorDoc' => $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA ? $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA : '',
-                                    'lastInterConsulDoctor' => $item->ULTIMO_ESPECIALISTA_INTERCONSULTA ? $item->ULTIMO_ESPECIALISTA_INTERCONSULTA : '',
-                                    'lastInterConsulSpeciality' => $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA ? $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA : '',
-                                    'neutropenia' => $item->NEUTROPENIA ? $item->NEUTROPENIA : '',
-                                    'preMedicalDischarge' => $item->PREALTA ? $item->PREALTA : '',
-                                    'dxSecondaryCode' => $item->COD_DX_SECUNDARIO ? $item->COD_DX_SECUNDARIO : '',
-                                    'dxSecondaryName' => $item->NOMBRE_DX_SECUNDARIO ? $item->NOMBRE_DX_SECUNDARIO : '',
-                                    'consultationReason' => $cr->DESCRIPCION_EVOLUCION ? $cr->DESCRIPCION_EVOLUCION : '',
-                                    'medDiagnostics' => $item->DX_MEDICO ? $item->DX_MEDICO : '',
-                                    'treatment' => $item->TRATAMIENTOS ? $item->TRATAMIENTOS : '',
-                                    'previousStudies' => $item->ESTUDIOS_PREVIOS ? $item->ESTUDIOS_PREVIOS : '',
-                                    'pendingAndRecommendations' => $item->ANALISIS ? $item->ANALISIS : '',
-                                    'lastEvoDoctorCode' => $item->COD_MED_ULT_EVO ? $item->COD_MED_ULT_EVO : '',
+                                    'lastInterConsulDoctorDoc' => $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA ?: '',
+                                    'lastInterConsulDoctor' => $item->ULTIMO_ESPECIALISTA_INTERCONSULTA ?: '',
+                                    'lastInterConsulSpeciality' => $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA ?: '',
+                                    'neutropenia' => $item->NEUTROPENIA ?: '',
+                                    'preMedicalDischarge' => $item->PREALTA ?: '',
+                                    'dxSecondaryCode' => $item->COD_DX_SECUNDARIO ?: '',
+                                    'dxSecondaryName' => $item->NOMBRE_DX_SECUNDARIO ?: '',
+                                    'consultationReason' => $cr->DESCRIPCION_EVOLUCION ?: '',
+                                    'medDiagnostics' => $item->DX_MEDICO ?: '',
+                                    'treatment' => $item->TRATAMIENTOS ?: '',
+                                    'previousStudies' => $item->ESTUDIOS_PREVIOS ?: '',
+                                    'pendingAndRecommendations' => $item->ANALISIS ?: '',
+                                    'lastEvoDoctorCode' => $item->COD_MED_ULT_EVO ?: '',
                                     'lastEvoDoctorName' => trim($item->NOM_MED_ULT_EVO),
-                                    'tVariable' => $item->VARIABLE_T ? $item->VARIABLE_T : '',
-                                    'nVariable' => $item->VARIABLE_N ? $item->VARIABLE_N : '',
-                                    'mVariable' => $item->VARIABLE_M ? $item->VARIABLE_M : '',
+                                    'tVariable' => $item->VARIABLE_T ?: '',
+                                    'nVariable' => $item->VARIABLE_N ?: '',
+                                    'mVariable' => $item->VARIABLE_M ?: '',
                                     'background' => $antecedentes,
                                     'risks' => $riesgos
                                 );
@@ -709,30 +857,24 @@ class HitoController extends Controller
                                 $item->PREALTA = 0;
                             }
 
-                            /*  if ($cr->MOTIVO != null) {
-                                    $cr->MOTIVO = [];
-                                } */
-
                             $tempConsulReason = array(
-                                //'folio' => $item->FOLIO,
-                                //'currentDisease' => $item->ENFEREMDAD_ACTUAL,
-                                'lastInterConsulDoctorDoc' => $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA ? $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA : '',
-                                'lastInterConsulDoctor' => $item->ULTIMO_ESPECIALISTA_INTERCONSULTA ? $item->ULTIMO_ESPECIALISTA_INTERCONSULTA : '',
-                                'lastInterConsulSpeciality' => $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA ? $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA : '',
-                                'neutropenia' => $item->NEUTROPENIA ? $item->NEUTROPENIA : '',
-                                'preMedicalDischarge' => $item->PREALTA ? $item->PREALTA : '',
-                                'dxSecondaryCode' => $item->COD_DX_SECUNDARIO ? $item->COD_DX_SECUNDARIO : '',
-                                'dxSecondaryName' => $item->NOMBRE_DX_SECUNDARIO ? $item->NOMBRE_DX_SECUNDARIO : '',
+                                'lastInterConsulDoctorDoc' => $item->DOCUMENTO_ESPECIALISTA_INTERCONSULTA ?: '',
+                                'lastInterConsulDoctor' => $item->ULTIMO_ESPECIALISTA_INTERCONSULTA ?: '',
+                                'lastInterConsulSpeciality' => $item->ESPECIALIDAD_ULTIMA_INTERCONSULTA ?: '',
+                                'neutropenia' => $item->NEUTROPENIA ?: '',
+                                'preMedicalDischarge' => $item->PREALTA ?: '',
+                                'dxSecondaryCode' => $item->COD_DX_SECUNDARIO ?: '',
+                                'dxSecondaryName' => $item->NOMBRE_DX_SECUNDARIO ?: '',
                                 'consultationReason' => "",
-                                'medDiagnostics' => $item->DX_MEDICO ? $item->DX_MEDICO : '',
-                                'treatment' => $item->TRATAMIENTOS ? $item->TRATAMIENTOS : '',
-                                'previousStudies' => $item->ESTUDIOS_PREVIOS ? $item->ESTUDIOS_PREVIOS : '',
-                                'pendingAndRecommendations' => $item->ANALISIS ? $item->ANALISIS : '',
-                                'lastEvoDoctorCode' => $item->COD_MED_ULT_EVO ? $item->COD_MED_ULT_EVO : '',
+                                'medDiagnostics' => $item->DX_MEDICO ?: '',
+                                'treatment' => $item->TRATAMIENTOS ?: '',
+                                'previousStudies' => $item->ESTUDIOS_PREVIOS ?: '',
+                                'pendingAndRecommendations' => $item->ANALISIS ?: '',
+                                'lastEvoDoctorCode' => $item->COD_MED_ULT_EVO ?: '',
                                 'lastEvoDoctorName' => trim($item->NOM_MED_ULT_EVO),
-                                'tVariable' => $item->VARIABLE_T ? $item->VARIABLE_T : '',
-                                'nVariable' => $item->VARIABLE_N ? $item->VARIABLE_N : '',
-                                'mVariable' => $item->VARIABLE_M ? $item->VARIABLE_M : '',
+                                'tVariable' => $item->VARIABLE_T ?: '',
+                                'nVariable' => $item->VARIABLE_N ?: '',
+                                'mVariable' => $item->VARIABLE_M ?: '',
                                 'background' => $antecedentes,
                                 'risks' => $riesgos
                             );
@@ -761,7 +903,6 @@ class HitoController extends Controller
                             'primaryDxDescription' => $item->DX,
                             'primaryDxDate' => $item->FECHA_1_DX,
                             'date' => $dt,
-                            //'consumption' => array_sum($consumos),
                             'consumption' => 0,
                             'realStay' => $item->EstanciaReal,
                             'clinicHistorial' => $consul_reason,
