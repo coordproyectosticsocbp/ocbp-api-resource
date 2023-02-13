@@ -849,8 +849,10 @@ class PQRSFController extends Controller
                 ' . $tipo . '
                 ,' . $concatName . '
                 ,ip.birthday  fecha_nacimiento
+                ,(select il2."createdAt" from issues_logs il2 where il2.status=9 and il2."issueId" =i.id) fecha_cierre
                 ,m.name minoria
                 ,id.description
+                ,id.solution respuesta
                 ,e.name Entidad
                 ,a.name "area"
                 ,c.name categoria
@@ -921,15 +923,28 @@ class PQRSFController extends Controller
                             }
 
                         }
-                   
+                        $diasRespuesta=null;
+                        $estadoDemorado=null;
+                     if($result->fecha_cierre!=null){
+                        $creacion = new DateTime($result->createdAt);
+                        $cierre = new DateTime($result->fecha_cierre);
+                        $dif = $creacion->diff($cierre);
+                        $diasRespuesta=$dif->days;
+                        if($diasRespuesta>5){
+                            $estadoDemorado='Caso demorado en atender';
+                        }else{
+                            $estadoDemorado='Caso atendido a tiempo';
+                        }
+                     }   
 
                     $resultado[] = [
                         'N°Caso: ' => $result->serial, 'N°Documento' => $result->document
-                        ,'Nombre'=>$result->nombres, 'Edad' => $edad,'Pais' => $result->country,'FechaCasos'=>$result->createdAt
+                        ,'Nombre'=>$result->nombres, 'Edad' => $edad,'Pais' => $result->country,'FechaCaso'=>$result->createdAt, 
+                        'fechaCierreCaso' =>$result->fecha_cierre,'DiasDeRespuesta' =>$diasRespuesta,'DemoradoONo' =>$estadoDemorado
                         , 'Ciudad' => $result->city, 'Tipo' => $result->tipo, 'Entidad' => $result->entidad
                         , 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria
                         ,  'RequerimientoDeJuridicaLegal' => $result->requerimiento_de_juridica_legal
-                        , 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad, 'Descripcion' =>$result->description
+                        , 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad, 'Descripcion' =>$result->description, 'Respuesta' =>$result->respuesta
                     ];
                 }
 
@@ -955,6 +970,221 @@ class PQRSFController extends Controller
             }
         }
     }
+    /**
+     * @OA\Get (
+     *     path="/api/v1/indicadores/get/halconreportegeneralcasos",
+     *     operationId="getHalconReporteGeneralCasos",
+     *     tags={"Indicadores"},
+     *     summary="Get getHalconReporteGeneralCasos",
+     *     description="Returns getHalconReporteGeneralCasos",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },@OA\Parameter (
+     *          name="fechaInicial?",
+     *          description="Required",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="fechaFinal?",
+     *          description="Required",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getHalconReporteGeneralCasos(Request $request,$fechaInicial='',$fechaFinal='')
+    {
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) return response()->json([
+                'msg' => 'Unauthorized',
+                'status' => 401
+            ]);
+           
+            if ($fechaInicial == '' && $fechaFinal == '') {
+
+                return response()
+                    ->json([
+                        'msg' => 'Parameters Cannot Be Empty!',
+                        'status' => 400
+                    ]);
+                    
+            }
+
+            try {
+                 
+                $ca1="when 0 then 'Peticion'
+                when 1 then 'Queja'
+                when 2 then 'Reclamo'
+                when 3 then 'Sugerencia'
+                when 4 then 'Felicitacion'";
+                $ca2=" , regexp_replace(trim(issues_details.description), E'[\n\r]+', ' ', 'g') DESCRIPCION_CASO ";
+                $ca3="when 0 then 'Ingresado'
+                when 1 then 'Asignado'
+                when 2 then 'Trasladado'
+                when 3 then 'Leido'
+                when 4 then 'Finalizado'
+                when 5 then 'Reasignado'
+                when 6 then 'Rechazado'
+                when 7 then 'Aprobado'
+                when 8 then 'No Aprobado'
+                when 9 then 'Respondido'
+                when 10 then 'Cierre conforme'
+                when 11 then 'Cierre no conforme'
+                when 12 then 'Cierre por tiempo'";
+                $ca4=" , regexp_replace(trim(issues_details.description), E'[\n\r]+', ' ', 'g')  DESCRIPCION
+                , regexp_replace(trim(issues_details.solution), E'[\n\r]+', ' ', 'g')  SOLUCION
+                , case issues_details.legal when true then 'SI' else 'NO' end REQUERIMIENTO_DE_JURIDICA_LEGAL
+                , case issues_details.risk when true then 'SI' else 'NO' end RIESGO_DE_VIDA
+                , case issues_details.relevant when true then 'SI' else 'NO' end PROCEDENTE_NO_PROCEDENTE";
+                $ca5="when 0 then 'Administrativo'
+                when 1 then 'Asistencial'
+                when 2 then 'Asistencial y Administrativo'";
+                $ca6=", date_part('day', (";
+                $ca7=", date_part('day', (";
+                $query = DB::connection('pgsql')
+                    ->select('
+
+                    select 
+                    distinct cast(issues."createdAt" as date)  FECHA_CREACION
+                    , issues.serial NUM_CASO
+                    , issue_patient."document" DOCUMENTO
+                    , document_types."name" TIPO_DE_DOCUMENTO
+                    , cast(issue_patient.birthday as DATE) FECHA_NACIMIENTO 
+                    , case issues."type"
+                            '.$ca1.'
+                    end TIPO
+                    , issue_patient."name" NOMBRE
+                    , issue_patient.lastname  APELLIDO
+                    , age(current_date, issue_patient.birthday) EDAD
+                    , minorities."name" MINORIA
+                   '.$ca2.'
+                    , issue_contact."name" NOMBRE_DE_CONTACTO
+                    , issue_contact.lastname APELLIDO_DE_CONTACTO
+                    , entity."name" ENTIDAD_DE_PACIENTE
+                    , area.name AREA
+                    , categories."name" CATEGORIA
+                    , case issues_logs.status
+                        '.$ca3.'
+                    END ESTADO
+                    , issue_contact.country PAIS
+                    , issue_contact.state DEPARTAMENTO 
+                    , issue_contact.city CIUDAD
+                    , issue_contact.address DIRECCION
+                    , issue_contact.email EMAIL
+                    , issue_contact.phone TELEFONO
+                   '.$ca4.'
+                    , case issues.management_type
+                        '.$ca5.'
+                    end TIPO_DE_GESTION
+                    , rights."name" DERECHO_VULNERADO
+                    , priority."name" PRIORIDAD
+                    '.$ca6.'	select il2."createdAt" 
+                                            from issues_logs il2 
+                                            where il2."issueId" = issues.id
+                                                    and il2.status = 4
+                                                    limit 1
+                                        ) - (	select il2."createdAt" 
+                                                from issues_logs il2 
+                                                where il2."issueId" = issues.id
+                                                        and il2.status = 1
+                                                        limit 1
+                                            )
+                    ) diff_dias_lider
+                    '.$ca7.'	select il2."createdAt" 
+                                            from issues_logs il2 
+                                            where il2."issueId" = issues.id
+                                                    and il2.status = 9
+                                                    limit 1
+                                        ) - (	select il2."createdAt" 
+                                                from issues_logs il2 
+                                                where il2."issueId" = issues.id
+                                                        and il2.status = 4
+                                                        limit 1
+                                            )
+                    ) diff_dias_admin_halcon
+            FROM issues
+                        inner JOIN issues_details ON issues.id = issues_details."issueId"
+                        inner join issue_patient on issues."patientId" = issue_patient.id 
+                        left join document_types on issue_patient."documentTypeId" = document_types.id 
+                        left join minorities on issue_patient."minorityId" = minorities.id 
+                        inner join issue_contact on issue_contact.id = issues."contactId"
+                        left join entity on issue_patient."entityId" = entity.id
+                        left join categories on categories.id = issues."categoryId"
+                        left join categories_rights on categories.id = categories_rights."categoryId" 
+                        left join rights on rights.id = categories_rights."rightId" 
+                        left JOIN issue_areas ON issues.id = issue_areas."issueId"
+                        left JOIN area ON issue_areas."areaId" = area.id
+                        inner join priority on issues."priorityId" = priority.id 
+                        left join issues_logs on	issues_logs."issueId" = issues_details.id 
+                                                    and issues_logs."updatedAt" =	(	select max(il."updatedAt")
+                                                                                        from issues_logs il 
+                                                                                        where il."issueId" = issues_details.id 
+                                                                                    )
+            where  cast(issues."createdAt" as date) between '."'".$fechaInicial."'".' and '."'".$fechaFinal."'".'
+
+                    ');
+
+                if (sizeof($query) < 0) return response()->json([
+                    'msg' => 'Empty Diagnoses Query Response',
+                    'status' => 204
+                ], 204);
+
+
+
+
+                if (count($query) < 0) return response()->json([
+                    'msg' => 'Empty Diagnoses Array',
+                    'status' => 204,
+                    'data' => []
+                ], 204);
+
+
+                return response()->json([
+                    'msg' => 'Ok',
+                    'status' => 200,
+                    'count' => count($query),
+                    'data' => $query
+                ], 200);
+
+                //
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
+    }
+    
     public function replaceCharacter($text)
     {
         if (!$text) {

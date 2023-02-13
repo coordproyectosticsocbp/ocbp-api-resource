@@ -614,4 +614,48 @@ class ExitusController extends Controller
             }
         }
     }
+
+
+
+    public function getPatientInfoByPavCode(Request $request, $pavName = '')
+    {
+        try {
+
+            if (!$request->hasHeader('X-Authorization')) return response()->json([
+                'msg' => 'Bad Request',
+                'status' => 500,
+            ], 500);
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) return response()->json([
+                'msg' => 'Unauthorized',
+                'status' => 401,
+            ]);
+
+            if (!$pavName) return response()->json([
+                'msg' => 'Parameter PavName Cannot Be Empty',
+                'status' => 400,
+            ]);
+
+            $query = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM HITO_BUSQUEDA_PACIENTES_POR_PABELLON('$pavName')");
+
+            if (count($query) < 0) return response()->json([
+                'msg' => 'Empty Query, please check it!',
+                'status' => 204,
+            ]);
+
+            $records = [];
+
+            foreach ($query as $item) {
+                $records[] = [];
+            }
+
+            //
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+    }
 }

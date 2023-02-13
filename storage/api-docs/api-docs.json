@@ -2115,6 +2115,92 @@
                 ]
             }
         },
+        "/api/v1/hito/get/patient-info/turn-delivery/{bedCode?}": {
+            "get": {
+                "tags": [
+                    "Hito"
+                ],
+                "summary": "getPatientInfoForTurnDelivery",
+                "description": "Returns getPatientInfoForTurnDelivery",
+                "operationId": "getPatientInfoForTurnDelivery",
+                "parameters": [
+                    {
+                        "name": "bedCode?",
+                        "in": "path",
+                        "description": "Código de la cama - Obligatory",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/hito/get/pavilion-beds/turn-delivery/{pavCode?}": {
+            "get": {
+                "tags": [
+                    "Hito"
+                ],
+                "summary": "getBedsOfPavilionByPavName",
+                "description": "Returns getBedsOfPavilionByPavName",
+                "operationId": "getBedsOfPavilionByPavName",
+                "parameters": [
+                    {
+                        "name": "pavCode?",
+                        "in": "path",
+                        "description": "Código del Pabellón - Obligatory",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
         "/api/v1/hygea/get/warehouses": {
             "get": {
                 "tags": [
@@ -3642,6 +3728,58 @@
                     },
                     {
                         "name": "fechaFinal?",
+                        "in": "path",
+                        "description": "Required",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "type": "apikey",
+                        "in": "header",
+                        "name": "X-Authorization",
+                        "X-Authorization": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/indicadores/get/SeguridadPaciente/TrazabilidadEgresos": {
+            "get": {
+                "tags": [
+                    "Indicadores"
+                ],
+                "summary": "Get getTrazabilidadEgresos",
+                "description": "Returns getTrazabilidadEgresos",
+                "operationId": "getTrazabilidadEgresos",
+                "parameters": [
+                    {
+                        "name": "fechaInicial?",
+                        "in": "path",
+                        "description": "Required",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "fechaActual?",
                         "in": "path",
                         "description": "Required",
                         "required": true,

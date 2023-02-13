@@ -143,6 +143,22 @@ Route::group([
         ]
     );
 
+    Route::get(
+        'hito/get/patient-info/turn-delivery/{bedCode?}',
+        [
+            \App\Http\Controllers\HitoController::class,
+            'getPatientInfoForTurnDelivery'
+        ]
+    );
+
+    Route::get(
+        'hito/get/pavilion-beds/turn-delivery/{pavName?}',
+        [
+            \App\Http\Controllers\HitoController::class,
+            'getBedsOfPavilionByPavName'
+        ]
+    );
+
     /* Route::get(
         '/hito/get/audit-get-patient-two/{patientdoc?}/{patientdoctype?}',
         [
@@ -724,7 +740,7 @@ Route::group([
             'getTurnsByDate'
         ]
     );
-
+    /* ------------------------------------------------------------------------------- */
     /* INDICADORES PQRSF */
 
     Route::get(
@@ -767,6 +783,21 @@ Route::group([
         [
             \App\Http\Controllers\TorreControl\PQRSFController::class,
             'getPrioridadCasos'
+        ]
+    );
+    Route::get(
+        ('/indicadores/get/halconreportegeneralcasos/{fechaInicial?}/{fechaFinal?}'),
+        [
+            \App\Http\Controllers\TorreControl\PQRSFController::class,
+            'getHalconReporteGeneralCasos'
+        ]
+    );
+    /* INDICADORES SEGURIDAD DEL PACIENTE */
+    Route::get(
+        ('/indicadores/get/SeguridadPaciente/TrazabilidadEgresos/{fechaInicial?}/{fechaActual?}'),
+        [
+            \App\Http\Controllers\TorreControl\SeguridadDelPacienteController::class,
+            'getTrazabilidadEgresos'
         ]
     );
 });

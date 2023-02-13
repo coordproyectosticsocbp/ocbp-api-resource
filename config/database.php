@@ -100,6 +100,19 @@ return [
             'prefix_indexes' => true,
         ],
 
+        'sqlsrv_fenix' => [
+            'driver' => 'sqlsrv',
+            'url' => '',
+            'host' => '172.16.55.4\INFOTEC',
+            'port' => '1500',
+            'database' => 'FENIX',
+            'username' => 'SA',
+            'password' => '123',
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
+
     ],
 
     /*

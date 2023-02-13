@@ -78,6 +78,7 @@ class HitoController extends Controller
                                 $query = DB::connection('sqlsrv_hosvital')
                                     ->select("SELECT CODIGO_PABELLON, NOMBRE_PABELLON, DESCRIPCION_CENTRO_COSTO FROM HITO_PABELLONES('$tower_pav->pavCode')");
 
+
                                 if (count($query) > 0) {
 
                                     $records = [];
@@ -91,7 +92,11 @@ class HitoController extends Controller
                                                                 SEXO, PREALTA, EstanciaReal, DX
                                                         FROM HITO_CENSOREAL('$item->CODIGO_PABELLON')");
 
+
+
                                         if (count($query2) > 0) {
+
+
 
                                             $habs = [];
 
@@ -103,7 +108,7 @@ class HitoController extends Controller
                                                     $cat->PREALTA = 0;
                                                 }
 
-                                                $temp1 = array(
+                                                $habs[] = array(
                                                     'pavCode' => $cat->COD_PAB,
                                                     'pavName' => $cat->PABELLON,
                                                     'habitation' => $cat->CAMA,
@@ -124,8 +129,6 @@ class HitoController extends Controller
                                                     'diagnosis' => $cat->DX,
                                                     'prealta' => $cat->PREALTA,
                                                 );
-
-                                                $habs[] = $temp1;
                                             }
 
                                             $temp2 = array(
@@ -139,11 +142,12 @@ class HitoController extends Controller
                                             // ARRAY QUE ALMACENA LA INFORMACIÓN DE CADA CAMA POR PABELLÓN
                                             $records[] = $temp2;
                                         } else {
+
                                             return response()
                                                 ->json([
                                                     'msg' => 'El query de pabellones no ha devuelto niguna respuesta',
                                                     'data' => [],
-                                                    'status' => 400
+                                                    'status' => 204
                                                 ]);
                                         }
                                     }
@@ -353,6 +357,7 @@ class HitoController extends Controller
             throw $e;
         }
     }
+
 
     /**
      * @OA\Get (
@@ -1529,6 +1534,394 @@ class HitoController extends Controller
                         'status' => 403
                     ]);
             }
+        }
+    }
+
+
+    // ============================================================
+    // FUNCTION TO TURN DELIVERY
+    //public function getPatientInfoForTurnDelivery(Request $request, $patientDoc = '', $patientDocType = '')
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hito/get/patient-info/turn-delivery/{bedCode?}",
+     *     operationId="getPatientInfoForTurnDelivery",
+     *     tags={"Hito"},
+     *     summary="getPatientInfoForTurnDelivery",
+     *     description="Returns getPatientInfoForTurnDelivery",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="bedCode?",
+     *          description="Código de la cama - Obligatory",
+     *          in="path",
+     *          required=true,
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getPatientInfoForTurnDelivery(Request $request, $bedCode = '')
+    {
+
+        try {
+
+            if (!$request->hasHeader('X-Authorization')) return response()->json([
+                'msg' => 'Api token not found in Header, please Check it!',
+                'status' => 500
+            ], 500);
+
+
+            // VALIDACIÓN SI ENCUENTRA USUARIO CON TOKEN EN BD
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) return response()->json([
+                'msg' => 'Unauthorized!',
+                'status' => 401
+            ]);
+
+            if (!$bedCode) return response()->json([
+                'msg' => 'Parameter BedCode Cannot Be Empty',
+                'status' => 400
+            ]);
+
+            // QUERY TO GET ALL PATIENT BY PAVILION CODE
+            $query = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM HITO_BUSQUEDA_PACIENTES_POR_PABELLON('$bedCode')");
+
+            if (sizeof($query) < 0 || !$query[0]->NOMBRE_COMPLETO) return response()->json([
+                'msg' => 'Empty Main Query',
+                'status' => 204
+            ]);
+
+            $records = [];
+
+            foreach ($query as $record) {
+
+                $query_antecedentes = DB::connection('sqlsrv_hosvital')
+                    ->select("SELECT TOP 5 * FROM HITO_ANTECEDENTES('$record->NUM_HISTORIA', '$record->TI_DOC')");
+
+                if (sizeof($query_antecedentes) < 0) return response()->json([
+                    'msg' => 'Empty Background Query',
+                    'status' => 204
+                ]);
+
+                $antecedentes = [];
+
+                foreach ($query_antecedentes as $antecedente) {
+
+                    $antecedentes[] = array(
+                        'folio' => $antecedente->FOLIO ?: '',
+                        'backDate' => $antecedente->FECHA ?: '',
+                        'backGroup' => $antecedente->GRUPO_ANTECEDENTE ?: '',
+                        'backSubGroup' => $antecedente->SUBGRUPO_ANTECEDENTE ?: '',
+                        'backDesc' => $antecedente->ANTECEDENTES ?: '',
+                    );
+                }
+
+                if (sizeof($antecedentes) < 0) $antecedentes = [];
+
+
+                $query_riesgos = DB::connection('sqlsrv_hosvital')
+                    ->select("SELECT * FROM HITO_RIESGOS_PACIENTE('$record->NUM_HISTORIA', '$record->TI_DOC', '$record->FOLIO_FORMATO')");
+
+                // VALIDACIÓN PARA LOS RIESGOS DEL PACIENTE
+                if (sizeof($query_riesgos) < 0) return response()->json([
+                    'msg' => 'Empty Risks Query',
+                    'status' => 204
+                ]);
+
+                $riesgos = [];
+
+                foreach ($query_riesgos as $riesgo) {
+
+                    $riesgos[] = array(
+                        /* 'Hipotensión_por_uso_de_vasodilatador' => $riesgo->UCI_HIPOTENSION_VASODILATADOR === 1 ? 1  : 0,
+                        'Arritmias_asociadas_a_uso_de_vasopresores' => $riesgo->UCI_ARRITMIA_VASOPRESORES === 1 ? 1  : 0,
+                        'Evento_Cerebrovascular_asociado_a_uso_de_vasopresor' => $riesgo->UCI_CEREBROVASCULAR_VASOPRESORES === 1 ? 1  : 0,
+                        'Desarrollo_de_delirium_en_paciente_critico' => $riesgo->UCI_DELIRIUM_PACIENTE === 1 ? 1  : 0,
+                        'Síndrome_de_desacondicionamiento_físico_en_paciente_critico' => $riesgo->UCI_DESACONDICIONAMIENTO_FISICO === 1 ? 1  : 0,
+                        'Fistula_traqueoesofagica_por_entubación_orotraqueal_prolongada' => $riesgo->UCI_FISTULA_ORATRAQUEAL === 1 ? 1  : 0,
+                        'Estenosis_subglotica_por_entubación_orotraqueal_prolongada' => $riesgo->UCI_ESTENOSIS_X_ENTUBACION === 1 ? 1  : 0,
+                        'Inestabilidad_hemodinámica_durante_hemodiálisis' => $riesgo->UCI_INESTABILIDAD_HEMODINAMICA === 1 ? 1  : 0,
+                        'Neumotórax_por_inserción_de_catéter_venoso_central' => $riesgo->UCI_NEUMOTORAX_CATETER_CENTRAL === 1 ? 1  : 0,
+                        'Lesión_pulmonar_asociada_a_ventilación_mecánica' => $riesgo->UCI_LESION_PULMONAR === 1 ? 1  : 0,
+                        'Lesion_isquemica_distal_por_vasopresores_en_pacientes_con_sepsis_en_la_UCI_Adultos' => $riesgo->UCI_LESION_ISQUEMICA === 1 ? 1  : 0,
+                        'Neutropenia_febril_en_pacientes_con_quimioterapia' => $riesgo->UCI_NEUTROPENIA_FEBRIL_QUIMIOTERAPIAS === 1 ? 1  : 0,
+                        'Mucositis_oral_en_pacientes_con_quimioterapia' => $riesgo->UCI_MUCOSITIS_QUIMIOTERAPIA === 1 ? 1  : 0,
+                        'Hemorragia_o_trombosis_en_paciente_anticoagulado' => $riesgo->UCI_HEMORRAGIA_ANTICOAGULADO === 1 ? 1  : 0,
+                        'Sangrado_segundario_a_trombocitopenia_severa' => $riesgo->UCIPED_SANGRADO_TROMBOCITOPENIA === 1 ? 1  : 0,
+                        'Hipotensión_por_desequilibrio_electrolítico_en_dengue_grave' => $riesgo->UCIPED_HIPOTENSION_ELECTROLITICO === 1 ? 1  : 0,
+                        'Shock_hipovolémico_por_insuficiencia__renal_aguda_en_pediatría' => $riesgo->UCIPED_SHOCK_HIPOVOLEMICO === 1 ? 1  : 0,
+                        'Falla_respiratoria_por_neumonía' => $riesgo->UCIPED_FALLA_RESPIRATORIA === 1 ? 1  : 0,
+                        'Sepsis_severa_en_aplasia_medular' => $riesgo->UCIPED_SEPSIS_APLASIA_MEDULAR === 1 ? 1  : 0,
+                        'Síndrome_de_Lisis_tumoral_en_Linfoma_No_Hodgkin' => $riesgo->UCIPED_SINDROME_LINFOMA_NOHODKIN === 1 ? 1  : 0,
+                        'Hipervolemia_por_no_restricciones_de_líquido_en_síndrome_nefrítico' => $riesgo->UCIPED_HIPERVOLEMIA === 1 ? 1  : 0,
+                        'Edema_pulmonar_por_extravasación_de_liquido_en_síndrome_nefrótico' => $riesgo->UCIPED_EDEMA_PULMONAR === 1 ? 1  : 0,
+                        'Crisis_hipertensiva_en_síndrome_nefrítico' => $riesgo->UCIPED_CRISIS_HIPERTENSIVA === 1 ? 1  : 0,
+                        'Hematuria_asociada_a_síndrome_nefrítico' => $riesgo->UCIPED_HEMATURIA_NEFRITICO === 1 ? 1  : 0,
+                        'Síndrome_Compresivos_en_Linfoma_No_Hodgkin' => $riesgo->UCIPED_SINDROME_COMPRENSI_UCI_PED === 1 ? 1  : 0,
+                        'Mucositis_oral_en_pacientes_con_quimioterapia' => $riesgo->UCIPED_MUCOSITIS_QUIMIOTERAPIA_UCI_PED === 1 ? 1  : 0,
+                        'Dolor_en_paciente_oncologico' => $riesgo->UCIPED_DOLOR_PACIENTE_ONCOLOGICO === 1 ? 1  : 0,
+                        'Neumonia_asociada_a_ventilacion_mecanica_en_UCIP' => $riesgo->UCIPED_NEUMONIA_VENTILACION_MECANICA === 1 ? 1  : 0,
+                        'Shock_hipovolémico_secundario_a_sangrado_agudo_en_procedimiento_quirúrgico_programado' => $riesgo->CIR_SHOCK_HIPOVOLEMICO === 1 ? 1  : 0,
+                        'Parada_cardiaca_durante_procedimiento_quirúrgico' => $riesgo->CIR_PARADA_CARDIACA === 1 ? 1  : 0,
+                        'Dehiscencia_de_herida_quirúrgica' => $riesgo->CIR_DEHISCENCIA_QX === 1 ? 1  : 0,
+                        'Seroma_postquirúrgico' => $riesgo->CIR_SEROMA_POSTQX === 1 ? 1  : 0,
+                        'Incremento_del_dolor_neuropatico_post_cirugía_oncológica_de_mama' => $riesgo->CIR_INCREMENTO_DOLOR_POSTQX === 1 ? 1  : 0,
+                        'Hernias_en_pared_abdominal_postquirúrgicas' => $riesgo->CIR_HERNIAS_ABDOMINAL_POSTQX === 1 ? 1  : 0,
+                        'Fistula_postcirugia_abdominal' => $riesgo->CIR_FISTULAQX_ABDOMINAL === 1 ? 1  : 0,
+                        'Lesión_de_uréteres_durante_cirugía_de_tumor_retroperitoneal' => $riesgo->CIR_LESION_URETERES === 1 ? 1  : 0,
+                        'Lesión_isquémica_por_perfusión_inadecuada_prolongada__durante_cirugía_de_tumor_retroperitoneal' => $riesgo->CIR_LESION_ISQUEMICA_QX_TUMOR === 1 ? 1  : 0,
+                        'Neumonía_por_realización_de_cirugía_abdominales_mayores' => $riesgo->CIR_NEUMONIA_ABDOMINALES_MAYORES === 1 ? 1  : 0,
+                        'Hemorragia_o_trombosis_en_paciente_anticoagulado' => $riesgo->CIR_HEMORRAGIA_TROMBOSIS === 1 ? 1  : 0,
+                        'Hematoma_por_obstrucción_de_hemovac_en_cirugía_de_mama_con_vaciamiento' => $riesgo->CIR_HEMATOMA_OBSTRUCCION_HEMOVAC === 1 ? 1  : 0,
+                        'Íleo_paralítico_en_pos_quirúrgico_de_colon_por_movilización_tardía' => $riesgo->CIR_ILEO_PARALITICO_POSTQX === 1 ? 1  : 0,
+                        'Linfaedema_post_cirugía_de_mama_con_vaciamiento_axilar' => $riesgo->CIR_LINFAEDEMA_POSTQX === 1 ? 1  : 0,
+                        'Obstrucción_de_sonda_vesical_en_post_quirúrgico_de_prostatectomía_transvesical' => $riesgo->CIR_OBSTRUCCION_SONDA_VESICAL === 1 ? 1  : 0,
+                        'Hematórax_o_colección_residual_por_drenaje_inadecuado_de_pleurovac_en_cirugía_de_tórax' => $riesgo->CIR_HEMOTORAX_POR_DRENAJE === 1 ? 1  : 0,
+                        'Peritonitis_por_dolor_abdominal' => $riesgo->CIR_PERITONITIS_DOLOR_ABDOMINAL === 1 ? 1  : 0,
+                        'Infeccion_de_sitio_quirurgico' => $riesgo->CIR_INFECCION_SITIO_QX === 1 ? 1  : 0, */
+                        'Neutropenia_febril_en_pacientes_con_quimioterapia_hospitalaria' => $riesgo->HOSP_NEUTROPENIA_FEBRIL === "1" ? 1  : 0,
+                        'Mucositis_oral_en_pacientes_con_quimioterapia' => $riesgo->HOSP_MUCOSITIS === "1" ? 1  : 0,
+                        'Progresion_de_las_complicaciones_por_radioterapia' => $riesgo->HOSP_PROGRESION_COMPLICACIONES_RADIOTERAPIA === "1" ? 1  : 0,
+                        'Malnutricion_en_paciente_oncologico' => $riesgo->HOSP_MALNUTRICION === "1" ? 1  : 0,
+                        'Dolor_en_paciente_oncologico' => $riesgo->HOSP_DOLOR === "1" ? 1 : 0,
+                        'Riesgo_de_Suicidio_' => $riesgo->HOSP_SUICIDIO === "1" ? 1  : 0,
+                        'Infeccion_de_sitio_quirurgico' => $riesgo->HOSP_INFECCION_SITIO_QX === "1" ? 1  : 0,
+                        'Hemorragia_o_trombosis_en_paciente_anticoagulado' => $riesgo->HOSP_HEMORRAGIA_TROMBOSIS === "1" ? 1  : 0,
+                        /* 'Retraso_en_atencion_en_pacientes_con_patologia_oncologica_(Ca_de_mama,_Leucemia_en_pediatria)' => $riesgo->HOSP_RETRASO_ATENCION === "1" ? 1  : 0, */
+                        'Retraso_en_atencion_en_pacientes_con_patologia_oncologica' => $riesgo->HOSP_RETRASO_ATENCION === "1" ? 1  : 0,
+                        'Hematoma_por_obstrucción_de_hemovac_en_cirugía_de_mama_con_vaciamiento' => $riesgo->HOSP_HEMATOMA_OBSTRUCCION_HEMOVAC === "1" ? 1  : 0,
+                        'Íleo_paralítico_en_pos_quirúrgico_de_colon_por_movilización_tardía' => $riesgo->HOSP_ILEO_PARALITICO_POSTQX === "1" ? 1  : 0,
+                        'Linfaedema_post_cirugía_de_mama_con_vaciamiento_axilar' => $riesgo->HOSP_LINFAEDEMA_POSTQX === "1" ? 1  : 0,
+                        'Obstrucción_de_sonda_vesical_en_post_quirúrgico_de_prostatectomía_transvesical' => $riesgo->HOSP_OBSTRUCCION_SONDA_VESICAL === "1" ? 1  : 0,
+                        'Hematórax_o_colección_residual_por_drenaje_inadecuado_de_pleurovac_en_cirugía_de_tórax' => $riesgo->HOSP_HEMOTORAX_POR_DRENAJE === "1" ? 1  : 0,
+                        /* 'Peritonitis_por_dolor_abdominal' => $riesgo->URG_PERITONITIS_DOLOR_ABDOMINAL === 1 ? 1  : 0,
+                        'Neutropenia_febril_en_pacientes_con_quimioterapia_hospitalaria' => $riesgo->URG_NEUTROPENIA_FEBRIL === 1 ? 1  : 0,
+                        'Mucositis_oral_en_pacientes_con_quimioterapia' => $riesgo->URG_MUCOSITIS === 1 ? 1  : 0,
+                        'Progresion_de_las_complicaciones_por_radioterapia_' => $riesgo->URG_PROGRESION_COMPLICACIONES_RADIOTERAPIA === 1 ? 1  : 0,
+                        'Malnutricion_en_paciente_oncologico' => $riesgo->URG_MALNUTRICION === 1 ? 1  : 0,
+                        'Dolor_en_paciente_oncologico' => $riesgo->URG_DOLOR === 1 ? 1  : 0,
+                        'Riesgo_de_Suicidio' => $riesgo->URG_SUICIDIO === 1 ? 1  : 0,
+                        'Hemorragia_o_trombosis_en_paciente_anticoagulado' => $riesgo->URG_HEMORRAGIA_TROMBOSIS === 1 ? 1  : 0,
+                        'Falla_ventilatoria_secundaria_en_paciente_con_derrame_pleural' => $riesgo->URG_FALLA_VENTILATORIA_DERRAME_PLEURAL === 1 ? 1  : 0,
+                        'Perforación_intestinal_por_obstruccion_mecanica' => $riesgo->URG_PERFORACION_POR_OBSTRUCCION === 1 ? 1  : 0,
+                        'Sangrado_cerebral_secundario_a_trombocitopenia_severa' => $riesgo->URG_SANGRADO_CEREBRAL === 1 ? 1  : 0,
+                        'Choque_hipovolemico_por_hemorragia_vaginal_en_cancer_de_cervix' => $riesgo->URG_CHOQUE_HIPOVOLEMICO === 1 ? 1  : 0,
+                        'Tromboembolismo_Pulmonar_en_paciente_con_fractura_de_cadera' => $riesgo->URG_TROMBOEMBOLISMO_PULMONAR === 1 ? 1  : 0,
+                        'Lesion_uretral_en_paciente_con_trombocitopenia_post_colocacion_de_sonda_vesical' => $riesgo->URG_LESION_URETRAL === 1 ? 1  : 0,
+                        'Aplasia_prolongada_secundaria_a_acondicionamiento_en_TAMO' => $riesgo->TAMO_APLASIA_PROLONGADA === 1 ? 1  : 0,
+                        'Síndrome_de_la_pega' => $riesgo->TAMO_SINDROME_PEGA === 1 ? 1  : 0,
+                        'Mucositis_severa_secundaria_a_condicionamiento_en_TAMO' => $riesgo->TAMO_MUCOSITIS === 1 ? 1  : 0,
+                        'Falla_en_la_colecta_de_CD34_por_movilización_deficiente' => $riesgo->TAMO_FALLA_COLECTA_CD34 === 1 ? 1  : 0,
+                        'Desarrollo_de_delirium_en_paciente_critico' => $riesgo->TAMO_DELIRIUM_PACIENTE_CRITICO === 1 ? 1  : 0,
+                        'Síndrome_de_desacondicionamiento_físico_en_paciente_critico' => $riesgo->TAMO_SINDROME_DESACONDICIONAMIENTO === 1 ? 1  : 0,
+                        'Sangrado_cerebral_secundario_a_trombocitopenia_severa' => $riesgo->TAMO_SANGRADO_CEREBRAL === 1 ? 1  : 0,
+                        'Falla_respiratoria_por_neumonía' => $riesgo->TAMO_FALLA_RESPIRATORIA_NEUMONIA === 1 ? 1  : 0,
+                        'Sepsis_severa_en_aplasia_medular' => $riesgo->TAMO_SEPSIS_APLASIA_MEDULAR === 1 ? 1  : 0,
+                        'Edema_agudo_de_pulmon_por_sobrecarga_de_volumen' => $riesgo->TAMO_EDEMA_AGUDO_PULMON === 1 ? 1  : 0,
+                        'Reaccion_alergica_a_acondicionamiento_con_melfalan' => $riesgo->TAMO_REACCION_ALERGICA === 1 ? 1  : 0,
+                        'Deshidratación_por_diarrea_y/o_vomito_postquimioterapia_con_alquilantes' => $riesgo->TAMO_DESHIDRATACION_DIARREA === 1 ? 1  : 0, */
+
+                    );
+                }
+
+                if (sizeof($riesgos) < 0) $riesgos = [];
+
+
+                $records[] = [
+
+                    'PatTDoc' => trim($record->TI_DOC),
+                    'PatDoc' => trim($record->NUM_HISTORIA),
+                    'PatBDate' => $record->FECHA_NAC,
+                    'PatAdmDate' => $record->FECHA_INGRESO,
+                    'PatAge' => $record->EDAD,
+                    'PatCompany' => trim($record->CONTRATO),
+                    'PatPavilion' => trim($record->PABELLON),
+                    'PatHabitation' => trim($record->CAMA),
+                    'nameComplete' => trim($record->NOMBRE_COMPLETO),
+                    'medDiagnostics' => $record->ANALISIS,
+                    'treatment' => $record->TRATAMIENTOS,
+                    'pendingAndRecommendations' => $record->DX_MEDICO,
+                    'risks' => $riesgos,
+                    'background' => $antecedentes
+
+                ];
+            }
+
+            if (sizeof($records) < 0) return response()->json([
+                'msg' => 'Empty Bed Array',
+                'status' => 204,
+                'data' => []
+            ]);
+
+            return response()->json([
+                'msg' => 'Bed',
+                'status' => 200,
+                'data' => $records
+            ]);
+
+            //
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    // ============================================================
+    // FUNCTION TO RETURN BEDS BY PAV CODE
+    /**
+     * @OA\Get (
+     *     path="/api/v1/hito/get/pavilion-beds/turn-delivery/{pavCode?}",
+     *     operationId="getBedsOfPavilionByPavName",
+     *     tags={"Hito"},
+     *     summary="getBedsOfPavilionByPavName",
+     *     description="Returns getBedsOfPavilionByPavName",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Parameter (
+     *          name="pavCode?",
+     *          description="Código del Pabellón - Obligatory",
+     *          in="path",
+     *          required=true,
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getBedsOfPavilionByPavName(Request $request, $pavCode = '')
+    {
+
+        try {
+
+            if (!$request->hasHeader('X-Authorization')) return response()->json([
+                'msg' => 'Api token not found in Header, please Check it!',
+                'status' => 500
+            ], 500);
+
+
+            // VALIDACIÓN SI ENCUENTRA USUARIO CON TOKEN EN BD
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) return response()->json([
+                'msg' => 'Unauthorized!',
+                'status' => 401
+            ]);
+
+            if (!$pavCode) return response()->json([
+                'msg' => 'Parameter pavCode Cannot Be Empty',
+                'status' => 400
+            ]);
+
+            //
+
+            $query = DB::connection('sqlsrv_hosvital')
+                ->select("  SELECT  RTRIM(MAEPAB.MPNomP) AS PABELLON,
+                                RTRIM(MAEPAB.MPCodP)  COD_PAB,
+                                RTRIM(MAEPAB1.MPNumC) CAMA,
+                                CASE MPDisp WHEN 1 THEN 'OCUPADA'
+                                            WHEN 0 THEN 'LIBRE'
+                                            WHEN 8 THEN 'MANTENIMIENTO'
+                                            WHEN 9 THEN 'DESINFECCION'
+                                END  ESTADO,
+                                MPUced NUM_HISTORIA,
+                                CAPBAS.MPTDoc TI_DOC,
+                                RTRIM(CAPBAS.MPNomC) NOMBRE_COMPLETO
+                        FROM    MAEPAB1	INNER JOIN	MAEPAB ON	MAEPAB.MPCodP = MAEPAB1.MPCodP
+											    AND MAEPAB.MPActPab <> 'S'
+					                    LEFT JOIN CAPBAS ON		CAPBAS.MPCedu = MPUced
+											    AND CAPBAS.MPTDoc = MAEPAB1.MPUDoc
+                        WHERE   MAEPAB1.MPCodP NOT IN (1, 2, 24, 29, 38)    AND MAEPAB1.MPNumC not in( '', 'OBSRE','ORTOP','PQQX','REA2A','REA2B','REANI','SILL1','SILL2','SILL3',
+																			 'SILL4','SILL5','SILL6','SILLA','SILLB','SILLC','SILLD',
+																			  'SILLE','SILLF','SILLG','VIP-A','VIP-B','VIP-C')
+                                                                            AND MPActCam = 'N'
+                                                                            AND MAEPAB.MPNomP = '$pavCode'
+                        ORDER BY MAEPAB1.MPNumC ASC
+            ");
+
+            if (sizeof($query) < 0) return response()->json([
+                'msg' => 'Empty Main Query',
+                'status' => 204
+            ]);
+
+            $records = [];
+
+            foreach ($query as $record) {
+
+                $records[] = [
+                    'pavName' => $record->PABELLON,
+                    'pavCode' => $record->COD_PAB,
+                    'bedStatus' => $record->ESTADO,
+                    'PatTDoc' => trim($record->TI_DOC),
+                    'PatDoc' => trim($record->NUM_HISTORIA),
+                    'PatHabitation' => trim($record->CAMA),
+                    'nameComplete' => trim($record->NOMBRE_COMPLETO)
+                ];
+            }
+
+            if (sizeof($records) < 0) return response()->json([
+                'msg' => 'Empty Beds Array',
+                'status' => 204,
+                'data' => []
+            ]);
+
+            return response()->json([
+                'msg' => 'Beds',
+                'status' => 200,
+                'data' => $records
+            ]);
+
+
+            //
+        } catch (\Throwable $th) {
+            throw $th;
         }
     }
 }
