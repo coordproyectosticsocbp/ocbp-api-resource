@@ -1793,6 +1793,108 @@ class HitoController extends Controller
 
     // ============================================================
     // FUNCTION TO RETURN BEDS BY PAV CODE
+
+    public function getBedsOfPavilionByPavName(Request $request, $pavCode = '')
+    {
+        try {
+
+            if (!$request->hasHeader('X-Authorization')) return response()->json([
+                'msg' => 'Api token not found in Header, please Check it!',
+                'status' => 500
+            ], 500);
+
+
+            // VALIDACIÓN SI ENCUENTRA USUARIO CON TOKEN EN BD
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) return response()->json([
+                'msg' => 'Unauthorized!',
+                'status' => 401
+            ]);
+
+            if (!$pavCode) return response()->json([
+                'msg' => 'Parameter pavCode Cannot Be Empty',
+                'status' => 400
+            ]);
+
+            // QUERY TO GET ALL PATIENT BY PAVILION CODE
+            $query = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM HITO_BUSQUEDA_PACIENTES_POR_PABELLON_TURN('$pavCode')");
+
+            if (sizeof($query) === 0) return response()->json([
+                'msg' => 'Error al buscar informacion de este pabellon, valide el parametro enviado',
+                'status' => 204
+            ]);
+
+            $records = [];
+
+            foreach ($query as $record) {
+
+                $query_antecedentes = DB::connection('sqlsrv_hosvital')
+                    ->select("SELECT TOP 5 * FROM HITO_ANTECEDENTES('$record->NUM_HISTORIA', '$record->TI_DOC')");
+
+                if (sizeof($query_antecedentes) < 0) return response()->json([
+                    'msg' => 'No se enconto informacion de antencedentes',
+                    'status' => 204
+                ]);
+
+                $antecedentes = [];
+
+                foreach ($query_antecedentes as $antecedente) {
+
+                    $antecedentes[] = array(
+                        'folio' => $antecedente->FOLIO ?: '',
+                        'backDate' => $antecedente->FECHA ?: '',
+                        'backGroup' => $antecedente->GRUPO_ANTECEDENTE ?: '',
+                        'backSubGroup' => $antecedente->SUBGRUPO_ANTECEDENTE ?: '',
+                        'backDesc' => $antecedente->ANTECEDENTES ?: '',
+                    );
+                }
+
+                if (sizeof($antecedentes) < 0) $antecedentes = [];
+
+
+                $riesgos = [];
+
+
+                $records[] = [
+
+                    'PatTDoc' => trim($record->TI_DOC) ? trim($record->TI_DOC) : 'CC',
+                    'PatDoc' => trim($record->NUM_HISTORIA) ? trim($record->NUM_HISTORIA) : '00000000000000000',
+                    'PatBDate' => $record->FECHA_NAC ? $record->FECHA_NAC : '01-01-1200',
+                    'PatAdmDate' => $record->FECHA_INGRESO ? $record->FECHA_INGRESO : '01-01-1200',
+                    'PatAge' => $record->EDAD ? $record->EDAD : '900',
+                    'PatCompany' => trim($record->CONTRATO) ? trim($record->CONTRATO) : 'CONTRATO CAMA VACIA',
+                    'PatPavilion' => trim($record->PABELLON),
+                    'PatHabitation' => trim($record->CAMA),
+                    'nameComplete' => trim($record->NOMBRE_COMPLETO) ? trim($record->NOMBRE_COMPLETO) : 'PACIENTE CAMA VACIA',
+                    'medDiagnostics' => $record->ANALISIS ? $record->ANALISIS : 'ANALISIS CAMA VACIA',
+                    'treatment' => $record->TRATAMIENTOS ? $record->TRATAMIENTOS : 'TRATAMIENTO CAMA VACIA',
+                    'pendingAndRecommendations' => $record->DX_MEDICO ? $record->DX_MEDICO : 'DX CAMA VACIA',
+                    'risks' => $riesgos,
+                    'background' => $antecedentes
+
+                ];
+            }
+
+            if (sizeof($records) < 0) return response()->json([
+                'msg' => 'Hubo un Error, Array de camas vacio',
+                'status' => 204,
+                'data' => []
+            ]);
+
+            return response()->json([
+                'msg' => 'Beds',
+                'status' => 200,
+                'data' => $records
+            ]);
+
+            //
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
     /**
      * @OA\Get (
      *     path="/api/v1/hito/get/pavilion-beds/turn-delivery/{pavCode?}",
@@ -1835,7 +1937,7 @@ class HitoController extends Controller
      *      )
      * )
      */
-    public function getBedsOfPavilionByPavName(Request $request, $pavCode = '')
+    /* public function getBedsOfPavilionByPavName(Request $request, $pavCode = '')
     {
 
         try {
@@ -1923,5 +2025,5 @@ class HitoController extends Controller
         } catch (\Throwable $th) {
             throw $th;
         }
-    }
+    } */
 }
