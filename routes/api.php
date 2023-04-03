@@ -699,12 +699,6 @@ Route::group([
     );
 
 
-
-
-
-
-
-
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* DOCTOR CLINIC */
@@ -792,6 +786,50 @@ Route::group([
             'getHalconReporteGeneralCasos'
         ]
     );
+
+    /* INDICADORES - URGENCIAS */
+
+    Route::get(
+        ('/indicadores/get/reentryurgency'),
+        [
+            \App\Http\Controllers\TorreControl\Urgencias::class,
+            'getReEntryUrgency'
+        ]
+    );
+    Route::get(
+        ('/indicadores/get/triagecount/{fechaInicial?}/{fechaFinal?}'),
+        [
+            \App\Http\Controllers\TorreControl\Urgencias::class,
+            'getTriageCount'
+        ]
+    );
+
+    /*INDICADORES - CIRUGIAS */
+
+    Route::get(
+        ('/indicadores/get/cirugias'),
+        [
+            \App\Http\Controllers\TorreControl\Cirugias::class,
+            'getCirugias'
+        ]
+    );
+
+    Route::get(
+        ('/indicadores/get/cirugyPatientMortality'),
+        [
+            \App\Http\Controllers\TorreControl\Cirugias::class,
+            'patientMortality'
+        ]
+    );
+
+    Route::get(
+        ('/indicadores/get/cirugyEficiency'),
+        [
+            \App\Http\Controllers\TorreControl\Cirugias::class,
+            'getsurgeryEfficiency'
+        ]
+    );
+
     /* INDICADORES SEGURIDAD DEL PACIENTE */
     Route::get(
         ('/indicadores/get/SeguridadPaciente/TrazabilidadEgresos/{fechaInicial?}/{fechaActual?}'),
