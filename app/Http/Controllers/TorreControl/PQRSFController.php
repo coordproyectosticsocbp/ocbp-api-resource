@@ -13,10 +13,7 @@ use function Ramsey\Uuid\v1;
 class PQRSFController extends Controller
 {
 
-    public function __construct()
-    {
-        $this->middleware('auth.apikey');
-    }
+    
 
 
     /**
@@ -803,17 +800,19 @@ class PQRSFController extends Controller
 
     public function getPrioridadCasos(Request $request)
     {
-        if ($request->hasHeader('X-Authorization')) {
+        //if ($request->hasHeader('X-Authorization')) {
 
-            $token = $request->header('X-Authorization');
-            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+            //$token = $request->header('X-Authorization');
+            //$user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
 
-            if (count($user) < 0) return response()->json([
-                'msg' => 'Unauthorized',
-                'status' => 401
-            ]);
+            //if (count($user) < 0) return response()->json([
+              //  'msg' => 'Unauthorized',
+                //'status' => 401
+            //]);
             $fechaInicial=date("Y").'-01-01';
             $fechaActual = date('Y-m-d');
+            $fechamenos1=date("Y-m-d",strtotime($fechaActual."- 1 days"));
+            //return $fechamenos1;
             //$idType='5';
             //if (!$fechaInicial || !$fechaFinal) {
 
@@ -884,7 +883,7 @@ class PQRSFController extends Controller
                 on c.id = cr."categoryId"
                 left join rights
                 on rights.id = cr."rightId"
-                where i."type" != 3 and i."type" != 4 and i."createdAt" BETWEEN ' . "'" . $fechaInicial . "'" . ' and ' . "'" . $fechaActual . "'" . '
+                where i."type" != 3 and i."type" != 4 and i."createdAt" BETWEEN ' . "'" . $fechamenos1 . "'" . ' and ' . "'" . $fechaActual . "'" . '
 
                     ');
 
@@ -896,6 +895,7 @@ class PQRSFController extends Controller
 
                 $ahora = new DateTime(date("Y-m-d"));
 
+                $resultado=[];
 
                 foreach ($query as $result) {
 
@@ -968,7 +968,7 @@ class PQRSFController extends Controller
             } catch (\Throwable $th) {
                 throw $th;
             }
-        }
+        //}
     }
     /**
      * @OA\Get (

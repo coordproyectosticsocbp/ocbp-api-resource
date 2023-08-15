@@ -11,8 +11,8 @@ class Urgencias extends Controller
 {
     public function getTriageCount(Request $request)
     {
-
-        if ($request->hasHeader('X-Authorization')) {
+       
+        //if ($request->hasHeader('X-Authorization')) {
             /*
             if ($fechaInicial == '' || $fechaActual == '') {
 
@@ -30,26 +30,27 @@ class Urgencias extends Controller
             $differenceFormat = '%a';
 
             */
-            $fechaInicial=date("Y-m").'-01';
+            $fechaInicial=date("Y-m").'-1';
             $fechaActual = date('Y-m-d');
+            $hora = date("d-m-Y h:i:s");
 
-            $token = $request->header('X-Authorization');
-            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+            //$token = $request->header('X-Authorization');
+            //$user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
 
-            if (count($user) < 0) return response()->json([
-                'msg' => 'Unauthorizedd',
-                'status' => 401
-            ]);
+            //if (count($user) < 0) return response()->json([
+              //  'msg' => 'Unauthorizedd',
+                //'status' => 401
+            //]);
             /*
             if ($contador->format($differenceFormat) > 3) return response()->json([
                 'msg' => 'The interval between dates should not be greater than 3 days',
                 'status' => 401
             ]);
             */
-
+            
             try {
 
-
+                
                 $query = DB::connection('sqlsrv_hosvital')
                     ->select("
                     SELECT	HCCOM1.HISCKEY DOCUMENTO
@@ -76,6 +77,7 @@ class Urgencias extends Controller
                 WHERE	CAST(HCCOM1.HisFhorAt AS DATE) between '".$fechaInicial."' AND '".$fechaActual."'
 		        AND HCCOM1.HISCLTR <> 0
                 ORDER BY HCCOM1.HISCKEY, INGRESOS.IngCsc ASC
+                
                     ");
 
                 //return $query;
@@ -96,7 +98,8 @@ class Urgencias extends Controller
                     'Contrato' => trim($result->CONTRATO),
                     'Triage' => intval($result->CLASIFICACION_TRIAGE),
                     'FechaDeAtencion' => $result->FECHA_DE_ATENCION,
-                    'Diagnostico' => trim($result->DIAGNOSTICO)
+                    'Diagnostico' => trim($result->DIAGNOSTICO),
+                    'horaActual'=>$hora
                 ];
 
 
@@ -118,11 +121,11 @@ class Urgencias extends Controller
             } catch (\Throwable $th) {
                 throw $th;
             }
-        }
+        //}
     }
     public function getReEntryUrgency(Request $request)
     {
-        if ($request->hasHeader('X-Authorization')) {
+        //if ($request->hasHeader('X-Authorization')) {
             /*
             if ($fechaInicial == ''
              //|| $fechaActual == ''
@@ -135,8 +138,8 @@ class Urgencias extends Controller
                     ]);
             }
             */
-            //$fechaInicial = date('Y-m-d');
-            $fechaInicial='2023-03-19';
+            $fechaInicial = date('Y-m-d');
+            //$fechaInicial='2023-04-11';
 
             $fechaAtras= date("Y-m-d",strtotime($fechaInicial."- 4 days")); 
             $fechaAnteriorAlActual= date("Y-m-d",strtotime($fechaInicial."- 1 days")); 
@@ -185,10 +188,6 @@ class Urgencias extends Controller
 		            AND HCCOM1.HISCLTR <> 0
                     ORDER BY HCCOM1.HISCKEY, INGRESOS.IngCsc ASC
                     ");
-
-                //return $query;
-
-                
 
                 $sw=true;
 
@@ -262,7 +261,7 @@ class Urgencias extends Controller
             } catch (\Throwable $th) {
                 throw $th;
             }
-        }
+        //}
     }
     
 }

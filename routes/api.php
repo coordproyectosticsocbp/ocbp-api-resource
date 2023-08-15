@@ -167,6 +167,27 @@ Route::group([
         ]
     ); */
 
+    /** ------------------------------------------------------------------------------------------------------ */
+
+    /** HITO AUDITORÍA */
+    ///api/v1/hito-auditoria/get/occupation
+    Route::get(
+        '/hito-auditoria/get/occupation',
+        [
+            \App\Http\Controllers\HitoAuditoriaController::class,
+            'getCenso'
+        ]
+    );
+
+    Route::get(
+        '/hito-auditoria/get/patient/{patientdoc?}/type/{patientdoctype?}/adm/{admNum?}',
+        [
+            \App\Http\Controllers\HitoAuditoriaController::class,
+            'getPatientInfoDetail'
+        ]
+    );
+
+
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* AGOTADOS */
@@ -772,13 +793,7 @@ Route::group([
             'getFelicitacionesVsQuejasPorArea'
         ]
     );
-    Route::get(
-        ('/indicadores/get/prioridadcasos/{fechaInicial?}/{fechaFinal?}'),
-        [
-            \App\Http\Controllers\TorreControl\PQRSFController::class,
-            'getPrioridadCasos'
-        ]
-    );
+
     Route::get(
         ('/indicadores/get/halconreportegeneralcasos/{fechaInicial?}/{fechaFinal?}'),
         [
@@ -787,7 +802,33 @@ Route::group([
         ]
     );
 
-    /* INDICADORES - URGENCIAS */
+
+    /* INDICADORES SEGURIDAD DEL PACIENTE */
+    Route::get(
+        ('/indicadores/get/SeguridadPaciente/TrazabilidadEgresos/{fechaInicial?}/{fechaActual?}'),
+        [
+            \App\Http\Controllers\TorreControl\SeguridadDelPacienteController::class,
+            'getTrazabilidadEgresos'
+        ]
+    );
+});
+
+
+//INDICADORES TORRE DE CONTROL
+
+
+Route::group([
+    'prefix' => 'v2'
+], function () {
+
+    /* URGENCIAS */
+    Route::get(
+        ('/indicadores/get/triagecount'),
+        [
+            \App\Http\Controllers\TorreControl\Urgencias::class,
+            'getTriageCount'
+        ]
+    );
 
     Route::get(
         ('/indicadores/get/reentryurgency'),
@@ -796,14 +837,6 @@ Route::group([
             'getReEntryUrgency'
         ]
     );
-    Route::get(
-        ('/indicadores/get/triagecount/{fechaInicial?}/{fechaFinal?}'),
-        [
-            \App\Http\Controllers\TorreControl\Urgencias::class,
-            'getTriageCount'
-        ]
-    );
-
     /*INDICADORES - CIRUGIAS */
 
     Route::get(
@@ -829,27 +862,20 @@ Route::group([
             'getsurgeryEfficiency'
         ]
     );
-
-    /* INDICADORES SEGURIDAD DEL PACIENTE */
     Route::get(
-        ('/indicadores/get/SeguridadPaciente/TrazabilidadEgresos/{fechaInicial?}/{fechaActual?}'),
+        ('/indicadores/get/cirugyOportunity'),
         [
-            \App\Http\Controllers\TorreControl\SeguridadDelPacienteController::class,
-            'getTrazabilidadEgresos'
+            \App\Http\Controllers\TorreControl\Cirugias::class,
+            'getOportunity'
+        ]
+    );
+    /* ------------------------------------------------------------------------------- */
+    /* INDICADORES PQRSF */
+    Route::get(
+        ('/indicadores/get/prioridadcasos/{fechaInicial?}/{fechaFinal?}'),
+        [
+            \App\Http\Controllers\TorreControl\PQRSFController::class,
+            'getPrioridadCasos'
         ]
     );
 });
-
-
-/*Route::group([
-    'prefix' => 'v2'
-], function () {
-
-    Route::get('/hub/hs/pavilions',
-        [
-            \App\Http\Controllers\HitoController::class,
-            'getServicios'
-        ]
-    );
-
-});*/

@@ -88,7 +88,7 @@ class EspartaController extends Controller
                         foreach ($query as $item) {
 
                             $query2 = DB::connection('sqlsrv_hosvital')
-                                ->select("SELECT * FROM ESPARTA_INFORMACION_FOLIOS_PACIENTES($item->DOCUMENTO, '$item->TIP_DOC')");
+                                ->select("SELECT * FROM ESPARTA_INFORMACION_FOLIOS_PACIENTES('$item->DOCUMENTO', '$item->TIP_DOC')");
 
                             if (sizeOf($query2) > 0) {
 
