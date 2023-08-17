@@ -303,13 +303,13 @@ class HitoAuditoriaController extends Controller
                 'status' => 204
             ], 204);
 
-            $patient = null;
+            $patient = [];
 
             foreach ($queryPatientInfoDetail as $item) {
 
                 if ($item->FECHA_EGRESO === '1753-01-01 00:00:00.000') $item->FECHA_EGRESO = null;
 
-                $patient = [
+                $patient[] = [
                     'patient_doc' => trim($item->NUM_HISTORIA),
                     'patient_doctype' => trim($item->TI_DOC),
                     'patient_firstName' => trim($item->NOMBRE_1),
@@ -332,7 +332,17 @@ class HitoAuditoriaController extends Controller
                     'main_diagnosis_description' => trim($item->DX_PRINCIPAL),
                     'medical_diagnosis' => trim($item->DX_MEDICO_ANALISIS),
                     'consultation_reason' => trim($item->MOTIVO_CONSULTA),
-                    'real_stay' => (int) $item->ESTANCIA_REAL
+                    'real_stay' => (int) $item->ESTANCIA_REAL,
+                    'tomografias' => $this->getAllTomografias($patientDoc, $patientDoctype, $admNum),
+                    'gamagrafias' => $this->getAllGamagrafias($patientDoc, $patientDoctype, $admNum),
+                    'resonancias' => $this->getAllResonancias($patientDoc, $patientDoctype, $admNum),
+                    'hemodinamias' => $this->getAllHemodinamia($patientDoc, $patientDoctype, $admNum),
+                    'pet_tc' => $this->getAllPetScans($patientDoc, $patientDoctype, $admNum),
+                    'interconsultas' => $this->getAllInterconsultas($patientDoc, $patientDoctype, $admNum),
+                    'quimioterapias' => $this->getAllQuimioterapias($patientDoc, $patientDoctype, $admNum),
+                    'radioterapias' => $this->getAllRadioterapias($patientDoc, $patientDoctype, $admNum),
+                    'ecocardiogramas' => $this->getAllEcocardiogramas($patientDoc, $patientDoctype, $admNum),
+                    //'pet_Scan' => $this->getAllPetScans($patientDoc, $patientDoctype, $admNum),
                 ];
             }
 
@@ -355,4 +365,338 @@ class HitoAuditoriaController extends Controller
             throw $e;
         }
     }
+
+    private function getAllPetScans($patientDoc = null, $patientDoctype = null, $admNum = null)
+    {
+
+        try {
+
+            $queryPetScan = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM BONNACOMMUNITY_PROCEDIMIENTOS_PET_TC('$patientDoc', '$patientDoctype', $admNum)");
+
+            if (count($queryPetScan) < 0) return [];
+
+            $petScans = [];
+
+            foreach ($queryPetScan as $pet) {
+                $petScans[] = [
+                    'admission_num' => (int) $pet->INGRESO,
+                    'admission_folio' => (int) $pet->FOLIO,
+                    'procedure_code' => trim($pet->CODIGO_PROCEDIMIENTO),
+                    'procedure_description' => trim($pet->DESCRIPCION_PROCEDIMIENTO),
+                    'order_date' => $pet->FECHA_ORDEN,
+                    'order_application_date' => $pet->FECHA_APLICACION,
+                    'service_code' => trim($pet->CODIGO_SERVICIO),
+                    'service_description' => trim($pet->CONCEPTO_SERVICIO),
+                    'order_status' => trim($pet->ESTADO_PROC),
+                ];
+            }
+
+            if (count($petScans) < 0) return [];
+
+            return $petScans;
+
+            //
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+    }
+
+
+    private function getAllTomografias($patientDoc = null, $patientDoctype = null, $admNum = null)
+    {
+
+        try {
+
+            $queryTomografia = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM BONNACOMMUNITY_PROCEDIMIENTOS_TOMOGRAFIAS('$patientDoc', '$patientDoctype', $admNum)");
+
+            if (count($queryTomografia) < 0) return [];
+
+            $tomografias = [];
+
+            foreach ($queryTomografia as $tomografia) {
+                $tomografias[] = [
+                    'admission_num' => (int) $tomografia->INGRESO,
+                    'admission_folio' => (int) $tomografia->FOLIO,
+                    'procedure_code' => trim($tomografia->CODIGO_PROCEDIMIENTO),
+                    'procedure_description' => trim($tomografia->DESCRIPCION_PROCEDIMIENTO),
+                    'order_date' => $tomografia->FECHA_ORDEN,
+                    'order_application_date' => $tomografia->FECHA_APLICACION,
+                    'service_code' => trim($tomografia->CODIGO_SERVICIO),
+                    'service_description' => trim($tomografia->CONCEPTO_SERVICIO),
+                    'order_status' => trim($tomografia->ESTADO_PROC),
+                ];
+            }
+
+            if (count($tomografias) < 0) return [];
+
+            return $tomografias;
+
+            //
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+    }
+
+
+    private function getAllGamagrafias($patientDoc = null, $patientDoctype = null, $admNum = null)
+    {
+
+        try {
+
+            $queryGamagrafia = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM BONNACOMMUNITY_PROCEDIMIENTOS_GAMAGRAFIA('$patientDoc', '$patientDoctype', $admNum)");
+
+            if (count($queryGamagrafia) < 0) return [];
+
+            $gamagrafias = [];
+
+            foreach ($queryGamagrafia as $gamagrafia) {
+                $gamagrafias[] = [
+                    'admission_num' => (int) $gamagrafia->INGRESO,
+                    'admission_folio' => (int) $gamagrafia->FOLIO,
+                    'procedure_code' => trim($gamagrafia->CODIGO_PROCEDIMIENTO),
+                    'procedure_description' => trim($gamagrafia->DESCRIPCION_PROCEDIMIENTO),
+                    'order_date' => $gamagrafia->FECHA_ORDEN,
+                    'order_application_date' => $gamagrafia->FECHA_APLICACION,
+                    'service_code' => trim($gamagrafia->CODIGO_SERVICIO),
+                    'service_description' => trim($gamagrafia->CONCEPTO_SERVICIO),
+                    'order_status' => trim($gamagrafia->ESTADO_PROC),
+                ];
+            }
+
+            if (count($gamagrafias) < 0) return [];
+
+            return $gamagrafias;
+
+            //
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+    }
+
+
+    private function getAllResonancias($patientDoc = null, $patientDoctype = null, $admNum = null)
+    {
+
+        try {
+
+            $queryResonancia = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM BONNACOMMUNITY_PROCEDIMIENTOS_RESONANCIAS('$patientDoc', '$patientDoctype', $admNum)");
+
+            if (count($queryResonancia) < 0) return [];
+
+            $resonancias = [];
+
+            foreach ($queryResonancia as $resonancia) {
+                $resonancias[] = [
+                    'admission_num' => (int) $resonancia->INGRESO,
+                    'admission_folio' => (int) $resonancia->FOLIO,
+                    'procedure_code' => trim($resonancia->CODIGO_PROCEDIMIENTO),
+                    'procedure_description' => trim($resonancia->DESCRIPCION_PROCEDIMIENTO),
+                    'order_date' => $resonancia->FECHA_ORDEN,
+                    'order_application_date' => $resonancia->FECHA_APLICACION,
+                    'service_code' => trim($resonancia->CODIGO_SERVICIO),
+                    'service_description' => trim($resonancia->CONCEPTO_SERVICIO),
+                    'order_status' => trim($resonancia->ESTADO_PROC),
+                ];
+            }
+
+            if (count($resonancias) < 0) return [];
+
+            return $resonancias;
+
+            //
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+    }
+
+
+    private function getAllHemodinamia($patientDoc = null, $patientDoctype = null, $admNum = null)
+    {
+
+        try {
+
+            $queryHemodinamia = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM BONNACOMMUNITY_PROCEDIMIENTOS_HEMODINAMIA('$patientDoc', '$patientDoctype', $admNum)");
+
+            if (count($queryHemodinamia) < 0) return [];
+
+            $hemodinamias = [];
+
+            foreach ($queryHemodinamia as $hemodinamia) {
+                $hemodinamias[] = [
+                    'admission_num' => (int) $hemodinamia->INGRESO,
+                    'admission_folio' => (int) $hemodinamia->FOLIO,
+                    'procedure_code' => trim($hemodinamia->CODIGO_PROCEDIMIENTO),
+                    'procedure_description' => trim($hemodinamia->DESCRIPCION_PROCEDIMIENTO),
+                    'order_date' => $hemodinamia->FECHA_ORDEN,
+                    'order_application_date' => $hemodinamia->FECHA_APLICACION,
+                    'service_code' => trim($hemodinamia->CODIGO_SERVICIO),
+                    'service_description' => trim($hemodinamia->CONCEPTO_SERVICIO),
+                    'order_status' => trim($hemodinamia->ESTADO_PROC),
+                ];
+            }
+
+            if (count($hemodinamias) < 0) return [];
+
+            return $hemodinamias;
+
+            //
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+    }
+
+
+    private function getAllInterconsultas($patientDoc = null, $patientDoctype = null, $admNum = null)
+    {
+
+        try {
+
+            $queryInterconsultas = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM HITO_AUDITORIA_INTERCONSULTAS('$patientDoc', '$patientDoctype', $admNum)");
+
+            if (count($queryInterconsultas) < 0) return [];
+
+            $interconsultas = [];
+
+            foreach ($queryInterconsultas as $interconsulta) {
+                $interconsultas[] = [
+                    'admission_num' => (int) $interconsulta->INGRESO,
+                    'admission_folio' => (int) $interconsulta->FOLIO,
+                    'speciality_code' => trim($interconsulta->COD_ESPECIALIDAD),
+                    'speciality_description' => trim($interconsulta->ESPECIALIDAD),
+                    'order_date' => $interconsulta->FECHA_ORDEN,
+                    'order_application_date' => $interconsulta->FECHA_RESPUESTA,
+                    'order_status' => trim($interconsulta->ESTADO),
+                ];
+            }
+
+            if (count($interconsultas) < 0) return [];
+
+            return $interconsultas;
+
+            //
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+    }
+
+
+    private function getAllQuimioterapias($patientDoc = null, $patientDoctype = null, $admNum = null)
+    {
+
+        try {
+
+            $queryQuimioterapias = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM BONNACOMMUNITY_PROCEDIMIENTOS_QUIMIOTERAPIAS('$patientDoc', '$patientDoctype', $admNum)");
+
+            if (count($queryQuimioterapias) < 0) return [];
+
+            $quimioterapias = [];
+
+            foreach ($queryQuimioterapias as $quimioterapia) {
+                $quimioterapias[] = [
+                    'admission_num' => (int) $quimioterapia->INGRESO,
+                    'admission_folio' => (int) $quimioterapia->FOLIO,
+                    'procedure_code' => trim($quimioterapia->CODIGO_PROCEDIMIENTO),
+                    'procedure_description' => trim($quimioterapia->DESCRIPCION_PROCEDIMIENTO),
+                    'order_date' => $quimioterapia->FECHA_ORDEN,
+                    'order_application_date' => $quimioterapia->FECHA_APLICACION,
+                    'service_code' => trim($quimioterapia->CODIGO_SERVICIO),
+                    'service_description' => trim($quimioterapia->CONCEPTO_SERVICIO),
+                    'order_status' => trim($quimioterapia->ESTADO_PROC),
+                ];
+            }
+
+            if (count($quimioterapias) < 0) return [];
+
+            return $quimioterapias;
+
+            //
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+    }
+
+
+    private function getAllRadioterapias($patientDoc = null, $patientDoctype = null, $admNum = null)
+    {
+
+        try {
+
+            $queryRadioterapias = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM BONNACOMMUNITY_PROCEDIMIENTOS_RADIOGRAFIAS('$patientDoc', '$patientDoctype', $admNum)");
+
+            if (count($queryRadioterapias) < 0) return [];
+
+            $radioterapias = [];
+
+            foreach ($queryRadioterapias as $radioterapia) {
+                $radioterapias[] = [
+                    'admission_num' => (int) $radioterapia->INGRESO,
+                    'admission_folio' => (int) $radioterapia->FOLIO,
+                    'procedure_code' => trim($radioterapia->CODIGO_PROCEDIMIENTO),
+                    'procedure_description' => trim($radioterapia->DESCRIPCION_PROCEDIMIENTO),
+                    'order_date' => $radioterapia->FECHA_ORDEN,
+                    'order_application_date' => $radioterapia->FECHA_APLICACION,
+                    'service_code' => trim($radioterapia->CODIGO_SERVICIO),
+                    'service_description' => trim($radioterapia->CONCEPTO_SERVICIO),
+                    'order_status' => trim($radioterapia->ESTADO_PROC),
+                ];
+            }
+
+            if (count($radioterapias) < 0) return [];
+
+            return $radioterapias;
+
+            //
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+    }
+
+    private function getAllEcocardiogramas($patientDoc = null, $patientDoctype = null, $admNum = null)
+    {
+
+        try {
+
+            $queryEcocardiogramas = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM BONNACOMMUNITY_PROCEDIMIENTOS_RADIOGRAFIAS('$patientDoc', '$patientDoctype', $admNum)");
+
+            if (count($queryEcocardiogramas) < 0) return [];
+
+            $ecocardiogramas = [];
+
+            foreach ($queryEcocardiogramas as $eco) {
+
+                if ($eco->FECHA_APLICACION === '1753-01-01 00:00:00.000') $eco->FECHA_APLICACION = null;
+
+                $ecocardiogramas[] = [
+                    'admission_num' => (int) $eco->INGRESO,
+                    'admission_folio' => (int) $eco->FOLIO,
+                    'procedure_code' => trim($eco->CODIGO_PROCEDIMIENTO),
+                    'procedure_description' => trim($eco->DESCRIPCION_PROCEDIMIENTO),
+                    'order_date' => $eco->FECHA_ORDEN,
+                    'order_application_date' => $eco->FECHA_APLICACION,
+                    'service_code' => trim($eco->CODIGO_SERVICIO),
+                    'service_description' => trim($eco->CONCEPTO_SERVICIO),
+                    'order_status' => trim($eco->ESTADO_PROC),
+                ];
+            }
+
+            if (count($ecocardiogramas) < 0) return [];
+
+            return $ecocardiogramas;
+
+            //
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+    }
+
+    //
 }
