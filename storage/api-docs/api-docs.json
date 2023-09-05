@@ -1736,7 +1736,7 @@
                 ]
             }
         },
-        "/api/v1/hito-auditoria/get/patient/{patientdoc?}/type/{patientdoctype?}/{admNum?}": {
+        "/api/v1/hito-auditoria/get/patient/{patientdoc?}/type/{patientdoctype?}/adm/{admnum?}": {
             "get": {
                 "tags": [
                     "HitoAuditoria"
@@ -1746,7 +1746,7 @@
                 "operationId": "getPatientInfoDetail",
                 "parameters": [
                     {
-                        "name": "patientDoc?",
+                        "name": "patientdoc?",
                         "in": "path",
                         "description": "Número de Documento - Obligatory",
                         "required": true,
@@ -1755,7 +1755,7 @@
                         }
                     },
                     {
-                        "name": "patientDoctype?",
+                        "name": "patientdoctype?",
                         "in": "path",
                         "description": "Tipo de Documento - Obligatory - RC - TI - CC - CE - NIT - MS - PA - PE - AS - SC",
                         "required": true,
@@ -1764,7 +1764,7 @@
                         }
                     },
                     {
-                        "name": "admNum?",
+                        "name": "admnum?",
                         "in": "path",
                         "description": "Consecutivo de Ingreso - Obligatory",
                         "required": true,

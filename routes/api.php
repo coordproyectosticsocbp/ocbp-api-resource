@@ -180,7 +180,7 @@ Route::group([
     );
 
     Route::get(
-        '/hito-auditoria/get/patient/{patientdoc?}/type/{patientdoctype?}/adm/{admNum?}',
+        '/hito-auditoria/get/patient/{patientdoc?}/type/{patientdoctype?}/adm/{admnum?}',
         [
             \App\Http\Controllers\HitoAuditoriaController::class,
             'getPatientInfoDetail'
@@ -811,11 +811,24 @@ Route::group([
             'getTrazabilidadEgresos'
         ]
     );
+
+    /* RONDAS */
+
+    Route::get(
+        ('/rondas/get/informacionempleado/{cedula?}'),
+        [
+            \App\Http\Controllers\RondasController::class,
+            'getInformacionEmpleados'
+        ]
+    );
 });
 
 
-//INDICADORES TORRE DE CONTROL
 
+
+
+
+//INDICADORES TORRE DE CONTROL
 
 Route::group([
     'prefix' => 'v2'

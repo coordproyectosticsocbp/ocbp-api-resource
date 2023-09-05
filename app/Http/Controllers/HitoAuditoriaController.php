@@ -138,7 +138,7 @@ class HitoAuditoriaController extends Controller
                                 //'patient_eps_nit' => $cat->EPS_NIT,
                                 //'patient_eps' => $cat->EPS,
                                 'contract' => $cat->CONTRATO,
-                                'attention_type' => $cat->TIPO_CONTRATO,
+                                'contract_type' => $cat->TIPO_CONTRATO,
                                 'admission_date' => $cat->FECHA_INGRESO,
                                 'admission_num' => (int) $cat->INGRESO,
                                 //'service_admission_date' => $cat->FECHA_INGRESO_SERVICIO,
@@ -188,7 +188,7 @@ class HitoAuditoriaController extends Controller
 
     /**
      * @OA\Get (
-     *     path="/api/v1/hito-auditoria/get/patient/{patientdoc?}/type/{patientdoctype?}/adm/{admNum?}",
+     *     path="/api/v1/hito-auditoria/get/patient/{patientdoc?}/type/{patientdoctype?}/adm/{admnum?}",
      *     operationId="getPatientInfoDetail",
      *     tags={"HitoAuditoria"},
      *     summary="getPatientInfoDetail",
@@ -202,7 +202,7 @@ class HitoAuditoriaController extends Controller
      *          }
      *     },
      *     @OA\Parameter (
-     *          name="patientDoc?",
+     *          name="patientdoc?",
      *          description="Número de Documento - Obligatory",
      *          in="path",
      *          required=true,
@@ -211,7 +211,7 @@ class HitoAuditoriaController extends Controller
      *          )
      *     ),
      *     @OA\Parameter (
-     *          name="patientDoctype?",
+     *          name="patientdoctype?",
      *          description="Tipo de Documento - Obligatory - RC - TI - CC - CE - NIT - MS - PA - PE - AS - SC",
      *          in="path",
      *          required=true,
@@ -220,7 +220,7 @@ class HitoAuditoriaController extends Controller
      *          )
      *     ),
      *     @OA\Parameter (
-     *          name="admNum?",
+     *          name="admnum?",
      *          description="Consecutivo de Ingreso - Obligatory",
      *          in="path",
      *          required=true,
@@ -324,15 +324,16 @@ class HitoAuditoriaController extends Controller
                     'admission_num' => (int) $item->INGRESO,
                     'service_admission_date' => $item->FECHA_INGRESO_SERVICIO,
                     'contract' => trim($item->CONTRATO),
-                    'attention_type' => trim($item->TIPO_CONTRATO),
+                    'contract_type' => trim($item->TIPO_CONTRATO),
                     'pavCode' => (int) $item->COD_PAB,
                     'pavName' => trim($item->PABELLON),
                     'habitation' => trim($item->CAMA),
                     'main_diagnosis_code' => trim($item->DX_PRINCIPAL_CODE),
                     'main_diagnosis_description' => trim($item->DX_PRINCIPAL),
-                    'medical_diagnosis' => trim($item->DX_MEDICO_ANALISIS),
+                    'related_diagnoses' => trim($item->DX_MEDICO_ANALISIS),
                     'consultation_reason' => trim($item->MOTIVO_CONSULTA),
                     'real_stay' => (int) $item->ESTANCIA_REAL,
+                    'qx_procedures' => $this->getAllQxProcedures($patientDoc, $patientDoctype, $admNum),
                     'tomografias' => $this->getAllTomografias($patientDoc, $patientDoctype, $admNum),
                     'gamagrafias' => $this->getAllGamagrafias($patientDoc, $patientDoctype, $admNum),
                     'resonancias' => $this->getAllResonancias($patientDoc, $patientDoctype, $admNum),
@@ -361,6 +362,42 @@ class HitoAuditoriaController extends Controller
 
             //
 
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+    }
+
+    private function getAllQxProcedures($patientDoc = null, $patientDoctype = null, $admNum = null)
+    {
+
+        try {
+
+            $queryPetScan = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM BONNACOMMUNITY_PROCEDIMIENTOS_QX('$patientDoc', '$patientDoctype', $admNum)");
+
+            if (count($queryPetScan) < 0) return [];
+
+            $petScans = [];
+
+            foreach ($queryPetScan as $pet) {
+                $petScans[] = [
+                    'admission_num' => (int) $pet->INGRESO,
+                    'admission_folio' => (int) $pet->FOLIO,
+                    'procedure_code' => trim($pet->CODIGO_PROCEDIMIENTO),
+                    'procedure_description' => trim($pet->DESCRIPCION_PROCEDIMIENTO),
+                    'order_date' => $pet->FECHA_ORDEN,
+                    'order_application_date' => $pet->FECHA_APLICACION ? $pet->FECHA_APLICACION : null,
+                    'service_code' => trim($pet->CODIGO_SERVICIO),
+                    'service_description' => trim($pet->CONCEPTO_SERVICIO),
+                    'order_status' => trim($pet->ESTADO_PROC),
+                ];
+            }
+
+            if (count($petScans) < 0) return [];
+
+            return $petScans;
+
+            //
         } catch (\Throwable $e) {
             throw $e;
         }
@@ -665,7 +702,7 @@ class HitoAuditoriaController extends Controller
         try {
 
             $queryEcocardiogramas = DB::connection('sqlsrv_hosvital')
-                ->select("SELECT * FROM BONNACOMMUNITY_PROCEDIMIENTOS_RADIOGRAFIAS('$patientDoc', '$patientDoctype', $admNum)");
+                ->select("SELECT * FROM BONNACOMMUNITY_PROCEDIMIENTOS_ECOCARDIOGRAMA('$patientDoc', '$patientDoctype', $admNum)");
 
             if (count($queryEcocardiogramas) < 0) return [];
 
