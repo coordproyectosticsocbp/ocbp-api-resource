@@ -386,6 +386,7 @@ class HitoAuditoriaController extends Controller
                     'procedure_code' => trim($pet->CODIGO_PROCEDIMIENTO),
                     'procedure_description' => trim($pet->DESCRIPCION_PROCEDIMIENTO),
                     'order_date' => $pet->FECHA_ORDEN,
+                    'schedule_date' => $pet->FECHA_PROGRAMACION,
                     'order_application_date' => $pet->FECHA_APLICACION ? $pet->FECHA_APLICACION : null,
                     'service_code' => trim($pet->CODIGO_SERVICIO),
                     'service_description' => trim($pet->CONCEPTO_SERVICIO),

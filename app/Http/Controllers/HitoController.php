@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use COM;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -1610,7 +1609,7 @@ class HitoController extends Controller
 
             // QUERY TO GET ALL PATIENT BY PAVILION CODE
             $query = DB::connection('sqlsrv_hosvital')
-                ->select("SELECT * FROM HITO_BUSQUEDA_PACIENTES_POR_PABELLON('$bedCode')");
+                ->select("SELECT * FROM HITO_BUSQUEDA_PACIENTES_POR_CODIGO_HABITACION('$bedCode')");
 
             if (sizeof($query) < 0 || !$query[0]->NOMBRE_COMPLETO) return response()->json([
                 'msg' => 'Empty Main Query',
@@ -1644,115 +1643,6 @@ class HitoController extends Controller
 
                 if (sizeof($antecedentes) < 0) $antecedentes = [];
 
-
-                $query_riesgos = DB::connection('sqlsrv_hosvital')
-                    ->select("SELECT * FROM HITO_RIESGOS_PACIENTE('$record->NUM_HISTORIA', '$record->TI_DOC', '$record->FOLIO_FORMATO')");
-
-                // VALIDACIÓN PARA LOS RIESGOS DEL PACIENTE
-                if (sizeof($query_riesgos) < 0) return response()->json([
-                    'msg' => 'Empty Risks Query',
-                    'status' => 204
-                ]);
-
-                $riesgos = [];
-
-                foreach ($query_riesgos as $riesgo) {
-
-                    $riesgos[] = array(
-                        /* 'Hipotensión_por_uso_de_vasodilatador' => $riesgo->UCI_HIPOTENSION_VASODILATADOR === 1 ? 1  : 0,
-                        'Arritmias_asociadas_a_uso_de_vasopresores' => $riesgo->UCI_ARRITMIA_VASOPRESORES === 1 ? 1  : 0,
-                        'Evento_Cerebrovascular_asociado_a_uso_de_vasopresor' => $riesgo->UCI_CEREBROVASCULAR_VASOPRESORES === 1 ? 1  : 0,
-                        'Desarrollo_de_delirium_en_paciente_critico' => $riesgo->UCI_DELIRIUM_PACIENTE === 1 ? 1  : 0,
-                        'Síndrome_de_desacondicionamiento_físico_en_paciente_critico' => $riesgo->UCI_DESACONDICIONAMIENTO_FISICO === 1 ? 1  : 0,
-                        'Fistula_traqueoesofagica_por_entubación_orotraqueal_prolongada' => $riesgo->UCI_FISTULA_ORATRAQUEAL === 1 ? 1  : 0,
-                        'Estenosis_subglotica_por_entubación_orotraqueal_prolongada' => $riesgo->UCI_ESTENOSIS_X_ENTUBACION === 1 ? 1  : 0,
-                        'Inestabilidad_hemodinámica_durante_hemodiálisis' => $riesgo->UCI_INESTABILIDAD_HEMODINAMICA === 1 ? 1  : 0,
-                        'Neumotórax_por_inserción_de_catéter_venoso_central' => $riesgo->UCI_NEUMOTORAX_CATETER_CENTRAL === 1 ? 1  : 0,
-                        'Lesión_pulmonar_asociada_a_ventilación_mecánica' => $riesgo->UCI_LESION_PULMONAR === 1 ? 1  : 0,
-                        'Lesion_isquemica_distal_por_vasopresores_en_pacientes_con_sepsis_en_la_UCI_Adultos' => $riesgo->UCI_LESION_ISQUEMICA === 1 ? 1  : 0,
-                        'Neutropenia_febril_en_pacientes_con_quimioterapia' => $riesgo->UCI_NEUTROPENIA_FEBRIL_QUIMIOTERAPIAS === 1 ? 1  : 0,
-                        'Mucositis_oral_en_pacientes_con_quimioterapia' => $riesgo->UCI_MUCOSITIS_QUIMIOTERAPIA === 1 ? 1  : 0,
-                        'Hemorragia_o_trombosis_en_paciente_anticoagulado' => $riesgo->UCI_HEMORRAGIA_ANTICOAGULADO === 1 ? 1  : 0,
-                        'Sangrado_segundario_a_trombocitopenia_severa' => $riesgo->UCIPED_SANGRADO_TROMBOCITOPENIA === 1 ? 1  : 0,
-                        'Hipotensión_por_desequilibrio_electrolítico_en_dengue_grave' => $riesgo->UCIPED_HIPOTENSION_ELECTROLITICO === 1 ? 1  : 0,
-                        'Shock_hipovolémico_por_insuficiencia__renal_aguda_en_pediatría' => $riesgo->UCIPED_SHOCK_HIPOVOLEMICO === 1 ? 1  : 0,
-                        'Falla_respiratoria_por_neumonía' => $riesgo->UCIPED_FALLA_RESPIRATORIA === 1 ? 1  : 0,
-                        'Sepsis_severa_en_aplasia_medular' => $riesgo->UCIPED_SEPSIS_APLASIA_MEDULAR === 1 ? 1  : 0,
-                        'Síndrome_de_Lisis_tumoral_en_Linfoma_No_Hodgkin' => $riesgo->UCIPED_SINDROME_LINFOMA_NOHODKIN === 1 ? 1  : 0,
-                        'Hipervolemia_por_no_restricciones_de_líquido_en_síndrome_nefrítico' => $riesgo->UCIPED_HIPERVOLEMIA === 1 ? 1  : 0,
-                        'Edema_pulmonar_por_extravasación_de_liquido_en_síndrome_nefrótico' => $riesgo->UCIPED_EDEMA_PULMONAR === 1 ? 1  : 0,
-                        'Crisis_hipertensiva_en_síndrome_nefrítico' => $riesgo->UCIPED_CRISIS_HIPERTENSIVA === 1 ? 1  : 0,
-                        'Hematuria_asociada_a_síndrome_nefrítico' => $riesgo->UCIPED_HEMATURIA_NEFRITICO === 1 ? 1  : 0,
-                        'Síndrome_Compresivos_en_Linfoma_No_Hodgkin' => $riesgo->UCIPED_SINDROME_COMPRENSI_UCI_PED === 1 ? 1  : 0,
-                        'Mucositis_oral_en_pacientes_con_quimioterapia' => $riesgo->UCIPED_MUCOSITIS_QUIMIOTERAPIA_UCI_PED === 1 ? 1  : 0,
-                        'Dolor_en_paciente_oncologico' => $riesgo->UCIPED_DOLOR_PACIENTE_ONCOLOGICO === 1 ? 1  : 0,
-                        'Neumonia_asociada_a_ventilacion_mecanica_en_UCIP' => $riesgo->UCIPED_NEUMONIA_VENTILACION_MECANICA === 1 ? 1  : 0,
-                        'Shock_hipovolémico_secundario_a_sangrado_agudo_en_procedimiento_quirúrgico_programado' => $riesgo->CIR_SHOCK_HIPOVOLEMICO === 1 ? 1  : 0,
-                        'Parada_cardiaca_durante_procedimiento_quirúrgico' => $riesgo->CIR_PARADA_CARDIACA === 1 ? 1  : 0,
-                        'Dehiscencia_de_herida_quirúrgica' => $riesgo->CIR_DEHISCENCIA_QX === 1 ? 1  : 0,
-                        'Seroma_postquirúrgico' => $riesgo->CIR_SEROMA_POSTQX === 1 ? 1  : 0,
-                        'Incremento_del_dolor_neuropatico_post_cirugía_oncológica_de_mama' => $riesgo->CIR_INCREMENTO_DOLOR_POSTQX === 1 ? 1  : 0,
-                        'Hernias_en_pared_abdominal_postquirúrgicas' => $riesgo->CIR_HERNIAS_ABDOMINAL_POSTQX === 1 ? 1  : 0,
-                        'Fistula_postcirugia_abdominal' => $riesgo->CIR_FISTULAQX_ABDOMINAL === 1 ? 1  : 0,
-                        'Lesión_de_uréteres_durante_cirugía_de_tumor_retroperitoneal' => $riesgo->CIR_LESION_URETERES === 1 ? 1  : 0,
-                        'Lesión_isquémica_por_perfusión_inadecuada_prolongada__durante_cirugía_de_tumor_retroperitoneal' => $riesgo->CIR_LESION_ISQUEMICA_QX_TUMOR === 1 ? 1  : 0,
-                        'Neumonía_por_realización_de_cirugía_abdominales_mayores' => $riesgo->CIR_NEUMONIA_ABDOMINALES_MAYORES === 1 ? 1  : 0,
-                        'Hemorragia_o_trombosis_en_paciente_anticoagulado' => $riesgo->CIR_HEMORRAGIA_TROMBOSIS === 1 ? 1  : 0,
-                        'Hematoma_por_obstrucción_de_hemovac_en_cirugía_de_mama_con_vaciamiento' => $riesgo->CIR_HEMATOMA_OBSTRUCCION_HEMOVAC === 1 ? 1  : 0,
-                        'Íleo_paralítico_en_pos_quirúrgico_de_colon_por_movilización_tardía' => $riesgo->CIR_ILEO_PARALITICO_POSTQX === 1 ? 1  : 0,
-                        'Linfaedema_post_cirugía_de_mama_con_vaciamiento_axilar' => $riesgo->CIR_LINFAEDEMA_POSTQX === 1 ? 1  : 0,
-                        'Obstrucción_de_sonda_vesical_en_post_quirúrgico_de_prostatectomía_transvesical' => $riesgo->CIR_OBSTRUCCION_SONDA_VESICAL === 1 ? 1  : 0,
-                        'Hematórax_o_colección_residual_por_drenaje_inadecuado_de_pleurovac_en_cirugía_de_tórax' => $riesgo->CIR_HEMOTORAX_POR_DRENAJE === 1 ? 1  : 0,
-                        'Peritonitis_por_dolor_abdominal' => $riesgo->CIR_PERITONITIS_DOLOR_ABDOMINAL === 1 ? 1  : 0,
-                        'Infeccion_de_sitio_quirurgico' => $riesgo->CIR_INFECCION_SITIO_QX === 1 ? 1  : 0, */
-                        'Neutropenia_febril_en_pacientes_con_quimioterapia_hospitalaria' => $riesgo->HOSP_NEUTROPENIA_FEBRIL === "1" ? 1  : 0,
-                        'Mucositis_oral_en_pacientes_con_quimioterapia' => $riesgo->HOSP_MUCOSITIS === "1" ? 1  : 0,
-                        'Progresion_de_las_complicaciones_por_radioterapia' => $riesgo->HOSP_PROGRESION_COMPLICACIONES_RADIOTERAPIA === "1" ? 1  : 0,
-                        'Malnutricion_en_paciente_oncologico' => $riesgo->HOSP_MALNUTRICION === "1" ? 1  : 0,
-                        'Dolor_en_paciente_oncologico' => $riesgo->HOSP_DOLOR === "1" ? 1 : 0,
-                        'Riesgo_de_Suicidio_' => $riesgo->HOSP_SUICIDIO === "1" ? 1  : 0,
-                        'Infeccion_de_sitio_quirurgico' => $riesgo->HOSP_INFECCION_SITIO_QX === "1" ? 1  : 0,
-                        'Hemorragia_o_trombosis_en_paciente_anticoagulado' => $riesgo->HOSP_HEMORRAGIA_TROMBOSIS === "1" ? 1  : 0,
-                        /* 'Retraso_en_atencion_en_pacientes_con_patologia_oncologica_(Ca_de_mama,_Leucemia_en_pediatria)' => $riesgo->HOSP_RETRASO_ATENCION === "1" ? 1  : 0, */
-                        'Retraso_en_atencion_en_pacientes_con_patologia_oncologica' => $riesgo->HOSP_RETRASO_ATENCION === "1" ? 1  : 0,
-                        'Hematoma_por_obstrucción_de_hemovac_en_cirugía_de_mama_con_vaciamiento' => $riesgo->HOSP_HEMATOMA_OBSTRUCCION_HEMOVAC === "1" ? 1  : 0,
-                        'Íleo_paralítico_en_pos_quirúrgico_de_colon_por_movilización_tardía' => $riesgo->HOSP_ILEO_PARALITICO_POSTQX === "1" ? 1  : 0,
-                        'Linfaedema_post_cirugía_de_mama_con_vaciamiento_axilar' => $riesgo->HOSP_LINFAEDEMA_POSTQX === "1" ? 1  : 0,
-                        'Obstrucción_de_sonda_vesical_en_post_quirúrgico_de_prostatectomía_transvesical' => $riesgo->HOSP_OBSTRUCCION_SONDA_VESICAL === "1" ? 1  : 0,
-                        'Hematórax_o_colección_residual_por_drenaje_inadecuado_de_pleurovac_en_cirugía_de_tórax' => $riesgo->HOSP_HEMOTORAX_POR_DRENAJE === "1" ? 1  : 0,
-                        /* 'Peritonitis_por_dolor_abdominal' => $riesgo->URG_PERITONITIS_DOLOR_ABDOMINAL === 1 ? 1  : 0,
-                        'Neutropenia_febril_en_pacientes_con_quimioterapia_hospitalaria' => $riesgo->URG_NEUTROPENIA_FEBRIL === 1 ? 1  : 0,
-                        'Mucositis_oral_en_pacientes_con_quimioterapia' => $riesgo->URG_MUCOSITIS === 1 ? 1  : 0,
-                        'Progresion_de_las_complicaciones_por_radioterapia_' => $riesgo->URG_PROGRESION_COMPLICACIONES_RADIOTERAPIA === 1 ? 1  : 0,
-                        'Malnutricion_en_paciente_oncologico' => $riesgo->URG_MALNUTRICION === 1 ? 1  : 0,
-                        'Dolor_en_paciente_oncologico' => $riesgo->URG_DOLOR === 1 ? 1  : 0,
-                        'Riesgo_de_Suicidio' => $riesgo->URG_SUICIDIO === 1 ? 1  : 0,
-                        'Hemorragia_o_trombosis_en_paciente_anticoagulado' => $riesgo->URG_HEMORRAGIA_TROMBOSIS === 1 ? 1  : 0,
-                        'Falla_ventilatoria_secundaria_en_paciente_con_derrame_pleural' => $riesgo->URG_FALLA_VENTILATORIA_DERRAME_PLEURAL === 1 ? 1  : 0,
-                        'Perforación_intestinal_por_obstruccion_mecanica' => $riesgo->URG_PERFORACION_POR_OBSTRUCCION === 1 ? 1  : 0,
-                        'Sangrado_cerebral_secundario_a_trombocitopenia_severa' => $riesgo->URG_SANGRADO_CEREBRAL === 1 ? 1  : 0,
-                        'Choque_hipovolemico_por_hemorragia_vaginal_en_cancer_de_cervix' => $riesgo->URG_CHOQUE_HIPOVOLEMICO === 1 ? 1  : 0,
-                        'Tromboembolismo_Pulmonar_en_paciente_con_fractura_de_cadera' => $riesgo->URG_TROMBOEMBOLISMO_PULMONAR === 1 ? 1  : 0,
-                        'Lesion_uretral_en_paciente_con_trombocitopenia_post_colocacion_de_sonda_vesical' => $riesgo->URG_LESION_URETRAL === 1 ? 1  : 0,
-                        'Aplasia_prolongada_secundaria_a_acondicionamiento_en_TAMO' => $riesgo->TAMO_APLASIA_PROLONGADA === 1 ? 1  : 0,
-                        'Síndrome_de_la_pega' => $riesgo->TAMO_SINDROME_PEGA === 1 ? 1  : 0,
-                        'Mucositis_severa_secundaria_a_condicionamiento_en_TAMO' => $riesgo->TAMO_MUCOSITIS === 1 ? 1  : 0,
-                        'Falla_en_la_colecta_de_CD34_por_movilización_deficiente' => $riesgo->TAMO_FALLA_COLECTA_CD34 === 1 ? 1  : 0,
-                        'Desarrollo_de_delirium_en_paciente_critico' => $riesgo->TAMO_DELIRIUM_PACIENTE_CRITICO === 1 ? 1  : 0,
-                        'Síndrome_de_desacondicionamiento_físico_en_paciente_critico' => $riesgo->TAMO_SINDROME_DESACONDICIONAMIENTO === 1 ? 1  : 0,
-                        'Sangrado_cerebral_secundario_a_trombocitopenia_severa' => $riesgo->TAMO_SANGRADO_CEREBRAL === 1 ? 1  : 0,
-                        'Falla_respiratoria_por_neumonía' => $riesgo->TAMO_FALLA_RESPIRATORIA_NEUMONIA === 1 ? 1  : 0,
-                        'Sepsis_severa_en_aplasia_medular' => $riesgo->TAMO_SEPSIS_APLASIA_MEDULAR === 1 ? 1  : 0,
-                        'Edema_agudo_de_pulmon_por_sobrecarga_de_volumen' => $riesgo->TAMO_EDEMA_AGUDO_PULMON === 1 ? 1  : 0,
-                        'Reaccion_alergica_a_acondicionamiento_con_melfalan' => $riesgo->TAMO_REACCION_ALERGICA === 1 ? 1  : 0,
-                        'Deshidratación_por_diarrea_y/o_vomito_postquimioterapia_con_alquilantes' => $riesgo->TAMO_DESHIDRATACION_DIARREA === 1 ? 1  : 0, */
-
-                    );
-                }
-
-                if (sizeof($riesgos) < 0) $riesgos = [];
-
-
                 $records[] = [
 
                     'PatTDoc' => trim($record->TI_DOC),
@@ -1761,13 +1651,14 @@ class HitoController extends Controller
                     'PatAdmDate' => $record->FECHA_INGRESO,
                     'PatAge' => $record->EDAD,
                     'PatCompany' => trim($record->CONTRATO),
+                    'PatPavilionCode' => trim($record->COD_PAB),
                     'PatPavilion' => trim($record->PABELLON),
                     'PatHabitation' => trim($record->CAMA),
                     'nameComplete' => trim($record->NOMBRE_COMPLETO),
-                    'medDiagnostics' => $record->ANALISIS,
+                    'medDiagnostics' => $record->DX_MEDICO,
                     'treatment' => $record->TRATAMIENTOS,
-                    'pendingAndRecommendations' => $record->DX_MEDICO,
-                    'risks' => $riesgos,
+                    'pendingAndRecommendations' => $record->ANALISIS,
+                    'risks' => $this->getPatientRisks(trim($record->NUM_HISTORIA), trim($record->TI_DOC), trim($record->FOLIO_FORMATO), $record->COD_PAB),
                     'background' => $antecedentes
 
                 ];
@@ -1866,13 +1757,14 @@ class HitoController extends Controller
                     'PatAdmDate' => $record->FECHA_INGRESO ? $record->FECHA_INGRESO : '01-01-1200',
                     'PatAge' => $record->EDAD ? $record->EDAD : '900',
                     'PatCompany' => trim($record->CONTRATO) ? trim($record->CONTRATO) : 'CONTRATO CAMA VACIA',
+                    'PatPavilionCode' => trim($record->COD_PAB),
                     'PatPavilion' => trim($record->PABELLON),
                     'PatHabitation' => trim($record->CAMA),
                     'nameComplete' => trim($record->NOMBRE_COMPLETO) ? trim($record->NOMBRE_COMPLETO) : 'PACIENTE CAMA VACIA',
-                    'medDiagnostics' => $record->ANALISIS ? $record->ANALISIS : 'ANALISIS CAMA VACIA',
+                    'medDiagnostics' => $record->DX_MEDICO ? $record->DX_MEDICO : 'ANALISIS CAMA VACIA',
                     'treatment' => $record->TRATAMIENTOS ? $record->TRATAMIENTOS : 'TRATAMIENTO CAMA VACIA',
-                    'pendingAndRecommendations' => $record->DX_MEDICO ? $record->DX_MEDICO : 'DX CAMA VACIA',
-                    'risks' => $riesgos,
+                    'pendingAndRecommendations' => $record->ANALISIS ? $record->ANALISIS : 'DX CAMA VACIA',
+                    'risks' => $this->getPatientRisks(trim($record->NUM_HISTORIA), trim($record->TI_DOC), trim($record->FOLIO_FORMATO), $record->COD_PAB),
                     'background' => $antecedentes
 
                 ];
@@ -1893,6 +1785,95 @@ class HitoController extends Controller
             //
         } catch (\Throwable $th) {
             throw $th;
+        }
+    }
+
+    private function getPatientRisks($patientNumDoc = '', $patientTipDoc = '', $patientFolio = '', $patientPabCode = '')
+    {
+
+        $riesgos = [];
+
+        if (!$patientNumDoc && !$patientTipDoc && !$patientFolio && !$patientPabCode) {
+
+            $riesgos = [];
+        } else {
+
+            if ((int) $patientPabCode === 62) {
+
+                $query_riesgos = DB::connection('sqlsrv_hosvital')
+                    ->select("SELECT * FROM HITO_RIESGOS_PACIENTE_TAMO('$patientNumDoc', '$patientTipDoc', '$patientFolio')");
+
+                if (count($query_riesgos) < 0) return [];
+
+                foreach ($query_riesgos as $record) {
+                    $riesgos[] = [
+                        'APLASIA_PROLONGADA' => $record->APLASIA_PROLONGADA === "1" ? 1 : 0,
+                        'SINDROME_PEGA' => $record->SINDROME_PEGA === "1" ? 1 : 0,
+                        'MUCOSITIS' => $record->MUCOSITIS === "1" ? 1 : 0,
+                        'FALLA_COLECTA_CD34' => $record->FALLA_COLECTA_CD34 === "1" ? 1 : 0,
+                        'DELIRIUM_PACIENTE_CRITICO' => $record->DELIRIUM_PACIENTE_CRITICO === "1" ? 1 : 0,
+                        'SINDROME_DESACONDICIONAMIENTO' => $record->SINDROME_DESACONDICIONAMIENTO === "1" ? 1 : 0,
+                        'SANGRADO_CEREBRAL' => $record->SANGRADO_CEREBRAL === "1" ? 1 : 0,
+                        'FALLA_RESPIRATORIA_NEUMONIA' => $record->FALLA_RESPIRATORIA_NEUMONIA === "1" ? 1 : 0,
+                        'SEPSIS_APLASIA_MEDULAR' => $record->SEPSIS_APLASIA_MEDULAR === "1" ? 1 : 0,
+                        'EDEMA_AGUDO_PULMON' => $record->EDEMA_AGUDO_PULMON === "1" ? 1 : 0,
+                        'REACCION_ALERGICA' => $record->REACCION_ALERGICA === "1" ? 1 : 0,
+                        'DESHIDRATACION_DIARREA' => $record->DESHIDRATACION_DIARREA === "1" ? 1 : 0,
+                    ];
+                }
+            } else if ((int) $patientPabCode === 4 || (int) $patientPabCode === 17 || (int) $patientPabCode === 18 || (int) $patientPabCode === 19 || (int) $patientPabCode === 37 || (int) $patientPabCode === 55) {
+
+                $query_riesgos = DB::connection('sqlsrv_hosvital')
+                    ->select("SELECT * FROM HITO_RIESGOS_PACIENTE_UCI('$patientNumDoc', '$patientTipDoc', '$patientFolio')");
+
+                if (count($query_riesgos) < 0) return [];
+
+                foreach ($query_riesgos as $record) {
+                    $riesgos[] = [
+                        'HIPOTENSION_VASODILATADOR' => $record->HIPOTENSION_VASODILATADOR === "1" ? 1 : 0,
+                        'ARRITMIA_VASOPRESORES' => $record->ARRITMIA_VASOPRESORES === "1" ? 1 : 0,
+                        'CEREBROVASCULAR_VASOPRESORES' => $record->CEREBROVASCULAR_VASOPRESORES === "1" ? 1 : 0,
+                        'DELIRIUM_PACIENTE' => $record->DELIRIUM_PACIENTE === "1" ? 1 : 0,
+                        'DESACONDICIONAMIENTO_FISICO' => $record->DESACONDICIONAMIENTO_FISICO === "1" ? 1 : 0,
+                        'FISTULA_ORATRAQUEAL' => $record->FISTULA_ORATRAQUEAL === "1" ? 1 : 0,
+                        'ESTENOSIS_X_ENTUBACION' => $record->ESTENOSIS_X_ENTUBACION === "1" ? 1 : 0,
+                        'INESTABILIDAD_HEMODINAMICA' => $record->INESTABILIDAD_HEMODINAMICA === "1" ? 1 : 0,
+                        'NEUMOTORAX_CATETER_CENTRAL' => $record->NEUMOTORAX_CATETER_CENTRAL === "1" ? 1 : 0,
+                        'LESION_PULMONAR' => $record->LESION_PULMONAR === "1" ? 1 : 0,
+                        'LESION_ISQUEMICA' => $record->LESION_ISQUEMICA === "1" ? 1 : 0,
+                        'NEUTROPENIA_FEBRIL_QUIMIOTERAPIAS' => $record->NEUTROPENIA_FEBRIL_QUIMIOTERAPIAS === "1" ? 1 : 0,
+                        'MUCOSITIS_QUIMIOTERAPIA' => $record->MUCOSITIS_QUIMIOTERAPIA === "1" ? 1 : 0,
+                        'HEMORRAGIA_ANTICOAGULADO' => $record->HEMORRAGIA_ANTICOAGULADO === "1" ? 1 : 0,
+                    ];
+                }
+            } else {
+
+                $query_riesgos = DB::connection('sqlsrv_hosvital')
+                    ->select("SELECT * FROM HITO_RIESGOS_PACIENTE_HOSP('$patientNumDoc', '$patientTipDoc', '$patientFolio')");
+
+                if (count($query_riesgos) < 0) return [];
+
+                foreach ($query_riesgos as $record) {
+                    $riesgos[] = [
+                        'NEUTROPENIA_FEBRIL' => $record->NEUTROPENIA_FEBRIL === "1" ? 1 : 0,
+                        'MUCOSITIS' => $record->MUCOSITIS === "1" ? 1 : 0,
+                        'PROGRESION_COMPLICACIONES_RADIOTERAPIA' => $record->PROGRESION_COMPLICACIONES_RADIOTERAPIA === "1" ? 1 : 0,
+                        'MALNUTRICION' => $record->MALNUTRICION === "1" ? 1 : 0,
+                        'DOLOR' => $record->DOLOR === "1" ? 1 : 0,
+                        'SUICIDIO' => $record->SUICIDIO === "1" ? 1 : 0,
+                        'INFECCION_SITIO_QX' => $record->INFECCION_SITIO_QX === "1" ? 1 : 0,
+                        'HEMORRAGIA_TROMBOSIS' => $record->HEMORRAGIA_TROMBOSIS === "1" ? 1 : 0,
+                        'RETRASO_ATENCION' => $record->RETRASO_ATENCION === "1" ? 1 : 0,
+                        'HEMATOMA_OBSTRUCCION_HEMOVAC' => $record->HEMATOMA_OBSTRUCCION_HEMOVAC === "1" ? 1 : 0,
+                        'ILEO_PARALITICO_POSTQX' => $record->ILEO_PARALITICO_POSTQX === "1" ? 1 : 0,
+                        'LINFAEDEMA_POSTQX' => $record->LINFAEDEMA_POSTQX === "1" ? 1 : 0,
+                        'OBSTRUCCION_SONDA_VESICAL' => $record->OBSTRUCCION_SONDA_VESICAL === "1" ? 1 : 0,
+                        'HEMOTORAX_POR_DRENAJE' => $record->HEMOTORAX_POR_DRENAJE === "1" ? 1 : 0,
+                    ];
+                }
+            }
+
+            return $riesgos;
         }
     }
     /**
