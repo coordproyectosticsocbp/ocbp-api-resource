@@ -172,6 +172,9 @@ class HitoAuditoriaController extends Controller
                 ];
             }
 
+            $preTotal = array_shift($torres);
+            array_push($torres, $preTotal);
+
             return response()
                 ->json([
                     'msg' => 'Ok',

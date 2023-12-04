@@ -14,7 +14,7 @@ class RondasController extends Controller
 
     public function getInformacionEmpleados(Request $request, $cedula = '')
     {
-
+       
         if ($request->hasHeader('X-Authorization')) {
 
             $token = $request->header('X-Authorization');
@@ -37,7 +37,7 @@ class RondasController extends Controller
 
             try {
 
-
+                
                 $query = DB::connection('sqlsrv_kactusprod')
                     ->select("
                     
@@ -67,7 +67,11 @@ class RondasController extends Controller
                                LEFT JOIN bi_emple B2 ON	B2.cod_empl = nm_contr.cod_frep
                                --INNER JOIN bi_FOEMP ON bi_emple.cod_empl = bi_foemp.cod_empl
                      where NM_CONTR.cod_empl = ".$cedula);
+                /*
 
+                $query = DB::connection('pgsql_bonna_comunity')
+                    ->select("select * from invf_productos_estantes");
+                */
                 $resultado = [];
 
                 if (sizeof($query) < 0) return response()->json([
@@ -75,31 +79,6 @@ class RondasController extends Controller
                     'status' => 204
                 ], 204);
 
-                /*
-                foreach ($query as $result) {
-
-                    $resultado[] = [
-                        'DOC' => trim($result->DOC),
-                        'TIPO_DOC' => trim($result->TIPO_DOC),
-                        'fecha' => trim($result->fecha),
-                        'Cama' => trim($result->cama),
-                        'ConsecutivoIngreso' => trim($result->consecutivoIngreso),
-                        'epicrisis' => ['fecha' => $result->fecha_epicrisis, 'medico' => trim($result->medico_epicrisis)],
-                        'alta_Especialista' => ['fecha' => $result->fecha_alta_Especialista, 'medico' => trim($result->medico_alta_Especialista)],
-                        'jefe_facturacion' => ['fecha' => $result->fecha_jefe_facturacion, 'medico' => trim($result->medico_jefe_facturacion)],
-                        'admisiones' => ['fecha' => $result->fecha_admisiones, 'medico' => trim($result->medico_admisiones)],
-                        'boleta_salida' => ['fecha' => $result->fecha_boleta_salida, 'medico' => trim($result->medico_boleta_salida)],
-                        'llamda_auxilio_general' => ['fecha' => $result->fecha_llamda_auxilio_genera, 'medico' => trim($result->medico_llamda_auxilio_genera)],
-                        'llamda_auxilio_clinico' => ['fecha' => $result->fecha_llamda_auxilio_clinico, 'medico' => trim($result->medico_llamda_auxilio_clinico)],
-                        'salida_paciente' => ['fecha' => $result->fecha_salida_paciente, 'medico' => trim($result->medico_salida_paciente)],
-                        'salida_porteria' => ['fecha' => $result->fecha_salida_porteria, 'medico' => trim($result->medico_salida_porteria)],
-                        'llegada_Servicios_generales' => ['fecha' => $result->fecha_llegada_Servicios_generales, 'medico' => trim($result->medico_llegada_Servicios_generales)],
-                        'fin_Servicios_generales' => ['fecha' => $result->fecha_fin_Servicios_generales, 'medico' => trim($result->medico_fin_Servicios_generales)],
-                        'ingreso_paciente' => ['fecha' => $result->fecha_ingreso_paciente, 'medico' => trim($result->medico_ingreso_paciente)],
-
-                    ];
-                }
-                */
 
                 if (count($query) < 0) return response()->json([
                     'msg' => 'Empty Diagnoses Array',
@@ -120,5 +99,160 @@ class RondasController extends Controller
                 throw $th;
             }
         }
+    }
+
+    public function getLugarEstanciaActual(Request $request, $cedula = ''){
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) return response()->json([
+                'msg' => 'Unauthorized',
+                'status' => 401
+            ]);
+
+
+            if ($cedula == '') {
+
+                return response()
+                    ->json([
+                        'msg' => 'Parameters Cannot Be Empty!',
+                        'status' => 400
+                    ]);
+            }
+
+            try {
+
+                
+                $query = DB::connection('sqlsrv_hosvital')
+                    ->select("
+                    
+                    select RTRIM(m.MPNomP) as pabellon, RTRIM (m1.MPUced) as cedula ,
+                    RTRIM(m1.MPNumC) as  cama, CONCAT(RTRIM(p.MPNom1)
+                    ,' ' ,RTRIM(p.MPNom2),' ',RTRIM(p.MPApe1),' ',RTRIM(p.MPApe2)) name_paciente   from MAEPAB1 m1
+                    left join MAEPAB m on m1.MPCodP = m.MPCodP
+                    left join CAPBAS p on p.MPCedu =m1.MPUced 
+                    where p.MPCedu = ".$cedula." order by m1.MPCodP ");
+                
+                /*
+                $query = DB::connection('pgsql_bonna_comunity')
+                    ->select("select * from invf_productos_estantes");
+                */
+              
+
+                if (sizeof($query) < 0) return response()->json([
+                    'msg' => 'Empty Diagnoses Query Response',
+                    'status' => 204
+                ], 204);
+
+
+                if (count($query) < 0) return response()->json([
+                    'msg' => 'Empty Diagnoses Array',
+                    'status' => 204,
+                    'data' => []
+                ], 204);
+
+
+                return response()->json([
+                    'msg' => 'Ok',
+                    'status' => 200,
+                    'count' => count($query),
+                    'data' => $query
+                ], 200);
+
+                //
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
+
+    }
+    public function getDatosBasicosPaciente(Request $request, $cedula = '', $tipo_doc = ''){
+
+        if ($request->hasHeader('X-Authorization')) {
+
+            $token = $request->header('X-Authorization');
+            $user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+            if (count($user) < 0) return response()->json([
+                'msg' => 'Unauthorized',
+                'status' => 401
+            ]);
+
+
+            if ($cedula == '') {
+
+                return response()
+                    ->json([
+                        'msg' => 'Parameters Cannot Be Empty!',
+                        'status' => 400
+                    ]);
+            }
+
+            try {
+
+                
+                $query = DB::connection('sqlsrv_hosvital')
+                    ->select("
+                    
+                    select DISTINCT 
+                    Rtrim(MPNOMC) NOMBRE,
+                    substring(INGRESOS.MPCedu,1,LEN(INGRESOS.MPCedu)) as ID,
+                    Rtrim(INGRESOS.MPTDoc) TIPO,
+                    Rtrim(MpMail) CORREO,
+                    Rtrim(MPDire) DIRECCION,
+                    Rtrim(EmpDsc) EMPRESA,
+                    Rtrim(MPTele) TELEFONO,
+                    Rtrim(MPTele2) CELULAR,
+                    Rtrim(NivEdu.NivEdDsc) NIVEL_EDUCATIVO,
+                    CAPBAS.MPFchN FECHA_NACIMIENTO
+
+                    from CAPBAS
+                    INNER JOIN INGRESOS on (INGRESOS.MPCedu = CAPBAS.MPCedu and INGRESOS.MPTDoc = CAPBAS.MPTDoc)
+                    LEFT join NivEdu on CAPBAS.MPNivEdu = NivEdu.NivEdCo
+                    LEFT join MAEEMP on (INGRESOS.IngNit = MAEEMP.MENNIT)
+                    LEFT join EMPRESS on (MAEEMP.MEcntr = EMPRESS.MEcntr)
+                    LEFT JOIN MAEPAC ON INGRESOS.MPCEDU=MAEPAC.MPCEDU AND INGRESOS.INGNIT=MAEPAC.MENNIT
+
+                    where MPEstPac='S' and INGRESOS.MPCedu='".$cedula."' and INGRESOS.MPTDoc='".$tipo_doc."'
+                    and IngCsc=(select MAX(IngCsc) FROM INGRESOS I 
+                    WHERE CAPBAS.MPCedu = MPCedu and CAPBAS.MPTDoc = MPTDoc)
+
+                    ");
+                
+                /*
+                $query = DB::connection('pgsql_bonna_comunity')
+                    ->select("select * from invf_productos_estantes");
+                */
+              
+
+                if (sizeof($query) < 0) return response()->json([
+                    'msg' => 'Empty Diagnoses Query Response',
+                    'status' => 204
+                ], 204);
+
+
+                if (count($query) < 0) return response()->json([
+                    'msg' => 'Empty Diagnoses Array',
+                    'status' => 204,
+                    'data' => []
+                ], 204);
+
+
+                return response()->json([
+                    'msg' => 'Ok',
+                    'status' => 200,
+                    'count' => count($query),
+                    'data' => $query
+                ], 200);
+
+                //
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
+
     }
 }

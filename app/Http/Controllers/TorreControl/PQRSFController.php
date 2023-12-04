@@ -13,7 +13,7 @@ use function Ramsey\Uuid\v1;
 class PQRSFController extends Controller
 {
 
-    
+
 
 
     /**
@@ -80,7 +80,7 @@ class PQRSFController extends Controller
             ]);
             // $fechaFinal = '2022-12-12';
             //$fechaInicial = '2022-01-01';
-            $fechaInicial=date("Y").'-01-01';
+            $fechaInicial = date("Y") . '-01-01';
             $fechaActual = date('Y-m-d');
             try {
 
@@ -236,16 +236,16 @@ class PQRSFController extends Controller
                         }
                     }
                 }
-                $fechaInicial=date("Y").'-01-01';
+                $fechaInicial = date("Y") . '-01-01';
                 $fechaActual = date('Y-m-d');
-                $fecha="'".$fechaInicial."' AND '".$fechaActual."'";
+                $fecha = "'" . $fechaInicial . "' AND '" . $fechaActual . "'";
                 //$subquery='(SELECT COUNT(id) FROM issues WHERE "type" =1)';
                 $query = DB::connection('pgsql')
                     ->table('issues')
                     ->whereBetween('createdAt', [$fechaInicial, $fechaActual])
                     ->select(
                         DB::raw('count(type) as totales'),
-                        DB::raw('(SELECT COUNT(id) as quejas FROM issues WHERE "type" =' . $idType . ' AND "createdAt" between '.$fecha.' )')
+                        DB::raw('(SELECT COUNT(id) as quejas FROM issues WHERE "type" =' . $idType . ' AND "createdAt" between ' . $fecha . ' )')
                     )->get();
 
                 if (sizeof($query) < 0) return response()->json([
@@ -253,37 +253,36 @@ class PQRSFController extends Controller
                     'status' => 204
                 ], 204);
 
-               
 
-                foreach ($query as $result){
-                    $cantidadPQR=0;
-                    $cantidadPQR=$result->quejas;
-                    if($result->totales >0){
+
+                foreach ($query as $result) {
+                    $cantidadPQR = 0;
+                    $cantidadPQR = $result->quejas;
+                    if ($result->totales > 0) {
                         $resultado[] = [
                             'Porcentaje ' => trim(($cantidadPQR / $result->totales) * 100),
                             'Quejas' => $cantidadPQR,
                             'Totales de PQR' => $result->totales,
                             'Type' => $descripcion,
-                            'FechaInicial'=>$fechaInicial,
-                            'FechaActual'=>$fechaActual,
+                            'FechaInicial' => $fechaInicial,
+                            'FechaActual' => $fechaActual,
                         ];
-                    }else{
+                    } else {
                         $resultado[] = [
                             'Porcentaje ' => '0',
                             'Quejas' => '0',
                             'Totales de PQR' => '0',
                             'Type' => $descripcion,
-                            'FechaInicial'=>$fechaInicial,
-                            'FechaActual'=>$fechaActual,
+                            'FechaInicial' => $fechaInicial,
+                            'FechaActual' => $fechaActual,
                         ];
                     }
-                    
-                } 
+                }
 
                 if (count($resultado) < 0) return response()->json([
-                  'msg' => 'Empty Diagnoses Array',
-                'status' => 204,
-                'data' => []
+                    'msg' => 'Empty Diagnoses Array',
+                    'status' => 204,
+                    'data' => []
                 ], 204);
 
 
@@ -373,8 +372,8 @@ class PQRSFController extends Controller
             //$fechaFinal= '2022-01-01';
             //$fechaInicial='2022-12-12';
             //$idType='5';
-            
-            $fechaInicial=date("Y").'-01-01';
+
+            $fechaInicial = date("Y") . '-01-01';
             $fechaActual = date('Y-m-d');
 
             try {
@@ -636,8 +635,8 @@ class PQRSFController extends Controller
             ]);
             // $fechaFinal = '2022-12-12';
             //$fechaInicial = '2022-01-01';
-            
-            $fechaInicial=date("Y").'-01-01';
+
+            $fechaInicial = date("Y") . '-01-01';
             $fechaActual = date('Y-m-d');
 
             try {
@@ -802,49 +801,54 @@ class PQRSFController extends Controller
     {
         //if ($request->hasHeader('X-Authorization')) {
 
-            //$token = $request->header('X-Authorization');
-            //$user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+        //$token = $request->header('X-Authorization');
+        //$user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
 
-            //if (count($user) < 0) return response()->json([
-              //  'msg' => 'Unauthorized',
-                //'status' => 401
-            //]);
-            $fechaInicial=date("Y").'-01-01';
-            $fechaActual = date('Y-m-d');
-            $fechamenos1=date("Y-m-d",strtotime($fechaActual."- 1 days"));
-            //return $fechamenos1;
-            //$idType='5';
-            //if (!$fechaInicial || !$fechaFinal) {
+        //if (count($user) < 0) return response()->json([
+        //  'msg' => 'Unauthorized',
+        //'status' => 401
+        //]);
+        $fechaInicial = date("Y") . '-01-01';
+        $fechaActual = date('Y-m-d');
+        $fechamenos1 = date("Y-m-d", strtotime($fechaActual . "- 1 days"));
+        $fechamas1 = date("Y-m-d", strtotime(date('Y-m-d') . "+ 1 days"));
 
-             //   return response()
-               //     ->json([
-            //            'msg' => 'Parameters Cannot Be Empty!',
-                   //     'status' => 400
-             //       ]);
-           // }
-            try {
-                $concatName = "concat( ip.name, ' ' ,ip.lastname  ) nombres";
+        //return $fechamenos1;
+        //$idType='5';
+        //if (!$fechaInicial || !$fechaFinal) {
 
-                $tipo = "when 0 then 'Petición'
+        //   return response()
+        //     ->json([
+        //            'msg' => 'Parameters Cannot Be Empty!',
+        //     'status' => 400
+        //       ]);
+        // }
+        try {
+            $concatName = "concat( ip.name, ' ' ,ip.lastname  ) nombres";
+
+            $tipo = "when 0 then 'Petición'
                 when 1 then 'Queja'
                 when 2 then 'Reclamo'
                 when 3 then 'Sugerencia'
                 when 4 then 'Felicitación'
                 end tipo";
 
-                $case2 = "case id.legal when true then 'SI' else 'NO' end REQUERIMIENTO_DE_JURIDICA_LEGAL
+            $case2 = "case id.legal when true then 'SI' else 'NO' end REQUERIMIENTO_DE_JURIDICA_LEGAL
                 , case id.risk when true then 'SI' else 'NO' end RIESGO_DE_VIDA
                 , case id.relevant when true then 'SI' else 'NO' end PROCEDENTE_NO_PROCEDENTE";
 
-                $ultimocase = "case i.management_type
+            $ultimocase = "case i.management_type
                 when 0 then 'Administrativo'
                 when 1 then 'Asistencial'
                 when 2 then 'Asistencial y Administrativo'
                 end TIPO_DE_GESTION";
 
-                $query = DB::connection('pgsql')
-                    ->select('
-                    select i.serial,ip."document",i."createdAt" ,case i."type"
+            $horas = "'5 hours' as fecha_cre";
+
+            $query = DB::connection('pgsql')
+                ->select('
+                    select i.serial,ip."document",i."createdAt" - INTERVAL ' . $horas . '
+                    ,case i."type"
                 ' . $tipo . '
                 ,' . $concatName . '
                 ,ip.birthday  fecha_nacimiento
@@ -872,10 +876,10 @@ class PQRSFController extends Controller
                 LEFT JOIN entity e
                 ON e.id = ip."entityId"
                 LEFT JOIN issue_areas ia
-                ON   i.id = ia."issueId" and ia.main =true 
+                ON   i.id = ia."issueId" and ia.main =true
                 LEFT JOIN "area" a
-                ON ia."areaId"  = a.id 
-                LEFT JOIN priority p 
+                ON ia."areaId"  = a.id
+                LEFT JOIN priority p
                 ON i."priorityId"  = p.id
                 LEFT JOIN categories c
                 ON i."categoryId"  = c.id
@@ -883,93 +887,88 @@ class PQRSFController extends Controller
                 on c.id = cr."categoryId"
                 left join rights
                 on rights.id = cr."rightId"
-                where i."type" != 3 and i."type" != 4 and i."createdAt" BETWEEN ' . "'" . $fechamenos1 . "'" . ' and ' . "'" . $fechaActual . "'" . '
+                where i."type" != 3 and i."type" != 4 and i."createdAt" BETWEEN ' . "'" . $fechamenos1 . "'" . ' and ' . "'" . $fechamas1 . "'" . '
 
                     ');
+            //return $query;
+            if (sizeof($query) < 0) return response()->json([
+                'msg' => 'Empty Diagnoses Query Response',
+                'status' => 204
+            ], 204);
 
-                if (sizeof($query) < 0) return response()->json([
-                    'msg' => 'Empty Diagnoses Query Response',
-                    'status' => 204
-                ], 204);
+
+            $ahora = new DateTime(date("Y-m-d"));
+
+            $resultado = [];
+
+            foreach ($query as $result) {
+
+                $nacimiento = new DateTime($result->fecha_nacimiento);
+                $dif = $ahora->diff($nacimiento);
+                $edad = $dif->format("%y");
+                $prioridad = '';
 
 
-                $ahora = new DateTime(date("Y-m-d"));
+                if ($edad < 18 || $edad > 60) {
 
-                $resultado=[];
+                    if ($edad > 120) {
+                        $prioridad = 'PRIORIDAD BAJA';
+                    } else {
+                        $prioridad = 'PRIORIDAD ALTA';
+                    }
+                } else {
 
-                foreach ($query as $result) {
+                    if ($edad >= 18 || $edad <= 60) {
 
-                    $nacimiento = new DateTime($result->fecha_nacimiento);
-                    $dif = $ahora->diff($nacimiento);
-                    $edad = $dif->format("%y");
-                    $prioridad = '';
+                        $prioridad = 'PRIORIDAD MEDIA';
+                    } else {
 
-                    
-                        if ($edad < 18 || $edad > 60) {
-
-                            if($edad > 120){
-                                $prioridad = 'PRIORIDAD BAJA';
-                            }else{
-                                $prioridad = 'PRIORIDAD ALTA';
-                            }
-                        }else{
-
-                            if ($edad >= 18 ||$edad <= 60) {
-    
-                                $prioridad = 'PRIORIDAD MEDIA';
-                            } else {
-    
-                                $prioridad = 'PRIORIDAD BAJA';
-                            }
-
-                        }
-                        $diasRespuesta=null;
-                        $estadoDemorado=null;
-                     if($result->fecha_cierre!=null){
-                        $creacion = new DateTime($result->createdAt);
-                        $cierre = new DateTime($result->fecha_cierre);
-                        $dif = $creacion->diff($cierre);
-                        $diasRespuesta=$dif->days;
-                        if($diasRespuesta>5){
-                            $estadoDemorado='Caso demorado en atender';
-                        }else{
-                            $estadoDemorado='Caso atendido a tiempo';
-                        }
-                     }   
-
-                    $resultado[] = [
-                        'N°Caso: ' => $result->serial, 'N°Documento' => $result->document
-                        ,'Nombre'=>$result->nombres, 'Edad' => $edad,'Pais' => $result->country,'FechaCaso'=>$result->createdAt, 
-                        'fechaCierreCaso' =>$result->fecha_cierre,'DiasDeRespuesta' =>$diasRespuesta,'DemoradoONo' =>$estadoDemorado
-                        , 'Ciudad' => $result->city, 'Tipo' => $result->tipo, 'Entidad' => $result->entidad
-                        , 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria
-                        ,  'RequerimientoDeJuridicaLegal' => $result->requerimiento_de_juridica_legal
-                        , 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad, 'Descripcion' =>$result->description, 'Respuesta' =>$result->respuesta
-                    ];
+                        $prioridad = 'PRIORIDAD BAJA';
+                    }
+                }
+                $diasRespuesta = null;
+                $estadoDemorado = null;
+                if ($result->fecha_cierre != null) {
+                    $creacion = new DateTime($result->fecha_cre);
+                    $cierre = new DateTime($result->fecha_cierre);
+                    $dif = $creacion->diff($cierre);
+                    $diasRespuesta = $dif->days;
+                    if ($diasRespuesta > 5) {
+                        $estadoDemorado = 'Caso demorado en atender';
+                    } else {
+                        $estadoDemorado = 'Caso atendido a tiempo';
+                    }
                 }
 
-
-
-                if (count($query) < 0) return response()->json([
-                    'msg' => 'Empty Diagnoses Array',
-                    'status' => 204,
-                    'data' => []
-                ], 204);
-
-
-                return response()->json([
-                    'msg' => 'Ok',
-                    'status' => 200,
-                    'count' => count($resultado),
-                    'data' => $resultado
-                ], 200);
-
-                //
-            } catch (\Throwable $th) {
-                throw $th;
+                $resultado[] = [
+                    'N°Caso: ' => $result->serial, 'N°Documento' => $result->document, 'Nombre' => $result->nombres, 'Edad' => $edad, 'Pais' => $result->country, 'FechaCaso' => $result->fecha_cre,
+                    'fechaCierreCaso' => $result->fecha_cierre, 'DiasDeRespuesta' => $diasRespuesta, 'DemoradoONo' => $estadoDemorado, 'Ciudad' => $result->city, 'Tipo' => $result->tipo, 'Entidad' => $result->entidad, 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria,  'RequerimientoDeJuridicaLegal' => $result->requerimiento_de_juridica_legal, 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad, 'Descripcion' => $result->description, 'Respuesta' => $result->respuesta
+                ];
             }
+
+
+
+            if (count($query) < 0) return response()->json([
+                'msg' => 'Empty Diagnoses Array',
+                'status' => 204,
+                'data' => []
+            ], 204);
+
+
+            return response()->json([
+                'msg' => 'Ok',
+                'status' => 200,
+                'count' => count($resultado),
+                'data' => $resultado
+            ], 200);
+
+            //
+        } catch (\Throwable $th) {
+            throw $th;
+        }
         //}
     }
+
     /**
      * @OA\Get (
      *     path="/api/v1/indicadores/get/halconreportegeneralcasos",
@@ -1020,7 +1019,7 @@ class PQRSFController extends Controller
      *      )
      * )
      */
-    public function getHalconReporteGeneralCasos(Request $request,$fechaInicial='',$fechaFinal='')
+    public function getHalconReporteGeneralCasos(Request $request, $fechaInicial = '', $fechaFinal = '')
     {
         if ($request->hasHeader('X-Authorization')) {
 
@@ -1031,7 +1030,7 @@ class PQRSFController extends Controller
                 'msg' => 'Unauthorized',
                 'status' => 401
             ]);
-           
+
             if ($fechaInicial == '' && $fechaFinal == '') {
 
                 return response()
@@ -1039,18 +1038,17 @@ class PQRSFController extends Controller
                         'msg' => 'Parameters Cannot Be Empty!',
                         'status' => 400
                     ]);
-
             }
 
             try {
-                 
-                $ca1="when 0 then 'Peticion'
+
+                $ca1 = "when 0 then 'Peticion'
                 when 1 then 'Queja'
                 when 2 then 'Reclamo'
                 when 3 then 'Sugerencia'
                 when 4 then 'Felicitacion'";
-                $ca2=" , regexp_replace(trim(issues_details.description), E'[\n\r]+', ' ', 'g') DESCRIPCION_CASO ";
-                $ca3="when 0 then 'Ingresado'
+                $ca2 = " , regexp_replace(trim(issues_details.description), E'[\n\r]+', ' ', 'g') DESCRIPCION_CASO ";
+                $ca3 = "when 0 then 'Ingresado'
                 when 1 then 'Asignado'
                 when 2 then 'Trasladado'
                 when 3 then 'Leido'
@@ -1063,72 +1061,72 @@ class PQRSFController extends Controller
                 when 10 then 'Cierre conforme'
                 when 11 then 'Cierre no conforme'
                 when 12 then 'Cierre por tiempo'";
-                $ca4=" , regexp_replace(trim(issues_details.description), E'[\n\r]+', ' ', 'g')  DESCRIPCION
+                $ca4 = " , regexp_replace(trim(issues_details.description), E'[\n\r]+', ' ', 'g')  DESCRIPCION
                 , regexp_replace(trim(issues_details.solution), E'[\n\r]+', ' ', 'g')  SOLUCION
                 , case issues_details.legal when true then 'SI' else 'NO' end REQUERIMIENTO_DE_JURIDICA_LEGAL
                 , case issues_details.risk when true then 'SI' else 'NO' end RIESGO_DE_VIDA
                 , case issues_details.relevant when true then 'SI' else 'NO' end PROCEDENTE_NO_PROCEDENTE";
-                $ca5="when 0 then 'Administrativo'
+                $ca5 = "when 0 then 'Administrativo'
                 when 1 then 'Asistencial'
                 when 2 then 'Asistencial y Administrativo'";
-                $ca6=", date_part('day', (";
-                $ca7=", date_part('day', (";
+                $ca6 = ", date_part('day', (";
+                $ca7 = ", date_part('day', (";
                 $query = DB::connection('pgsql')
                     ->select('
 
-                    select 
+                    select
                     distinct cast(issues."createdAt" as date)  FECHA_CREACION
                     , issues.serial NUM_CASO
                     , issue_patient."document" DOCUMENTO
                     , document_types."name" TIPO_DE_DOCUMENTO
-                    , cast(issue_patient.birthday as DATE) FECHA_NACIMIENTO 
+                    , cast(issue_patient.birthday as DATE) FECHA_NACIMIENTO
                     , case issues."type"
-                            '.$ca1.'
+                            ' . $ca1 . '
                     end TIPO
                     , issue_patient."name" NOMBRE
                     , issue_patient.lastname  APELLIDO
                     , age(current_date, issue_patient.birthday) EDAD
                     , minorities."name" MINORIA
-                   '.$ca2.'
+                   ' . $ca2 . '
                     , issue_contact."name" NOMBRE_DE_CONTACTO
                     , issue_contact.lastname APELLIDO_DE_CONTACTO
                     , entity."name" ENTIDAD_DE_PACIENTE
                     , area.name AREA
                     , categories."name" CATEGORIA
                     , case issues_logs.status
-                        '.$ca3.'
+                        ' . $ca3 . '
                     END ESTADO
                     , issue_contact.country PAIS
-                    , issue_contact.state DEPARTAMENTO 
+                    , issue_contact.state DEPARTAMENTO
                     , issue_contact.city CIUDAD
                     , issue_contact.address DIRECCION
                     , issue_contact.email EMAIL
                     , issue_contact.phone TELEFONO
-                   '.$ca4.'
+                   ' . $ca4 . '
                     , case issues.management_type
-                        '.$ca5.'
+                        ' . $ca5 . '
                     end TIPO_DE_GESTION
                     , rights."name" DERECHO_VULNERADO
                     , priority."name" PRIORIDAD
-                    '.$ca6.'	select il2."createdAt" 
-                                            from issues_logs il2 
+                    ' . $ca6 . '	select il2."createdAt"
+                                            from issues_logs il2
                                             where il2."issueId" = issues.id
                                                     and il2.status = 4
                                                     limit 1
-                                        ) - (	select il2."createdAt" 
-                                                from issues_logs il2 
+                                        ) - (	select il2."createdAt"
+                                                from issues_logs il2
                                                 where il2."issueId" = issues.id
                                                         and il2.status = 1
                                                         limit 1
                                             )
                     ) diff_dias_lider
-                    '.$ca7.'	select il2."createdAt" 
-                                            from issues_logs il2 
+                    ' . $ca7 . '	select il2."createdAt"
+                                            from issues_logs il2
                                             where il2."issueId" = issues.id
                                                     and il2.status = 9
                                                     limit 1
-                                        ) - (	select il2."createdAt" 
-                                                from issues_logs il2 
+                                        ) - (	select il2."createdAt"
+                                                from issues_logs il2
                                                 where il2."issueId" = issues.id
                                                         and il2.status = 4
                                                         limit 1
@@ -1136,23 +1134,23 @@ class PQRSFController extends Controller
                     ) diff_dias_admin_halcon
             FROM issues
                         inner JOIN issues_details ON issues.id = issues_details."issueId"
-                        inner join issue_patient on issues."patientId" = issue_patient.id 
-                        left join document_types on issue_patient."documentTypeId" = document_types.id 
-                        left join minorities on issue_patient."minorityId" = minorities.id 
+                        inner join issue_patient on issues."patientId" = issue_patient.id
+                        left join document_types on issue_patient."documentTypeId" = document_types.id
+                        left join minorities on issue_patient."minorityId" = minorities.id
                         inner join issue_contact on issue_contact.id = issues."contactId"
                         left join entity on issue_patient."entityId" = entity.id
                         left join categories on categories.id = issues."categoryId"
-                        left join categories_rights on categories.id = categories_rights."categoryId" 
-                        left join rights on rights.id = categories_rights."rightId" 
+                        left join categories_rights on categories.id = categories_rights."categoryId"
+                        left join rights on rights.id = categories_rights."rightId"
                         left JOIN issue_areas ON issues.id = issue_areas."issueId"
                         left JOIN area ON issue_areas."areaId" = area.id
-                        inner join priority on issues."priorityId" = priority.id 
-                        left join issues_logs on	issues_logs."issueId" = issues_details.id 
+                        inner join priority on issues."priorityId" = priority.id
+                        left join issues_logs on	issues_logs."issueId" = issues_details.id
                                                     and issues_logs."updatedAt" =	(	select max(il."updatedAt")
-                                                                                        from issues_logs il 
-                                                                                        where il."issueId" = issues_details.id 
+                                                                                        from issues_logs il
+                                                                                        where il."issueId" = issues_details.id
                                                                                     )
-            where  cast(issues."createdAt" as date) between '."'".$fechaInicial."'".' and '."'".$fechaFinal."'".'
+            where  cast(issues."createdAt" as date) between ' . "'" . $fechaInicial . "'" . ' and ' . "'" . $fechaFinal . "'" . '
 
                     ');
 
@@ -1184,7 +1182,66 @@ class PQRSFController extends Controller
             }
         }
     }
-    
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/indicadores/get/censo-estancias",
+     *     operationId="getCensoForControlTower",
+     *     tags={"Indicadores"},
+     *     summary="Get getCensoForControlTower",
+     *     description="Returns getCensoForControlTower",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+    public function getCensoForControlTower(Request $request)
+    {
+
+        try {
+
+            $censoQuery = DB::connection('sqlsrv_hosvital')
+                ->select("SELECT * FROM BONNACOMMUNITY_CENSO() ORDER BY PABELLON ASC");
+
+            if (count($censoQuery) < 0) return response()->json([
+                'msg' => 'La query no ha devuelto datos',
+                'status' => 204,
+                'data' => []
+            ], 204);
+
+            return response()->json([
+                'msg' => 'Data retornada',
+                'status' => 200,
+                'data' => $censoQuery
+            ], 200);
+
+            //
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
     public function replaceCharacter($text)
     {
         if (!$text) {

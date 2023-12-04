@@ -1081,6 +1081,10 @@ class HitoController extends Controller
 
                 foreach ($query_doctors as $item) {
 
+                    if ($item->DOC === '1140901155') {
+                        $item->JEFE_INMEDIATO = 'KATIUSKA ISABEL ROMERO FERNANDEZ';
+                    }
+
                     $temp = array(
                         'docType' => $item->TIP_DOC,
                         'document' => $item->DOC,
@@ -1658,6 +1662,7 @@ class HitoController extends Controller
                     'medDiagnostics' => $record->DX_MEDICO,
                     'treatment' => $record->TRATAMIENTOS,
                     'pendingAndRecommendations' => $record->ANALISIS,
+                    'folioformato' => trim($record->FOLIO_FORMATO),
                     'risks' => $this->getPatientRisks(trim($record->NUM_HISTORIA), trim($record->TI_DOC), trim($record->FOLIO_FORMATO), $record->COD_PAB),
                     'background' => $antecedentes
 
@@ -1764,6 +1769,7 @@ class HitoController extends Controller
                     'medDiagnostics' => $record->DX_MEDICO ? $record->DX_MEDICO : 'ANALISIS CAMA VACIA',
                     'treatment' => $record->TRATAMIENTOS ? $record->TRATAMIENTOS : 'TRATAMIENTO CAMA VACIA',
                     'pendingAndRecommendations' => $record->ANALISIS ? $record->ANALISIS : 'DX CAMA VACIA',
+                    'folioformato' => trim($record->FOLIO_FORMATO),
                     'risks' => $this->getPatientRisks(trim($record->NUM_HISTORIA), trim($record->TI_DOC), trim($record->FOLIO_FORMATO), $record->COD_PAB),
                     'background' => $antecedentes
 

@@ -812,6 +812,15 @@ Route::group([
         ]
     );
 
+    /** INDICADORES ESTANCIA */
+    Route::get(
+        ('/indicadores/get/censo-estancias'),
+        [
+            \App\Http\Controllers\TorreControl\PQRSFController::class,
+            'getCensoForControlTower'
+        ]
+    );
+
     /* RONDAS */
 
     Route::get(
@@ -819,6 +828,44 @@ Route::group([
         [
             \App\Http\Controllers\RondasController::class,
             'getInformacionEmpleados'
+        ]
+    );
+    Route::get(
+        ('/rondas/get/estanciapaciente/{cedula?}'),
+        [
+            \App\Http\Controllers\RondasController::class,
+            'getLugarEstanciaActual'
+        ]
+    );
+    Route::get(
+        ('/rondas/get/datosbasicospaciente/{cedula}/{tipo_doc}'),
+        [
+            \App\Http\Controllers\RondasController::class,
+            'getDatosBasicosPaciente'
+        ]
+    );
+
+    /* ALICANTO */
+
+    Route::get(
+        ('/alicanto/get/auditorias'),
+        [
+            \App\Http\Controllers\Alicanto\ReportesController::class,
+            'getAuditoria'
+        ]
+    );
+    Route::get(
+        ('/alicanto/get/comite'),
+        [
+            \App\Http\Controllers\Alicanto\ReportesController::class,
+            'getComites'
+        ]
+    );
+    Route::get(
+        ('/alicanto/get/asistenciacomite'),
+        [
+            \App\Http\Controllers\Alicanto\ReportesController::class,
+            'getAsitenciaComite'
         ]
     );
 });
@@ -831,7 +878,8 @@ Route::group([
 //INDICADORES TORRE DE CONTROL
 
 Route::group([
-    'prefix' => 'v2'
+    'prefix' => 'v2',
+    'middleware' => 'auth.apikey'
 ], function () {
 
     /* URGENCIAS */
@@ -891,4 +939,6 @@ Route::group([
             'getPrioridadCasos'
         ]
     );
+
+    /* ------------------------------------------------------------------------------- */
 });
