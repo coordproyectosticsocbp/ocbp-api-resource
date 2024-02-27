@@ -179,7 +179,7 @@ class HitoAuditoriaController extends Controller
                 ->json([
                     'msg' => 'Ok',
                     'data' => $torres,
-                    'status' => 200
+                    'status' => 200,
                 ]);
 
             //
@@ -187,7 +187,6 @@ class HitoAuditoriaController extends Controller
             throw $e;
         }
     }
-
 
     /**
      * @OA\Get (
@@ -443,7 +442,6 @@ class HitoAuditoriaController extends Controller
         }
     }
 
-
     private function getAllTomografias($patientDoc = null, $patientDoctype = null, $admNum = null)
     {
 
@@ -479,7 +477,6 @@ class HitoAuditoriaController extends Controller
             throw $e;
         }
     }
-
 
     private function getAllGamagrafias($patientDoc = null, $patientDoctype = null, $admNum = null)
     {
@@ -517,7 +514,6 @@ class HitoAuditoriaController extends Controller
         }
     }
 
-
     private function getAllResonancias($patientDoc = null, $patientDoctype = null, $admNum = null)
     {
 
@@ -553,7 +549,6 @@ class HitoAuditoriaController extends Controller
             throw $e;
         }
     }
-
 
     private function getAllHemodinamia($patientDoc = null, $patientDoctype = null, $admNum = null)
     {
@@ -591,7 +586,6 @@ class HitoAuditoriaController extends Controller
         }
     }
 
-
     private function getAllInterconsultas($patientDoc = null, $patientDoctype = null, $admNum = null)
     {
 
@@ -625,7 +619,6 @@ class HitoAuditoriaController extends Controller
             throw $e;
         }
     }
-
 
     private function getAllQuimioterapias($patientDoc = null, $patientDoctype = null, $admNum = null)
     {
@@ -662,7 +655,6 @@ class HitoAuditoriaController extends Controller
             throw $e;
         }
     }
-
 
     private function getAllRadioterapias($patientDoc = null, $patientDoctype = null, $admNum = null)
     {

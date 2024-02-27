@@ -900,6 +900,15 @@ class PQRSFController extends Controller
             $ahora = new DateTime(date("Y-m-d"));
 
             $resultado = [];
+            
+            
+            $censoReal = DB::connection('sqlsrv_hosvital')
+                    ->select("
+                    
+                        SELECT * FROM CENSOREAL() ORDER BY PABELLON, CAMA
+
+                    ");
+
 
             foreach ($query as $result) {
 
@@ -939,10 +948,27 @@ class PQRSFController extends Controller
                         $estadoDemorado = 'Caso atendido a tiempo';
                     }
                 }
+                
+                $Estahospitalizada='NO';
+                $pabellon='';
+                $cama='';
+                foreach ($censoReal as $censo) {
+                    if($result->document == $censo->NUM_HISTORIA){
+                        
+                        $Estahospitalizada='SI';
+                        $pabellon=$censo->PABELLON;
+                        $cama=$censo->CAMA;
+                        
+
+                    }
+                }
 
                 $resultado[] = [
                     'N°Caso: ' => $result->serial, 'N°Documento' => $result->document, 'Nombre' => $result->nombres, 'Edad' => $edad, 'Pais' => $result->country, 'FechaCaso' => $result->fecha_cre,
-                    'fechaCierreCaso' => $result->fecha_cierre, 'DiasDeRespuesta' => $diasRespuesta, 'DemoradoONo' => $estadoDemorado, 'Ciudad' => $result->city, 'Tipo' => $result->tipo, 'Entidad' => $result->entidad, 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria,  'RequerimientoDeJuridicaLegal' => $result->requerimiento_de_juridica_legal, 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad, 'Descripcion' => $result->description, 'Respuesta' => $result->respuesta
+                    'fechaCierreCaso' => $result->fecha_cierre, 'DiasDeRespuesta' => $diasRespuesta, 'DemoradoONo' => $estadoDemorado, 'Ciudad' => $result->city, 
+                    'Tipo' => $result->tipo, 'Entidad' => $result->entidad, 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria,  
+                    'RequerimientoDeJuridicaLegal' => $result->requerimiento_de_juridica_legal, 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad,
+                     'Descripcion' => $result->description, 'Respuesta' => $result->respuesta,'Estahospitalizada' => $Estahospitalizada,'pabellon' => $pabellon,'cama' => $cama
                 ];
             }
 
@@ -968,6 +994,255 @@ class PQRSFController extends Controller
         }
         //}
     }
+
+    /**
+     * @OA\Get (
+     *     path="/api/v1/indicadores/get/prioridadcasos",
+     *     operationId="getPrioridadCasos",
+     *     tags={"Indicadores"},
+     *     summary="Get getPrioridadCasos",
+     *     description="Returns getPrioridadCasos",
+     *     security = {
+     *          {
+     *              "type": "apikey",
+     *              "in": "header",
+     *              "name": "X-Authorization",
+     *              "X-Authorization": {}
+     *          }
+     *     },@OA\Parameter (
+     *          name="fechaInicial?",
+     *          description="Required",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Parameter (
+     *          name="fechaFinal?",
+     *          description="Required",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema (
+     *              type="string"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
+
+     public function getPrioridadCasosYear(Request $request)
+     {
+         //if ($request->hasHeader('X-Authorization')) {
+ 
+         //$token = $request->header('X-Authorization');
+         //$user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+ 
+         //if (count($user) < 0) return response()->json([
+         //  'msg' => 'Unauthorized',
+         //'status' => 401
+         //]);
+         $fechaInicial = date("Y") . '-01-01';
+         $fechaActual = date('Y-m-d');
+         $fechamenos1 = date("Y-m-d", strtotime($fechaActual . "- 1 days"));
+         $fechamas1 = date("Y-m-d", strtotime(date('Y-m-d') . "+ 1 days"));
+ 
+         //return $fechamenos1;
+         //$idType='5';
+         //if (!$fechaInicial || !$fechaFinal) {
+ 
+         //   return response()
+         //     ->json([
+         //            'msg' => 'Parameters Cannot Be Empty!',
+         //     'status' => 400
+         //       ]);
+         // }
+         try {
+             $concatName = "concat( ip.name, ' ' ,ip.lastname  ) nombres";
+ 
+             $tipo = "when 0 then 'Petición'
+                 when 1 then 'Queja'
+                 when 2 then 'Reclamo'
+                 when 3 then 'Sugerencia'
+                 when 4 then 'Felicitación'
+                 end tipo";
+ 
+             $case2 = "case id.legal when true then 'SI' else 'NO' end REQUERIMIENTO_DE_JURIDICA_LEGAL
+                 , case id.risk when true then 'SI' else 'NO' end RIESGO_DE_VIDA
+                 , case id.relevant when true then 'SI' else 'NO' end PROCEDENTE_NO_PROCEDENTE";
+ 
+             $ultimocase = "case i.management_type
+                 when 0 then 'Administrativo'
+                 when 1 then 'Asistencial'
+                 when 2 then 'Asistencial y Administrativo'
+                 end TIPO_DE_GESTION";
+ 
+             $horas = "'5 hours' as fecha_cre";
+ 
+             $query = DB::connection('pgsql')
+                 ->select('
+                     select i.serial,ip."document",i."createdAt" - INTERVAL ' . $horas . '
+                     ,case i."type"
+                 ' . $tipo . '
+                 ,' . $concatName . '
+                 ,ip.birthday  fecha_nacimiento
+                 ,(select il2."createdAt" from issues_logs il2 where il2.status=9 and il2."issueId" =i.id) fecha_cierre
+                 ,m.name minoria
+                 ,id.description
+                 ,id.solution respuesta
+                 ,e.name Entidad
+                 ,a.name "area"
+                 ,c.name categoria
+                 ,ip.country
+                 ,ip.city
+                 ,' . $case2 . '
+                 , p."name" prioridad
+                 , i."createdAt" fecha_creacion
+                 ,' . $ultimocase . '
+                 ,rights."name" DERECHO_VULNERADO
+                 from issues i
+                 LEFT JOIN issue_patient ip
+                 ON ip.id = i."patientId"
+                 LEFT JOIN minorities m
+                 ON m.id = ip."minorityId"
+                 LEFT JOIN issues_details id
+                 ON id."issueId" =i.id
+                 LEFT JOIN entity e
+                 ON e.id = ip."entityId"
+                 LEFT JOIN issue_areas ia
+                 ON   i.id = ia."issueId" and ia.main =true
+                 LEFT JOIN "area" a
+                 ON ia."areaId"  = a.id
+                 LEFT JOIN priority p
+                 ON i."priorityId"  = p.id
+                 LEFT JOIN categories c
+                 ON i."categoryId"  = c.id
+                 left join categories_rights cr
+                 on c.id = cr."categoryId"
+                 left join rights
+                 on rights.id = cr."rightId"
+                 where i."type" != 3 and i."type" != 4 and i."createdAt" > ' . "'" . $fechaInicial . "'" . '
+ 
+                     ');
+             //return $query;
+             if (sizeof($query) < 0) return response()->json([
+                 'msg' => 'Empty Diagnoses Query Response',
+                 'status' => 204
+             ], 204);
+ 
+ 
+             $ahora = new DateTime(date("Y-m-d"));
+ 
+             $resultado = [];
+             
+             
+             $censoReal = DB::connection('sqlsrv_hosvital')
+                     ->select("
+                     
+                         SELECT * FROM CENSOREAL() ORDER BY PABELLON, CAMA
+ 
+                     ");
+ 
+ 
+             foreach ($query as $result) {
+ 
+                 $nacimiento = new DateTime($result->fecha_nacimiento);
+                 $dif = $ahora->diff($nacimiento);
+                 $edad = $dif->format("%y");
+                 $prioridad = '';
+ 
+ 
+                 if ($edad < 18 || $edad > 60) {
+ 
+                     if ($edad > 120) {
+                         $prioridad = 'PRIORIDAD BAJA';
+                     } else {
+                         $prioridad = 'PRIORIDAD ALTA';
+                     }
+                 } else {
+ 
+                     if ($edad >= 18 || $edad <= 60) {
+ 
+                         $prioridad = 'PRIORIDAD MEDIA';
+                     } else {
+ 
+                         $prioridad = 'PRIORIDAD BAJA';
+                     }
+                 }
+                 $diasRespuesta = null;
+                 $estadoDemorado = null;
+                 if ($result->fecha_cierre != null) {
+                     $creacion = new DateTime($result->fecha_cre);
+                     $cierre = new DateTime($result->fecha_cierre);
+                     $dif = $creacion->diff($cierre);
+                     $diasRespuesta = $dif->days;
+                     if ($diasRespuesta > 5) {
+                         $estadoDemorado = 'Caso demorado en atender';
+                     } else {
+                         $estadoDemorado = 'Caso atendido a tiempo';
+                     }
+                 }
+                 
+                 $Estahospitalizada='NO';
+                 $pabellon='';
+                 $cama='';
+                 foreach ($censoReal as $censo) {
+                     if($result->document == $censo->NUM_HISTORIA){
+                         
+                         $Estahospitalizada='SI';
+                         $pabellon=$censo->PABELLON;
+                         $cama=$censo->CAMA;
+                         
+ 
+                     }
+                 }
+ 
+                 $resultado[] = [
+                     'N°Caso: ' => $result->serial, 'N°Documento' => $result->document, 'Nombre' => $result->nombres, 'Edad' => $edad, 'Pais' => $result->country, 'FechaCaso' => $result->fecha_cre,
+                     'fechaCierreCaso' => $result->fecha_cierre, 'DiasDeRespuesta' => $diasRespuesta, 'DemoradoONo' => $estadoDemorado, 'Ciudad' => $result->city, 
+                     'Tipo' => $result->tipo, 'Entidad' => $result->entidad, 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria,  
+                     'RequerimientoDeJuridicaLegal' => $result->requerimiento_de_juridica_legal, 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad,
+                      'Descripcion' => $result->description, 'Respuesta' => $result->respuesta,'Estahospitalizada' => $Estahospitalizada,'pabellon' => $pabellon,'cama' => $cama
+                 ];
+             }
+ 
+ 
+ 
+             if (count($query) < 0) return response()->json([
+                 'msg' => 'Empty Diagnoses Array',
+                 'status' => 204,
+                 'data' => []
+             ], 204);
+ 
+ 
+             return response()->json([
+                 'msg' => 'Ok',
+                 'status' => 200,
+                 'count' => count($resultado),
+                 'data' => $resultado
+             ], 200);
+ 
+             //
+         } catch (\Throwable $th) {
+             throw $th;
+         }
+         //}
+     }
 
     /**
      * @OA\Get (
@@ -1180,65 +1455,6 @@ class PQRSFController extends Controller
             } catch (\Throwable $th) {
                 throw $th;
             }
-        }
-    }
-
-    /**
-     * @OA\Get (
-     *     path="/api/v1/indicadores/get/censo-estancias",
-     *     operationId="getCensoForControlTower",
-     *     tags={"Indicadores"},
-     *     summary="Get getCensoForControlTower",
-     *     description="Returns getCensoForControlTower",
-     *     security = {
-     *          {
-     *              "type": "apikey",
-     *              "in": "header",
-     *              "name": "X-Authorization",
-     *              "X-Authorization": {}
-     *          }
-     *     },
-     *     @OA\Response(
-     *          response=200,
-     *          description="Successful operation",
-     *       ),
-     *      @OA\Response(
-     *          response=400,
-     *          description="Bad Request"
-     *      ),
-     *      @OA\Response(
-     *          response=401,
-     *          description="Unauthenticated",
-     *      ),
-     *      @OA\Response(
-     *          response=403,
-     *          description="Forbidden"
-     *      )
-     * )
-     */
-    public function getCensoForControlTower(Request $request)
-    {
-
-        try {
-
-            $censoQuery = DB::connection('sqlsrv_hosvital')
-                ->select("SELECT * FROM BONNACOMMUNITY_CENSO() ORDER BY PABELLON ASC");
-
-            if (count($censoQuery) < 0) return response()->json([
-                'msg' => 'La query no ha devuelto datos',
-                'status' => 204,
-                'data' => []
-            ], 204);
-
-            return response()->json([
-                'msg' => 'Data retornada',
-                'status' => 200,
-                'data' => $censoQuery
-            ], 200);
-
-            //
-        } catch (\Throwable $th) {
-            throw $th;
         }
     }
 

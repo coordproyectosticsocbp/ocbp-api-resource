@@ -406,6 +406,28 @@ Route::group([
         ]
     );
 
+    Route::get(
+        '/hygea/get/rotacion_fcia',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'DB_ROTACION_FCIA'
+        ]
+    );
+
+    Route::get(
+        '/hygea/get/ordenes_compra',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'DB_ORDENES_DE_COMPRA_V2'
+        ]
+    );
+    Route::get(
+        '/hygea/get/rotacion_diaria',
+        [
+            \App\Http\Controllers\HygeaController::class,
+            'DB_ROTACION_DIARIA_FCIA'
+        ]
+    );
     /*-------------------------------------------------------------------------------------------------------------*/
 
     /* MACNA */
@@ -424,6 +446,8 @@ Route::group([
             'getAltCostoFormat'
         ]
     );
+
+
 
     /*-------------------------------------------------------------------------------------------------------------*/
 
@@ -844,6 +868,34 @@ Route::group([
             'getDatosBasicosPaciente'
         ]
     );
+    Route::get(
+        ('/rondas/get/censoreal'),
+        [
+            \App\Http\Controllers\RondasController::class,
+            'getCensoReal'
+        ]
+    );
+    Route::get(
+        ('/rondas/get/medicosyespecialistas'),
+        [
+            \App\Http\Controllers\RondasController::class,
+            'getMedicosEspecialistas'
+        ]
+    );
+    Route::get(
+        ('/rondas/get/dataqsystem'),
+        [
+            \App\Http\Controllers\RondasController::class,
+            'dataqsystem'
+        ]
+    );
+    Route::get(
+        ('/rondas/get/tiposolicitud/{servicio_id}'),
+        [
+            \App\Http\Controllers\RondasController::class,
+            'getTipoSolicitud'
+        ]
+    );
 
     /* ALICANTO */
 
@@ -868,6 +920,34 @@ Route::group([
             'getAsitenciaComite'
         ]
     );
+    /* CHATBOT */
+    Route::get(
+        ('/chatbot/get/citashoy'),
+        [
+            \App\Http\Controllers\RondasController::class,
+            'getChatbotCitas'
+        ]
+    );
+
+    /* ESTANCIAS */
+    Route::get(
+        ('/estancias/get/censo'),
+        [
+            \App\Http\Controllers\TorreControl\EstanciasController::class,
+            'getCenso'
+        ]
+    );
+
+    /**ORDENES DE COMPRA FARMACIA */
+    
+    Route::get(
+        ('/OrderFarmacia/get/{num_order}/{token}'),
+        [
+            \App\Http\Controllers\RondasController::class,
+            'obtenerOrdenes'
+        ]
+    );
+
 });
 
 
@@ -937,6 +1017,13 @@ Route::group([
         [
             \App\Http\Controllers\TorreControl\PQRSFController::class,
             'getPrioridadCasos'
+        ]
+    );
+    Route::get(
+        ('/indicadores/get/prioridadcasosyear/{fechaInicial?}/{fechaFinal?}'),
+        [
+            \App\Http\Controllers\TorreControl\PQRSFController::class,
+            'getPrioridadCasosYear'
         ]
     );
 

@@ -2662,4 +2662,71 @@ class HygeaController extends Controller
             }
         }
     }
+
+    //-------
+
+    //FUNCIONES DE BD 
+
+    public function DB_ROTACION_FCIA(Request $request){
+
+        try {
+
+            $data = DB::connection('sqlsrv_hosvital')
+            ->select(
+                "SELECT * FROM ROTACION_FCIA()"
+            );
+
+            return response()->json([
+                'msg' => 'Ok',
+                'status' => 200,
+                'count' => count($data),
+                'data' => $data
+            ], 200);
+
+        } catch (\Throwable $th) {
+            return $th;
+        }
+    }
+
+    public function DB_ORDENES_DE_COMPRA_V2(Request $request){
+
+        try {
+
+            $data = DB::connection('sqlsrv_hosvital')
+            ->select(
+                "SELECT * FROM ORDENES_DE_COMPRA_V2()"
+            );
+
+            return response()->json([
+                'msg' => 'Ok',
+                'status' => 200,
+                'count' => count($data),
+                'data' => $data
+            ], 200);
+
+        } catch (\Throwable $th) {
+            return $th;
+        }
+    }
+    public function DB_ROTACION_DIARIA_FCIA(Request $request){
+
+        try {
+
+            $data = DB::connection('sqlsrv_hosvital')
+            ->select(
+                "SELECT * FROM ROTACION_DIARIA_FCIA(GETDATE() - 30,GETDATE())"
+            );
+
+            return response()->json([
+                'msg' => 'Ok',
+                'status' => 200,
+                'count' => count($data),
+                'data' => $data
+            ], 200);
+
+        } catch (\Throwable $th) {
+            return $th;
+        }
+    }
+
 }

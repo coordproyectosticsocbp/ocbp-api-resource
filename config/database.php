@@ -111,21 +111,21 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
         ],
-        /*
         
-        'pgsql_bonna_comunity' => [
+        
+        'pgsql_bonna_comunity_interno' => [
             'driver' => 'pgsql',
             'url' => '',
             'host' => '172.16.52.64',
             'port' => '5433',
-            'database' => 'api_ocbp_comunity',
+            'database' => 'bonnacommunity_test',
             'username' => 'postgres',
             'password' => '@Desarrollo*.',
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
         ],
-        */
+        
         'sqlsrv_fenix' => [
             'driver' => 'sqlsrv',
             'url' => '',
@@ -134,6 +134,18 @@ return [
             'database' => 'FENIX',
             'username' => 'SA',
             'password' => '123',
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
+        'mysql_qsystem' => [
+            'driver' => 'mysql',
+            'url' => '',
+            'host' => 'bonnadona.qsystems.co',
+            'port' => '3306',
+            'database' => 'bonnadona_db',
+            'username' => 'bonnadona_qs',
+            'password' => 'q$!st3Ms&b0nN@don4!',
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
