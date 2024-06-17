@@ -939,7 +939,7 @@ Route::group([
     );
 
     /**ORDENES DE COMPRA FARMACIA */
-    
+
     Route::get(
         ('/OrderFarmacia/get/{num_order}/{token}'),
         [
@@ -947,7 +947,6 @@ Route::group([
             'obtenerOrdenes'
         ]
     );
-
 });
 
 
@@ -1026,6 +1025,6 @@ Route::group([
             'getPrioridadCasosYear'
         ]
     );
-
+    //
     /* ------------------------------------------------------------------------------- */
 });

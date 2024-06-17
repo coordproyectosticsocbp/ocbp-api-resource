@@ -900,11 +900,11 @@ class PQRSFController extends Controller
             $ahora = new DateTime(date("Y-m-d"));
 
             $resultado = [];
-            
-            
+
+
             $censoReal = DB::connection('sqlsrv_hosvital')
-                    ->select("
-                    
+                ->select("
+
                         SELECT * FROM CENSOREAL() ORDER BY PABELLON, CAMA
 
                     ");
@@ -948,27 +948,25 @@ class PQRSFController extends Controller
                         $estadoDemorado = 'Caso atendido a tiempo';
                     }
                 }
-                
-                $Estahospitalizada='NO';
-                $pabellon='';
-                $cama='';
-                foreach ($censoReal as $censo) {
-                    if($result->document == $censo->NUM_HISTORIA){
-                        
-                        $Estahospitalizada='SI';
-                        $pabellon=$censo->PABELLON;
-                        $cama=$censo->CAMA;
-                        
 
+                $Estahospitalizada = 'NO';
+                $pabellon = '';
+                $cama = '';
+                foreach ($censoReal as $censo) {
+                    if ($result->document == $censo->NUM_HISTORIA) {
+
+                        $Estahospitalizada = 'SI';
+                        $pabellon = $censo->PABELLON;
+                        $cama = $censo->CAMA;
                     }
                 }
 
                 $resultado[] = [
                     'N°Caso: ' => $result->serial, 'N°Documento' => $result->document, 'Nombre' => $result->nombres, 'Edad' => $edad, 'Pais' => $result->country, 'FechaCaso' => $result->fecha_cre,
-                    'fechaCierreCaso' => $result->fecha_cierre, 'DiasDeRespuesta' => $diasRespuesta, 'DemoradoONo' => $estadoDemorado, 'Ciudad' => $result->city, 
-                    'Tipo' => $result->tipo, 'Entidad' => $result->entidad, 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria,  
+                    'fechaCierreCaso' => $result->fecha_cierre, 'DiasDeRespuesta' => $diasRespuesta, 'DemoradoONo' => $estadoDemorado, 'Ciudad' => $result->city,
+                    'Tipo' => $result->tipo, 'Entidad' => $result->entidad, 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria,
                     'RequerimientoDeJuridicaLegal' => $result->requerimiento_de_juridica_legal, 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad,
-                     'Descripcion' => $result->description, 'Respuesta' => $result->respuesta,'Estahospitalizada' => $Estahospitalizada,'pabellon' => $pabellon,'cama' => $cama
+                    'Descripcion' => $result->description, 'Respuesta' => $result->respuesta, 'Estahospitalizada' => $Estahospitalizada, 'pabellon' => $pabellon, 'cama' => $cama
                 ];
             }
 
@@ -1046,56 +1044,56 @@ class PQRSFController extends Controller
      * )
      */
 
-     public function getPrioridadCasosYear(Request $request)
-     {
-         //if ($request->hasHeader('X-Authorization')) {
- 
-         //$token = $request->header('X-Authorization');
-         //$user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
- 
-         //if (count($user) < 0) return response()->json([
-         //  'msg' => 'Unauthorized',
-         //'status' => 401
-         //]);
-         $fechaInicial = date("Y") . '-01-01';
-         $fechaActual = date('Y-m-d');
-         $fechamenos1 = date("Y-m-d", strtotime($fechaActual . "- 1 days"));
-         $fechamas1 = date("Y-m-d", strtotime(date('Y-m-d') . "+ 1 days"));
- 
-         //return $fechamenos1;
-         //$idType='5';
-         //if (!$fechaInicial || !$fechaFinal) {
- 
-         //   return response()
-         //     ->json([
-         //            'msg' => 'Parameters Cannot Be Empty!',
-         //     'status' => 400
-         //       ]);
-         // }
-         try {
-             $concatName = "concat( ip.name, ' ' ,ip.lastname  ) nombres";
- 
-             $tipo = "when 0 then 'Petición'
+    public function getPrioridadCasosYear(Request $request)
+    {
+        //if ($request->hasHeader('X-Authorization')) {
+
+        //$token = $request->header('X-Authorization');
+        //$user = DB::select("SELECT TOP 1 * FROM api_keys AS ap WHERE ap.[key] = '$token'");
+
+        //if (count($user) < 0) return response()->json([
+        //  'msg' => 'Unauthorized',
+        //'status' => 401
+        //]);
+        $fechaInicial = date("Y") . '-01-01';
+        $fechaActual = date('Y-m-d');
+        $fechamenos1 = date("Y-m-d", strtotime($fechaActual . "- 1 days"));
+        $fechamas1 = date("Y-m-d", strtotime(date('Y-m-d') . "+ 1 days"));
+
+        //return $fechamenos1;
+        //$idType='5';
+        //if (!$fechaInicial || !$fechaFinal) {
+
+        //   return response()
+        //     ->json([
+        //            'msg' => 'Parameters Cannot Be Empty!',
+        //     'status' => 400
+        //       ]);
+        // }
+        try {
+            $concatName = "concat( ip.name, ' ' ,ip.lastname  ) nombres";
+
+            $tipo = "when 0 then 'Petición'
                  when 1 then 'Queja'
                  when 2 then 'Reclamo'
                  when 3 then 'Sugerencia'
                  when 4 then 'Felicitación'
                  end tipo";
- 
-             $case2 = "case id.legal when true then 'SI' else 'NO' end REQUERIMIENTO_DE_JURIDICA_LEGAL
+
+            $case2 = "case id.legal when true then 'SI' else 'NO' end REQUERIMIENTO_DE_JURIDICA_LEGAL
                  , case id.risk when true then 'SI' else 'NO' end RIESGO_DE_VIDA
                  , case id.relevant when true then 'SI' else 'NO' end PROCEDENTE_NO_PROCEDENTE";
- 
-             $ultimocase = "case i.management_type
+
+            $ultimocase = "case i.management_type
                  when 0 then 'Administrativo'
                  when 1 then 'Asistencial'
                  when 2 then 'Asistencial y Administrativo'
                  end TIPO_DE_GESTION";
- 
-             $horas = "'5 hours' as fecha_cre";
- 
-             $query = DB::connection('pgsql')
-                 ->select('
+
+            $horas = "'5 hours' as fecha_cre";
+
+            $query = DB::connection('pgsql')
+                ->select('
                      select i.serial,ip."document",i."createdAt" - INTERVAL ' . $horas . '
                      ,case i."type"
                  ' . $tipo . '
@@ -1137,112 +1135,110 @@ class PQRSFController extends Controller
                  left join rights
                  on rights.id = cr."rightId"
                  where i."type" != 3 and i."type" != 4 and i."createdAt" > ' . "'" . $fechaInicial . "'" . '
- 
+
                      ');
-             //return $query;
-             if (sizeof($query) < 0) return response()->json([
-                 'msg' => 'Empty Diagnoses Query Response',
-                 'status' => 204
-             ], 204);
- 
- 
-             $ahora = new DateTime(date("Y-m-d"));
- 
-             $resultado = [];
-             
-             
-             $censoReal = DB::connection('sqlsrv_hosvital')
-                     ->select("
-                     
+            //return $query;
+            if (sizeof($query) < 0) return response()->json([
+                'msg' => 'Empty Diagnoses Query Response',
+                'status' => 204
+            ], 204);
+
+
+            $ahora = new DateTime(date("Y-m-d"));
+
+            $resultado = [];
+
+
+            $censoReal = DB::connection('sqlsrv_hosvital')
+                ->select("
+
                          SELECT * FROM CENSOREAL() ORDER BY PABELLON, CAMA
- 
+
                      ");
- 
- 
-             foreach ($query as $result) {
- 
-                 $nacimiento = new DateTime($result->fecha_nacimiento);
-                 $dif = $ahora->diff($nacimiento);
-                 $edad = $dif->format("%y");
-                 $prioridad = '';
- 
- 
-                 if ($edad < 18 || $edad > 60) {
- 
-                     if ($edad > 120) {
-                         $prioridad = 'PRIORIDAD BAJA';
-                     } else {
-                         $prioridad = 'PRIORIDAD ALTA';
-                     }
-                 } else {
- 
-                     if ($edad >= 18 || $edad <= 60) {
- 
-                         $prioridad = 'PRIORIDAD MEDIA';
-                     } else {
- 
-                         $prioridad = 'PRIORIDAD BAJA';
-                     }
-                 }
-                 $diasRespuesta = null;
-                 $estadoDemorado = null;
-                 if ($result->fecha_cierre != null) {
-                     $creacion = new DateTime($result->fecha_cre);
-                     $cierre = new DateTime($result->fecha_cierre);
-                     $dif = $creacion->diff($cierre);
-                     $diasRespuesta = $dif->days;
-                     if ($diasRespuesta > 5) {
-                         $estadoDemorado = 'Caso demorado en atender';
-                     } else {
-                         $estadoDemorado = 'Caso atendido a tiempo';
-                     }
-                 }
-                 
-                 $Estahospitalizada='NO';
-                 $pabellon='';
-                 $cama='';
-                 foreach ($censoReal as $censo) {
-                     if($result->document == $censo->NUM_HISTORIA){
-                         
-                         $Estahospitalizada='SI';
-                         $pabellon=$censo->PABELLON;
-                         $cama=$censo->CAMA;
-                         
- 
-                     }
-                 }
- 
-                 $resultado[] = [
-                     'N°Caso: ' => $result->serial, 'N°Documento' => $result->document, 'Nombre' => $result->nombres, 'Edad' => $edad, 'Pais' => $result->country, 'FechaCaso' => $result->fecha_cre,
-                     'fechaCierreCaso' => $result->fecha_cierre, 'DiasDeRespuesta' => $diasRespuesta, 'DemoradoONo' => $estadoDemorado, 'Ciudad' => $result->city, 
-                     'Tipo' => $result->tipo, 'Entidad' => $result->entidad, 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria,  
-                     'RequerimientoDeJuridicaLegal' => $result->requerimiento_de_juridica_legal, 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad,
-                      'Descripcion' => $result->description, 'Respuesta' => $result->respuesta,'Estahospitalizada' => $Estahospitalizada,'pabellon' => $pabellon,'cama' => $cama
-                 ];
-             }
- 
- 
- 
-             if (count($query) < 0) return response()->json([
-                 'msg' => 'Empty Diagnoses Array',
-                 'status' => 204,
-                 'data' => []
-             ], 204);
- 
- 
-             return response()->json([
-                 'msg' => 'Ok',
-                 'status' => 200,
-                 'count' => count($resultado),
-                 'data' => $resultado
-             ], 200);
- 
-             //
-         } catch (\Throwable $th) {
-             throw $th;
-         }
-         //}
-     }
+
+
+            foreach ($query as $result) {
+
+                $nacimiento = new DateTime($result->fecha_nacimiento);
+                $dif = $ahora->diff($nacimiento);
+                $edad = $dif->format("%y");
+                $prioridad = '';
+
+
+                if ($edad < 18 || $edad > 60) {
+
+                    if ($edad > 120) {
+                        $prioridad = 'PRIORIDAD BAJA';
+                    } else {
+                        $prioridad = 'PRIORIDAD ALTA';
+                    }
+                } else {
+
+                    if ($edad >= 18 || $edad <= 60) {
+
+                        $prioridad = 'PRIORIDAD MEDIA';
+                    } else {
+
+                        $prioridad = 'PRIORIDAD BAJA';
+                    }
+                }
+                $diasRespuesta = null;
+                $estadoDemorado = null;
+                if ($result->fecha_cierre != null) {
+                    $creacion = new DateTime($result->fecha_cre);
+                    $cierre = new DateTime($result->fecha_cierre);
+                    $dif = $creacion->diff($cierre);
+                    $diasRespuesta = $dif->days;
+                    if ($diasRespuesta > 5) {
+                        $estadoDemorado = 'Caso demorado en atender';
+                    } else {
+                        $estadoDemorado = 'Caso atendido a tiempo';
+                    }
+                }
+
+                $Estahospitalizada = 'NO';
+                $pabellon = '';
+                $cama = '';
+                foreach ($censoReal as $censo) {
+                    if (trim($result->document) === ($censo->NUM_HISTORIA)) {
+
+                        $Estahospitalizada = 'SI';
+                        $pabellon = $censo->PABELLON;
+                        $cama = $censo->CAMA;
+                    }
+                }
+
+                $resultado[] = [
+                    'N°Caso: ' => $result->serial, 'N°Documento' => $result->document, 'Nombre' => $result->nombres, 'Edad' => $edad, 'Pais' => $result->country, 'FechaCaso' => $result->fecha_cre,
+                    'fechaCierreCaso' => $result->fecha_cierre, 'DiasDeRespuesta' => $diasRespuesta, 'DemoradoONo' => $estadoDemorado, 'Ciudad' => $result->city,
+                    'Tipo' => $result->tipo, 'Entidad' => $result->entidad, 'Minoria' => $result->minoria,  'Area' => $result->area, 'Categoria' => $result->categoria,
+                    'RequerimientoDeJuridicaLegal' => $result->requerimiento_de_juridica_legal, 'RiesgoDeVida' => $result->riesgo_de_vida, 'Prioridad' => $prioridad,
+                    'Descripcion' => $result->description, 'Respuesta' => $result->respuesta, 'Estahospitalizada' => $Estahospitalizada, 'pabellon' => $pabellon, 'cama' => $cama
+                ];
+            }
+
+
+
+            if (count($query) < 0) return response()->json([
+                'msg' => 'Empty Diagnoses Array',
+                'status' => 204,
+                'data' => []
+            ], 204);
+
+
+            return response()->json([
+                'msg' => 'Ok',
+                'status' => 200,
+                'count' => count($resultado),
+                'data' => $resultado
+            ], 200);
+
+            //
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+        //}
+    }
 
     /**
      * @OA\Get (
