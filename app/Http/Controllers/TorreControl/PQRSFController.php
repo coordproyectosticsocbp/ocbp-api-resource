@@ -953,7 +953,7 @@ class PQRSFController extends Controller
                 $pabellon = '';
                 $cama = '';
                 foreach ($censoReal as $censo) {
-                    if ($result->document == $censo->NUM_HISTORIA) {
+                    if (trim($result->document) === trim($censo->NUM_HISTORIA)) {
 
                         $Estahospitalizada = 'SI';
                         $pabellon = $censo->PABELLON;
@@ -1200,7 +1200,7 @@ class PQRSFController extends Controller
                 $pabellon = '';
                 $cama = '';
                 foreach ($censoReal as $censo) {
-                    if (trim($result->document) === ($censo->NUM_HISTORIA)) {
+                    if (trim($result->document) === trim($censo->NUM_HISTORIA)) {
 
                         $Estahospitalizada = 'SI';
                         $pabellon = $censo->PABELLON;
